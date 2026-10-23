@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0e1420">
+<title>Stillness</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--txt:#eef1f6;--mut:rgba(238,241,246,.55);--line:rgba(255,255,255,.12);--glow:#f3d9a4}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;color:var(--txt);font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;overflow:hidden;background:#0e1420}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.sky{position:fixed;inset:0;background:radial-gradient(120% 80% at 50% 110%,#c98f6b 0%,#6d5a7a 28%,#2b3352 55%,#0e1420 85%);transition:filter 3s}
+.sky::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 15%,rgba(255,255,255,.06) 0 1px,transparent 2px) 0 0/90px 90px,radial-gradient(circle at 70% 40%,rgba(255,255,255,.05) 0 1px,transparent 2px) 0 0/130px 130px}
+body.sitting .sky{filter:brightness(.55) saturate(.8)}
+.wrap{position:relative;height:100%;display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top) + 22px) 26px calc(env(safe-area-inset-bottom) + 26px);max-width:640px;margin:0 auto}
+.top{width:100%;display:flex;justify-content:space-between;align-items:center;font-family:system-ui,sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);transition:opacity 1.5s}
+.quote{margin-top:6vh;text-align:center;max-width:460px;transition:opacity 1.5s}
+.quote p{font-size:clamp(20px,5.4vw,27px);line-height:1.45;font-style:italic;margin:0}
+.quote small{display:block;margin-top:14px;font-family:system-ui,sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--mut)}
+.orbwrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%}
+.orb{position:relative;width:min(58vw,260px);aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.orb::before{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 45%,rgba(255,236,200,.28),rgba(243,217,164,.08) 60%,transparent 72%);box-shadow:0 0 80px rgba(243,217,164,.18);animation:breathe 10s ease-in-out infinite}
+body:not(.sitting) .orb::before{animation-duration:14s}
+@keyframes breathe{0%,100%{transform:scale(.82);opacity:.7}50%{transform:scale(1.08);opacity:1}}
+.orb svg{position:absolute;inset:-14px;width:calc(100% + 28px);height:calc(100% + 28px);transform:rotate(-90deg)}
+.time{position:relative;font-family:system-ui,sans-serif;font-weight:200;font-size:clamp(48px,14vw,68px);letter-spacing:1px;font-variant-numeric:tabular-nums}
+.hint{position:relative;font-family:system-ui,sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--mut);margin-top:6px;min-height:16px}
+.picker{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font-family:system-ui,sans-serif;transition:opacity 1s}
+.picker button{min-width:52px;padding:10px 14px;border-radius:999px;border:1px solid var(--line);font-size:15px;color:var(--mut);backdrop-filter:blur(6px)}
+.picker button.on{border-color:var(--glow);color:var(--txt);background:rgba(243,217,164,.12)}
+.go{margin-top:22px;width:84px;height:84px;border-radius:50%;border:1px solid rgba(243,217,164,.6);display:grid;place-items:center;background:rgba(243,217,164,.08);box-shadow:0 0 40px rgba(243,217,164,.15)}
+.go svg{width:28px;height:28px;fill:var(--txt)}
+.row2{display:flex;gap:26px;margin-top:18px;font-family:system-ui,sans-serif;font-size:13px;color:var(--mut);transition:opacity 1s}
+.row2 button{letter-spacing:1px}
+body.sitting .hide{opacity:0;pointer-events:none}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:rgba(14,20,32,.94);backdrop-filter:blur(18px);border-top:1px solid var(--line);border-radius:24px 24px 0 0;padding:22px 24px calc(env(safe-area-inset-bottom) + 28px);transform:translateY(105%);transition:transform .45s cubic-bezier(.2,.8,.2,1);font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;z-index:5}
+.sheet.show{transform:none}
+.sheet h3{font-family:Georgia,serif;font-weight:400;font-size:22px;margin:0 0 16px}
+.opt{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);font-size:15px}
+.seg{display:flex;gap:6px}.seg button{padding:7px 12px;border-radius:999px;border:1px solid var(--line);font-size:13px;color:var(--mut)}.seg button.on{border-color:var(--glow);color:var(--txt)}
+.stats{display:flex;justify-content:space-around;text-align:center;margin:6px 0 10px}.stats b{display:block;font-family:Georgia,serif;font-weight:400;font-size:30px}.stats span{font-size:12px;color:var(--mut);letter-spacing:1px;text-transform:uppercase}
+.close{position:absolute;top:16px;right:20px;font-size:22px;color:var(--mut)}
+input[type=range]{width:100%;accent-color:#f3d9a4}
+.end{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:30px;z-index:4}
+.end.show{display:flex;animation:fade 2s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.end h2{font-weight:400;font-size:30px;margin:0}.end p{color:var(--mut);font-family:system-ui,sans-serif;font-size:14px;letter-spacing:1px}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.3s;z-index:4}.scrim.show{opacity:1;pointer-events:auto}
+</style>
+</head>
+<body>
+<div class="sky"></div>
+<div class="wrap">
+  <div class="top hide"><span id="date"></span><button id="menuBtn" aria-label="Settings">◦ ◦ ◦</button></div>
+  <div class="quote hide" id="quote"><p id="qt"></p><small id="qa"></small></div>
+  <div class="orbwrap">
+    <div class="orb" id="orb">
+      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,255,255,.08)" stroke-width=".6"/><circle id="arc" cx="50" cy="50" r="48" fill="none" stroke="#f3d9a4" stroke-width=".9" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="301.6"/></svg>
+      <div class="time" id="time">10:00</div>
+      <div class="hint" id="hint">breathe</div>
+    </div>
+  </div>
+  <div class="picker hide" id="picker"></div>
+  <button class="go" id="go" aria-label="Begin"><svg viewBox="0 0 24 24" id="goIcon"><path d="M8 5v14l11-7z"/></svg></button>
+  <div class="row2 hide"><button id="soundBtn">Bowl</button><button id="statsBtn">Journey</button></div>
+</div>
+
+<div class="end" id="end"><h2>Be well, Alan.</h2><p id="endmsg"></p><button class="go" id="endOk" style="width:64px;height:64px;font-family:system-ui;font-size:13px;letter-spacing:1px">OK</button></div>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"><button class="close" id="closeSheet">×</button><div id="sheetBody"></div></div>
+
+<script>
+const QUOTES=[
+["Peace comes from within. Do not seek it without.","Buddha"],
+["Nature does not hurry, yet everything is accomplished.","Lao Tzu"],
+["The present moment is filled with joy and happiness. If you are attentive, you will see it.","Thich Nhat Hanh"],
+["Quiet the mind, and the soul will speak.","Ma Jaya Sati Bhagavati"],
+["Within you, there is a stillness and a sanctuary to which you can retreat at any time.","Hermann Hesse"],
+["Breathing in, I calm body and mind. Breathing out, I smile.","Thich Nhat Hanh"],
+["Muddy water is best cleared by leaving it alone.","Alan Watts"],
+["You should sit in meditation for twenty minutes a day, unless you're too busy. Then you should sit for an hour.","Zen saying"],
+["Do not dwell in the past, do not dream of the future, concentrate the mind on the present moment.","Buddha"],
+["The quieter you become, the more you are able to hear.","Rumi"],
+["Silence is a source of great strength.","Lao Tzu"],
+["Feelings come and go like clouds in a windy sky. Conscious breathing is my anchor.","Thich Nhat Hanh"],
+["Sit quietly, doing nothing, spring comes, and the grass grows by itself.","Zen proverb"],
+["Wherever you are, be all there.","Jim Elliot"],
+["Almost everything will work again if you unplug it for a few minutes, including you.","Anne Lamott"],
+["The mind is everything. What you think you become.","Buddha"],
+["Be still, and know.","Psalm 46:10"],
+["Very little is needed to make a happy life; it is all within yourself, in your way of thinking.","Marcus Aurelius"],
+["Nowhere can man find a quieter or more untroubled retreat than in his own soul.","Marcus Aurelius"],
+["If you want to conquer the anxiety of life, live in the moment, live in the breath.","Amit Ray"],
+["Smile, breathe and go slowly.","Thich Nhat Hanh"],
+["In the midst of movement and chaos, keep stillness inside of you.","Deepak Chopra"],
+["Calmness is the cradle of power.","Josiah Gilbert Holland"],
+["Let go or be dragged.","Zen proverb"],
+["To a mind that is still, the whole universe surrenders.","Zhuangzi"],
+["When you realize nothing is lacking, the whole world belongs to you.","Lao Tzu"],
+["Each morning we are born again. What we do today is what matters most.","Buddha"],
+["The best way to capture moments is to pay attention.","Jon Kabat-Zinn"],
+["You can't stop the waves, but you can learn to surf.","Jon Kabat-Zinn"],
+["Walk as if you are kissing the Earth with your feet.","Thich Nhat Hanh"],
+["Tension is who you think you should be. Relaxation is who you are.","Chinese proverb"],
+["The soul always knows what to do to heal itself. The challenge is to silence the mind.","Caroline Myss"],
+["Rest is not idleness.","John Lubbock"],
+["Simplicity, patience, compassion. These three are your greatest treasures.","Lao Tzu"],
+["Do every act of your life as though it were the very last act of your life.","Marcus Aurelius"],
+["Happiness is not something ready made. It comes from your own actions.","Dalai Lama"],
+["Life is available only in the present moment.","Thich Nhat Hanh"],
+["Be like water making its way through cracks.","Bruce Lee"],
+["Peace is every step.","Thich Nhat Hanh"],
+["Look deep into nature, and then you will understand everything better.","Albert Einstein"],
+["In the end, just three things matter: how well we have lived, how well we have loved, how well we have learned to let go.","Jack Kornfield"],
+["Silence is not the absence of something but the presence of everything.","Gordon Hempton"],
+["The little things? The little moments? They aren't little.","Jon Kabat-Zinn"],
+["Knowing others is intelligence; knowing yourself is true wisdom.","Lao Tzu"],
+["What we are looking for is what is looking.","St. Francis of Assisi"],
+["The wound is the place where the Light enters you.","Rumi"],
+["Every breath we take, every step we make, can be filled with peace, joy and serenity.","Thich Nhat Hanh"],
+["Let the waters settle and you will see the moon and the stars mirrored in your own being.","Rumi"],
+["Patience is the companion of wisdom.","Saint Augustine"],
+["Adopt the pace of nature: her secret is patience.","Ralph Waldo Emerson"],
+["The time to relax is when you don't have time for it.","Sydney J. Harris"],
+["A quiet mind is able to hear intuition over fear.","Unknown"],
+["Gratitude turns what we have into enough.","Aesop"],
+["Breath is the bridge which connects life to consciousness.","Thich Nhat Hanh"],
+["Stillness is where creativity and solutions to problems are found.","Eckhart Tolle"],
+["The sea is calm today, and so am I.","Ocean saying"],
+["Slow down and everything you are chasing will come around and catch you.","John De Paola"],
+["Your calm mind is the ultimate weapon against your challenges.","Bryant McGill"],
+["Inhale the future, exhale the past.","Unknown"],
+["One today is worth two tomorrows.","Benjamin Franklin"]
+];
+const KEY='stillness-v1';
+const D={min:10,sound:'bowl',start:true,interval:0,log:{},vol:.8};
+let S=Object.assign({},D,JSON.parse(localStorage.getItem(KEY)||'{}'));const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+const $=id=>document.getElementById(id);
+const ds=d=>{const z=new Date(d);z.setMinutes(z.getMinutes()-z.getTimezoneOffset());return z.toISOString().slice(0,10)};
+const today=()=>ds(new Date());
+
+// daily quote
+function dailyQuote(){const d=new Date();const n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5)+d.getFullYear()*7;const q=QUOTES[n%QUOTES.length];$('qt').textContent='“'+q[0]+'”';$('qa').textContent=q[1]}
+$('date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+dailyQuote();
+
+// picker
+const MINS=[1,3,5,10,15,20,30];
+function drawPicker(){$('picker').innerHTML=MINS.map(m=>`<button class="${S.min===m?'on':''}" data-m="${m}">${m}</button>`).join('')+`<button class="${MINS.includes(S.min)?'':'on'}" id="custom">${MINS.includes(S.min)?'…':S.min}</button>`;
+ document.querySelectorAll('#picker [data-m]').forEach(b=>b.onclick=()=>{S.min=+b.dataset.m;save();drawPicker();showTime(S.min*60)});
+ $('custom').onclick=openCustom;}
+const fmt=s=>{s=Math.max(0,Math.ceil(s));const m=Math.floor(s/60);return m+':'+String(s%60).padStart(2,'0')};
+function showTime(s){$('time').textContent=fmt(s)}
+drawPicker();showTime(S.min*60);
+const SNAME={bowl:'Bowl',gong:'Gong',chime:'Chime'};$('soundBtn').textContent=SNAME[S.sound];
+
+// ---- sound synthesis ----
+let ac;function ctx(){ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();return ac}
+function strike(type=S.sound,gain=S.vol){
+ const a=ctx(),t=a.currentTime,out=a.createGain();out.gain.value=gain;
+ // gentle reverb-ish via delay feedback
+ const dl=a.createDelay();dl.delayTime.value=.13;const fb=a.createGain();fb.gain.value=.28;const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2400;
+ out.connect(a.destination);out.connect(dl);dl.connect(lp);lp.connect(fb);fb.connect(dl);lp.connect(a.destination);
+ const P={bowl:{f:220,parts:[[1,1,9],[2.76,.5,6],[5.40,.25,4],[8.93,.12,2.5],[1.006,.6,9]]},
+          gong:{f:98,parts:[[1,1,10],[1.52,.6,8],[2.01,.5,7],[2.83,.35,5],[3.6,.25,4],[4.9,.15,3],[1.008,.7,10]]},
+          chime:{f:880,parts:[[1,1,4.5],[2.4,.35,3],[3.9,.18,2],[5.4,.09,1.5],[1.003,.5,4.5]]}}[type];
+ P.parts.forEach(([r,amp,dec])=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=P.f*r;
+  if(type==='gong'){o.frequency.setValueAtTime(P.f*r*1.02,t);o.frequency.exponentialRampToValueAtTime(P.f*r,t+1.2)}
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(amp*.22,t+(type==='gong'?.06:.008));g.gain.exponentialRampToValueAtTime(.0001,t+dec);
+  o.connect(g);g.connect(out);o.start(t);o.stop(t+dec+.1)});
+ if(type==='gong'){const n=a.createBufferSource(),b=a.createBuffer(1,a.sampleRate*.4,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);n.buffer=b;const bp=a.createBiquadFilter();bp.type='bandpass';bp.frequency.value=180;const g=a.createGain();g.gain.value=.25;n.connect(bp);bp.connect(g);g.connect(out);n.start(t)}
+}
+function finalBell(){strike();setTimeout(()=>strike(S.sound,S.vol*.75),S.sound==='chime'?2200:4200);setTimeout(()=>strike(S.sound,S.vol*.55),S.sound==='chime'?4400:8400)}
+
+// ---- timer ----
+let T=null,wake=null;const C=301.6;
+async function begin(){
+ ctx();
+ try{wake=await navigator.wakeLock.request('screen')}catch(_){}
+ document.body.classList.add('sitting');
+ const total=S.min*60;T={total,end:Date.now()+total*1000+ (S.start?0:0),paused:false,remain:total,lastInt:0,settle:5};
+ setGo('pause');$('hint').textContent='settle in';
+ if(S.start) strike(S.sound,S.vol*.6);
+ T.iv=setInterval(loop,250);loop();
+}
+function loop(){
+ if(T.paused)return;
+ T.remain=(T.end-Date.now())/1000;
+ const el=T.total-T.remain;
+ $('arc').style.strokeDashoffset=C*(1-Math.min(1,el/T.total));
+ showTime(T.remain);
+ $('hint').textContent=el<8?'settle in':(Math.floor(el/5)%2?'breathe out':'breathe in');
+ if(S.interval&&el>0){const k=Math.floor(el/(S.interval*60));if(k>T.lastInt&&T.remain>5){T.lastInt=k;strike(S.sound,S.vol*.4)}}
+ if(T.remain<=0)complete();
+}
+function pauseResume(){
+ if(!T)return begin();
+ if(T.paused){T.end=Date.now()+T.remain*1000;T.paused=false;setGo('pause');document.body.classList.add('sitting')}
+ else{T.paused=true;setGo('play');$('hint').textContent='paused · hold to end';document.body.classList.remove('sitting')}
+}
+function stop(record){
+ clearInterval(T.iv);try{wake&&wake.release()}catch(_){}wake=null;
+ const sat=Math.round((T.total-Math.max(0,T.remain)));
+ if(record&&sat>=30){const l=S.log[today()]||{n:0,s:0};l.n++;l.s+=sat;S.log[today()]=l;save()}
+ T=null;document.body.classList.remove('sitting');setGo('play');$('arc').style.strokeDashoffset=C;showTime(S.min*60);$('hint').textContent='breathe';return sat;
+}
+function complete(){const total=T.total;stop(true);finalBell();if(navigator.vibrate)navigator.vibrate([400,200,400]);
+ $('endmsg').textContent=`${Math.round(total/60)} minute${total>=120?'s':''} of stillness · ${streak()} day${streak()===1?'':'s'} in a row`;$('end').classList.add('show')}
+$('endOk').onclick=()=>$('end').classList.remove('show');
+function setGo(s){$('goIcon').innerHTML=s==='pause'?'<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/>':'<path d="M8 5v14l11-7z"/>'}
+// tap = start/pause, long press = end early
+let lp;const go=$('go');
+go.addEventListener('pointerdown',()=>{lp=setTimeout(()=>{lp=null;if(T){const s=stop(true);if(navigator.vibrate)navigator.vibrate(60)}},800)});
+go.addEventListener('pointerup',()=>{if(lp){clearTimeout(lp);lp=null;pauseResume()}});
+go.addEventListener('pointerleave',()=>{if(lp){clearTimeout(lp);lp=null}});
+
+function streak(){let n=0,d=new Date();if(!S.log[ds(d)])d.setDate(d.getDate()-1);while(S.log[ds(d)]){n++;d.setDate(d.getDate()-1)}return n}
+
+// ---- sheets ----
+function openSheet(html){$('sheetBody').innerHTML=html;$('sheet').classList.add('show');$('scrim').classList.add('show')}
+function closeSheet(){$('sheet').classList.remove('show');$('scrim').classList.remove('show')}
+$('closeSheet').onclick=closeSheet;$('scrim').onclick=closeSheet;
+function openCustom(){openSheet(`<h3>Custom length</h3><div class="opt"><span>Minutes</span><b id="cv">${S.min}</b></div><input type="range" min="1" max="90" value="${S.min}" id="cr" style="margin-top:14px">`);
+ $('cr').oninput=e=>{S.min=+e.target.value;$('cv').textContent=S.min;showTime(S.min*60)};$('cr').onchange=()=>{save();drawPicker()}}
+$('soundBtn').onclick=()=>{
+ const seg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-k="${k}" data-v="${v}" class="${String(S[k])===String(v)?'on':''}">${l}</button>`).join('')}</div>`;
+ openSheet(`<h3>Sound</h3>
+ <div class="opt"><span>Ending sound</span>${seg('sound',[['bowl','Bowl'],['gong','Gong'],['chime','Chime']])}</div>
+ <div class="opt"><span>Starting bell</span>${seg('start',[[true,'On'],[false,'Off']])}</div>
+ <div class="opt"><span>Interval bell</span>${seg('interval',[[0,'Off'],[1,'1m'],[5,'5m'],[10,'10m']])}</div>
+ <div class="opt" style="border:0"><span>Volume</span></div><input type="range" min="0.1" max="1" step="0.05" value="${S.vol}" id="vol">`);
+ document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{const k=b.dataset.k;let v=b.dataset.v;v=v==='true'?true:v==='false'?false:isNaN(v)?v:+v;S[k]=v;save();b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(k==='sound'){$('soundBtn').textContent=SNAME[v];strike(v)}});
+ $('vol').onchange=e=>{S.vol=+e.target.value;save();strike()};
+};
+$('statsBtn').onclick=()=>{const v=Object.values(S.log);const mins=Math.round(v.reduce((a,l)=>a+l.s,0)/60);
+ let dots='';for(let i=27;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const l=S.log[ds(d)];dots+=`<span title="${ds(d)}" style="width:14px;height:14px;border-radius:50%;display:inline-block;margin:3px;background:${l?'rgba(243,217,164,'+Math.min(1,.35+l.s/1800)+')':'rgba(255,255,255,.08)'}"></span>`}
+ openSheet(`<h3>Your journey</h3><div class="stats"><div><b>${streak()}</b><span>day streak</span></div><div><b>${v.reduce((a,l)=>a+l.n,0)}</b><span>sessions</span></div><div><b>${mins}</b><span>minutes</span></div></div><div style="text-align:center;margin-top:10px">${dots}</div><p style="text-align:center;color:var(--mut);font-size:12px;letter-spacing:1px;margin-top:10px">LAST 4 WEEKS</p>`)};
+$('menuBtn').onclick=()=>openSheet(`<h3>About</h3><p style="color:var(--mut);line-height:1.6;font-size:14px">Tap the circle button to begin or pause. Hold it to end early. A new quote greets you each day. Your sessions stay on this phone.</p><p style="color:var(--mut);font-size:12px;margin-top:20px">Stillness · made for Alan by Hark</p>`);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
