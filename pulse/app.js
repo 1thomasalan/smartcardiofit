@@ -54,7 +54,7 @@ function header(){const end=dataEnd();const stale=S.e>end?`Data through ${P.fmtD
   return `<div class="range">${PRESETS.map(([k,l])=>`<button data-p="${k}" class="${S.preset===k?'on':''}">${l}</button>`).join('')}</div>
   <div class="rlabel">${P.rangeLabel(S.s,S.e)}<small>${stale}</small></div>
   <div class="range" style="margin-top:12px">${[['all','All'],['fb','Facebook'],['ig','Instagram']].map(([k,l])=>`<button data-f="${k}" class="chip ${S.plat===k?'on':''}">${l}</button>`).join('')}</div>`}
-function topbar(){return `<div class="top"><span>Pulse · ${esc(CFG.rOrg)}</span><div style="display:flex;gap:10px"><button class="icon" id="impBtn" aria-label="Import">${ICON.imp}</button><button class="icon" id="gear" aria-label="Settings">${ICON.gear}</button></div></div>`}
+function topbar(){return `<div class="top"><span>MCCS Pulse</span><div style="display:flex;gap:10px"><button class="icon" id="impBtn" aria-label="Import">${ICON.imp}</button><button class="icon" id="gear" aria-label="Settings">${ICON.gear}</button></div></div>`}
 // ---- render ----
 function render(){const app=$('#app');
   if(S.locked&&SYNC.meta){$('#dock').style.display='none';app.innerHTML=topbar()+lockScreen();bindTop();bindLock();return;}
@@ -151,18 +151,18 @@ function settings(){const T={dusk:'#6d5a7a',dawn:'#f2a7a0',ocean:'#2b7a9e',fores
  <div class="sec">Your data</div><div class="opt"><span>${nf(S.posts.length)} posts · through ${dataEnd()?P.fmtDate(dataEnd(),{year:'numeric'}):'—'}</span></div>
  ${localStorage.pulseSynced?`<div class="opt"><span>Synced from Hark ${new Date(localStorage.pulseSynced).toLocaleString('en-US',{timeZone:'Asia/Tokyo',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</span><button class="chip" id="resync">Check now</button></div><div class="opt"><span>Passcode saved on this device</span><button class="chip" id="forget">Forget</button></div>`:''}
  <div class="opt"><span>Back up to a file</span><button class="chip" id="bk">Export</button></div><div class="opt"><span>Restore a backup</span><button class="chip" id="rs">Restore</button></div><div class="opt"><span>Erase all data on this device</span><button class="chip" id="er" style="color:#ffb0a8">Erase</button></div>
- <p class="note">Pulse never uploads your data. It lives only in this browser.</p>`);
+ <p class="note">MCCS Pulse never uploads your data. It lives only in this browser.</p>`);
  $$('[data-t]').forEach(b=>b.onclick=()=>{CFG.theme=b.dataset.t;document.body.dataset.theme=CFG.theme;saveCfg();$$('[data-t]').forEach(x=>x.classList.toggle('on',x===b))});
  $$('[data-seg] button').forEach(b=>b.onclick=()=>{const n=b.parentNode.dataset.seg;CFG[n]=n==='tvSec'?+b.dataset.val:b.dataset.val;saveCfg();b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(n==='compare')render()});
  $$('[data-rs]').forEach(b=>b.onclick=()=>{CFG.rStyle=b.dataset.rs;saveCfg();$$('[data-rs]').forEach(x=>x.classList.toggle('on',x===b))});
  ['rTitle','rHead','rOrg'].forEach(k=>$('#'+k).oninput=e=>{CFG[k]=e.target.value;saveCfg()});
  $$('[data-sec]').forEach(i=>i.onchange=()=>{CFG.rSec[i.dataset.sec]=i.checked?1:0;saveCfg()});
  $$('[data-w]').forEach(t=>t.oninput=()=>{CFG.watch[+t.dataset.w]=t.value;saveCfg()});
- $('#bk').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S.posts)],{type:'application/json'}));a.download=`pulse-backup-${P.todayKey()}.json`;a.click()};
+ $('#bk').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S.posts)],{type:'application/json'}));a.download=`mccs-pulse-backup-${P.todayKey()}.json`;a.click()};
  $('#rs').onclick=()=>$('#bfile').click();
  const rsy=$('#resync');if(rsy)rsy.onclick=async()=>{localStorage.pulseSynced='';closeSheet();await sync();toast('Up to date')};const fg=$('#forget');if(fg)fg.onclick=()=>{delete localStorage.pulsePass;delete localStorage.pulseSynced;toast('Passcode forgotten on this device');closeSheet()};
- $('#er').onclick=async()=>{if(!confirm('Erase all posts stored in Pulse on this device?'))return;S.posts=[];await DB.set('posts',[]);closeSheet();render()}}
-$('#bfile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const arr=JSON.parse(await f.text());const r=P.merge(S.posts,arr);S.posts=r.posts;await DB.set('posts',S.posts);closeSheet();render();toast(`Restored ${arr.length} posts`)}catch(err){toast('That file is not a Pulse backup')}e.target.value=''};
+ $('#er').onclick=async()=>{if(!confirm('Erase all posts stored in MCCS Pulse on this device?'))return;S.posts=[];await DB.set('posts',[]);closeSheet();render()}}
+$('#bfile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const arr=JSON.parse(await f.text());const r=P.merge(S.posts,arr);S.posts=r.posts;await DB.set('posts',S.posts);closeSheet();render();toast(`Restored ${arr.length} posts`)}catch(err){toast('That file is not an MCCS Pulse backup')}e.target.value=''};
 // ---- TV mode ----
 const TV={i:0,timer:null,slides:[]};
 function tvBuild(){const {L,C,t,c}=ctx();const has=c.n>0;const top=[...L].sort((a,b)=>b.v-a.v).slice(0,3),pages=P.byPage(L).slice(0,6),ser=P.series(L,S.s,S.e,'v');const mx=Math.max(1,...pages.map(g=>g.v));
@@ -232,7 +232,7 @@ async function sync(){let meta;try{const r=await fetch('data.enc.json?t='+Date.n
   SYNC.meta=meta;const pass=localStorage.pulsePass;
   if(pass){if(localStorage.pulseSynced===meta.updated&&S.posts.length)return;try{await applyRemote(meta,pass);render();toast(`Latest data loaded · through ${P.fmtDate(meta.through,{year:'numeric'})}`)}catch(e){delete localStorage.pulsePass;S.locked=!S.posts.length;render()}}
   else{S.locked=true;render()}}
-function lockScreen(){return `<div class="empty lock"><div class="orb"></div><h1>Your social, at a glance.</h1><p>Enter your Pulse passcode to load the latest ${esc(CFG.rOrg)} metrics. You only do this once on each device.</p>
+function lockScreen(){return `<div class="empty lock"><div class="orb"></div><h1>Your social, at a glance.</h1><p>Enter your MCCS Pulse passcode to load the latest ${esc(CFG.rOrg)} metrics. You only do this once on each device.</p>
   <form id="unlock" class="unlock"><input id="pass" type="password" autocomplete="current-password" placeholder="Passcode" autocapitalize="none" spellcheck="false"><button class="btn" type="submit">Unlock</button></form><p class="mut sm" id="lockErr" style="min-height:20px"></p>
   ${S.posts.length?'<button class="more" id="skipLock" style="max-width:320px">Not now, use data on this device</button>':''}</div>`}
 function bindLock(){const f=$('#unlock');if(!f)return;f.onsubmit=async e=>{e.preventDefault();const p=$('#pass').value.trim();if(!p)return;$('#lockErr').textContent='Unlocking…';
