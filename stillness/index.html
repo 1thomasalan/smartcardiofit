@@ -64,7 +64,11 @@ body[data-orb=ring] .orb::before{background:none!important;box-shadow:none;borde
 body[data-orb=minimal] .orb::before,body[data-orb=minimal] .orb svg{display:none}
 body.notime .time{opacity:0}
 body.keepquote.sitting #quote{opacity:.85!important}
-.qtools{margin-top:12px;display:flex;gap:18px;justify-content:center;font-family:system-ui,sans-serif;font-size:12px;letter-spacing:1px;color:var(--mut)}
+.quote{width:100%}
+.qtools{width:100%;margin-top:14px;display:flex;justify-content:space-between;align-items:center}
+.qtools button{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;color:var(--mut);backdrop-filter:blur(6px);background:rgba(255,255,255,.04)}
+.qtools button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.qtools button:active{background:rgba(255,255,255,.12)}
 .top button#menuBtn{font-size:20px;letter-spacing:0;filter:grayscale(.3);opacity:.85}
 .sec{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:20px 0 2px}
 .sheet{max-height:82vh;overflow-y:auto}
@@ -80,7 +84,7 @@ body.keepquote.sitting #quote{opacity:.85!important}
 <div class="sky"></div>
 <div class="wrap">
   <div class="top hide"><span id="date"></span><button id="menuBtn" aria-label="Settings">⚙️</button></div>
-  <div class="quote hide" id="quote"><p id="qt"></p><small id="qa"></small><div class="qtools"><button id="qNext">↻ another</button><button id="qShare">share</button></div></div>
+  <div class="quote hide" id="quote"><p id="qt"></p><small id="qa"></small><div class="qtools"><button id="qNext" aria-label="Another quote"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button><button id="qShare" aria-label="Share quote"><svg viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></button></div></div>
   <div class="orbwrap">
     <div class="orb" id="orb">
       <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,255,255,.08)" stroke-width=".6"/><circle id="arc" cx="50" cy="50" r="48" fill="none" stroke="#f3d9a4" stroke-width=".9" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="301.6"/></svg>
@@ -175,7 +179,24 @@ let qi;function dayIndex(){const d=new Date();return (Math.floor((d-new Date(d.g
 function showQuote(i){qi=i;const q=QUOTES[i];const el=$('quote');el.style.opacity=0;setTimeout(()=>{$('qt').textContent='“'+q[0]+'”';$('qa').textContent=q[1];el.style.opacity=''},qi===undefined?0:400)}
 qi=dayIndex();$('qt').textContent='“'+QUOTES[qi][0]+'”';$('qa').textContent=QUOTES[qi][1];
 $('qNext').onclick=()=>{let n;do{n=Math.random()*QUOTES.length|0}while(n===qi);showQuote(n)};
-$('qShare').onclick=async()=>{const q=QUOTES[qi];const t=`“${q[0]}” — ${q[1]}`;try{if(navigator.share)await navigator.share({text:t});else{await navigator.clipboard.writeText(t);$('qShare').textContent='copied'}}catch(_){}};
+const CARD={dusk:['#0e1420','#2b3352','#6d5a7a','#c98f6b','#f3d9a4'],dawn:['#34416e','#8f8bc6','#f2a7a0','#ffd3a5','#fff1d6'],ocean:['#07142a','#173a5e','#2b7a9e','#6fd6d6','#c8f6f2'],forest:['#0a1613','#1f3b33','#55806a','#b9cc8c','#e6f2c4'],sakura:['#1f1830','#7a5a85','#e59ab5','#ffd3de','#ffe3ec'],midnight:['#000000','#090b11','#141a28','#1b2131','#cfd8ec']};
+function quoteCard(){const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const p=CARD[S.theme]||CARD.dusk;
+ const g=x.createRadialGradient(W/2,H*1.15,0,W/2,H*1.15,H*1.05);g.addColorStop(0,p[3]);g.addColorStop(.3,p[2]);g.addColorStop(.6,p[1]);g.addColorStop(.95,p[0]);x.fillStyle=p[0];x.fillRect(0,0,W,H);x.fillStyle=g;x.fillRect(0,0,W,H);
+ x.fillStyle='rgba(255,255,255,.35)';for(let i=0;i<70;i++){const sx=(i*397)%W,sy=(i*233)%(H*.55);x.beginPath();x.arc(sx,sy,(i%3)*.7+.6,0,7);x.fill()}
+ const og=x.createRadialGradient(W/2,H*.78,0,W/2,H*.78,260);og.addColorStop(0,p[4]+'66');og.addColorStop(1,p[4]+'00');x.fillStyle=og;x.beginPath();x.arc(W/2,H*.78,260,0,7);x.fill();
+ x.strokeStyle=p[4]+'aa';x.lineWidth=3;x.beginPath();x.arc(W/2,H*.78,150,0,7);x.stroke();
+ const q=QUOTES[qi];x.fillStyle='#f4f1ea';x.textAlign='center';let fs=64;let lines;
+ const wrap=(t,f)=>{x.font=`italic ${f}px Georgia, 'Times New Roman', serif`;const w=t.split(' '),L=[];let l='';w.forEach(wd=>{const tt=l?l+' '+wd:wd;if(x.measureText(tt).width>W-200&&l){L.push(l);l=wd}else l=tt});L.push(l);return L};
+ do{lines=wrap('“'+q[0]+'”',fs);fs-=4}while(lines.length*fs*1.4>H*.48&&fs>34);fs+=4;
+ const lh=fs*1.42,top=H*.36-lines.length*lh/2;lines.forEach((l,i)=>x.fillText(l,W/2,top+i*lh+fs));
+ x.font='500 30px system-ui, sans-serif';x.fillStyle='rgba(244,241,234,.7)';x.letterSpacing='6px';x.fillText(q[1].toUpperCase(),W/2,top+lines.length*lh+fs+40);
+ x.font='26px system-ui, sans-serif';x.fillStyle='rgba(244,241,234,.55)';x.fillText('STILLNESS',W/2,H-70);
+ return new Promise(r=>c.toBlob(r,'image/png'))}
+$('qShare').onclick=async()=>{const q=QUOTES[qi];const text=`“${q[0]}” — ${q[1]}`;
+ try{const blob=await quoteCard();const file=new File([blob],'stillness-quote.png',{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text});return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='stillness-quote.png';a.click();
+ }catch(e){if(e&&e.name==='AbortError')return;try{await navigator.clipboard.writeText(text)}catch(_){}}};
 $('date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 
 // picker
