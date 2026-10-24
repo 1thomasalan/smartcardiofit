@@ -312,6 +312,13 @@ function settings(){
  $('resetLook').onclick=()=>{const keep={min:S.min,log:S.log};S=Object.assign({},D,keep);save();applyLook();$('soundBtn').textContent=SNAME[S.sound];settings()};
 }
 $('menuBtn').onclick=settings;
+const EMBED=new URLSearchParams(location.search).has('embed');
+if(EMBED){const b=document.createElement('button');b.textContent='‹ Streak';b.style.cssText='font:inherit;letter-spacing:2px;color:inherit';b.onclick=()=>{if(T)stop(true);parent.postMessage('stillness-close','*')};$('date').replaceWith(b)}
+// fullscreen like a native app: installed apps open fullscreen via the manifest; in a browser tab, go fullscreen on first touch
+(function(){const inApp=matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches||window.self!==window.top;
+ if(inApp)return;const f=()=>{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)d.requestFullscreen({navigationUI:'hide'}).catch(()=>{})};
+ document.addEventListener('pointerdown',f,{once:true})})();
+
 $('soundBtn').onclick=()=>{openSheet(`<h3>Sound</h3>
  <div class="opt"><span>Ending sound</span>${seg('sound',[['bowl','Bowl'],['gong','Gong'],['chime','Chime']])}</div>
  <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['rain','Rain'],['ocean','Ocean'],['brown','Hush'],['om','Om']])}</div>`);wireSegs()};
