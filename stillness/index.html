@@ -49,13 +49,38 @@ input[type=range]{width:100%;accent-color:#f3d9a4}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 .end h2{font-weight:400;font-size:30px;margin:0}.end p{color:var(--mut);font-family:system-ui,sans-serif;font-size:14px;letter-spacing:1px}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.3s;z-index:4}.scrim.show{opacity:1;pointer-events:auto}
+
+:root{--sky:radial-gradient(120% 80% at 50% 110%,#c98f6b 0%,#6d5a7a 28%,#2b3352 55%,#0e1420 85%)}
+body[data-theme=dawn]{--sky:radial-gradient(120% 80% at 50% 110%,#ffd3a5 0%,#f2a7a0 26%,#8f8bc6 56%,#34416e 92%);--glow:#fff1d6}
+body[data-theme=ocean]{--sky:radial-gradient(120% 80% at 50% 110%,#6fd6d6 0%,#2b7a9e 28%,#173a5e 58%,#07142a 90%);--glow:#c8f6f2}
+body[data-theme=forest]{--sky:radial-gradient(120% 80% at 50% 110%,#b9cc8c 0%,#55806a 28%,#1f3b33 58%,#0a1613 90%);--glow:#e6f2c4}
+body[data-theme=sakura]{--sky:radial-gradient(120% 80% at 50% 110%,#ffd3de 0%,#e59ab5 27%,#7a5a85 57%,#1f1830 90%);--glow:#ffe3ec}
+body[data-theme=midnight]{--sky:radial-gradient(120% 80% at 50% 110%,#1b2131 0%,#090b11 50%,#000 85%);--glow:#cfd8ec}
+.sky{background:var(--sky)!important}
+#arc{stroke:var(--glow)}
+.orb::before{background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--glow) 32%,transparent),color-mix(in srgb,var(--glow) 9%,transparent) 60%,transparent 72%)!important}
+body.guided.sitting .orb::before{animation:none!important;transform:scale(var(--s,.9));opacity:calc(.55 + (var(--s,.9) - .8) * 1.6);transition:transform .3s linear,opacity .3s linear}
+body[data-orb=ring] .orb::before{background:none!important;box-shadow:none;border:1px solid color-mix(in srgb,var(--glow) 45%,transparent)}
+body[data-orb=minimal] .orb::before,body[data-orb=minimal] .orb svg{display:none}
+body.notime .time{opacity:0}
+body.keepquote.sitting #quote{opacity:.85!important}
+.qtools{margin-top:12px;display:flex;gap:18px;justify-content:center;font-family:system-ui,sans-serif;font-size:12px;letter-spacing:1px;color:var(--mut)}
+.top button#menuBtn{font-size:20px;letter-spacing:0;filter:grayscale(.3);opacity:.85}
+.sec{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:20px 0 2px}
+.sheet{max-height:82vh;overflow-y:auto}
+.seg{flex-wrap:wrap;justify-content:flex-end}
+.swatches{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 4px}
+.sw{width:44px;height:44px;border-radius:50%;border:2px solid transparent;position:relative}
+.sw.on{border-color:#fff}
+.sw small{position:absolute;top:48px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--mut);white-space:nowrap}
+.swrow{padding-bottom:18px}
 </style>
 </head>
 <body>
 <div class="sky"></div>
 <div class="wrap">
-  <div class="top hide"><span id="date"></span><button id="menuBtn" aria-label="Settings">◦ ◦ ◦</button></div>
-  <div class="quote hide" id="quote"><p id="qt"></p><small id="qa"></small></div>
+  <div class="top hide"><span id="date"></span><button id="menuBtn" aria-label="Settings">⚙️</button></div>
+  <div class="quote hide" id="quote"><p id="qt"></p><small id="qa"></small><div class="qtools"><button id="qNext">↻ another</button><button id="qShare">share</button></div></div>
   <div class="orbwrap">
     <div class="orb" id="orb">
       <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,255,255,.08)" stroke-width=".6"/><circle id="arc" cx="50" cy="50" r="48" fill="none" stroke="#f3d9a4" stroke-width=".9" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="301.6"/></svg>
@@ -136,16 +161,22 @@ const QUOTES=[
 ["One today is worth two tomorrows.","Benjamin Franklin"]
 ];
 const KEY='stillness-v1';
-const D={min:10,sound:'bowl',start:true,interval:0,log:{},vol:.8};
+const D={min:10,sound:'bowl',start:true,interval:0,log:{},vol:.8,theme:'dusk',orb:'glow',showTime:true,keepQuote:false,prep:0,breath:'natural',ambient:'off',ambVol:.5,strikes:3,vib:true};
 let S=Object.assign({},D,JSON.parse(localStorage.getItem(KEY)||'{}'));const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
 const $=id=>document.getElementById(id);
 const ds=d=>{const z=new Date(d);z.setMinutes(z.getMinutes()-z.getTimezoneOffset());return z.toISOString().slice(0,10)};
 const today=()=>ds(new Date());
+const THEMES={dusk:['Dusk','#0e1420','linear-gradient(#2b3352,#c98f6b)'],dawn:['Dawn','#34416e','linear-gradient(#8f8bc6,#ffd3a5)'],ocean:['Ocean','#07142a','linear-gradient(#173a5e,#6fd6d6)'],forest:['Forest','#0a1613','linear-gradient(#1f3b33,#b9cc8c)'],sakura:['Sakura','#1f1830','linear-gradient(#7a5a85,#ffd3de)'],midnight:['Midnight','#000000','linear-gradient(#000,#1b2131)']};
+function applyLook(){document.body.dataset.theme=S.theme;document.body.dataset.orb=S.orb;document.body.classList.toggle('notime',!S.showTime);document.body.classList.toggle('keepquote',S.keepQuote);document.body.classList.toggle('guided',S.breath!=='natural');document.querySelector('meta[name=theme-color]').content=THEMES[S.theme][1]}
+applyLook();
 
-// daily quote
-function dailyQuote(){const d=new Date();const n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5)+d.getFullYear()*7;const q=QUOTES[n%QUOTES.length];$('qt').textContent='“'+q[0]+'”';$('qa').textContent=q[1]}
+// quotes
+let qi;function dayIndex(){const d=new Date();return (Math.floor((d-new Date(d.getFullYear(),0,0))/864e5)+d.getFullYear()*7)%QUOTES.length}
+function showQuote(i){qi=i;const q=QUOTES[i];const el=$('quote');el.style.opacity=0;setTimeout(()=>{$('qt').textContent='“'+q[0]+'”';$('qa').textContent=q[1];el.style.opacity=''},qi===undefined?0:400)}
+qi=dayIndex();$('qt').textContent='“'+QUOTES[qi][0]+'”';$('qa').textContent=QUOTES[qi][1];
+$('qNext').onclick=()=>{let n;do{n=Math.random()*QUOTES.length|0}while(n===qi);showQuote(n)};
+$('qShare').onclick=async()=>{const q=QUOTES[qi];const t=`“${q[0]}” — ${q[1]}`;try{if(navigator.share)await navigator.share({text:t});else{await navigator.clipboard.writeText(t);$('qShare').textContent='copied'}}catch(_){}};
 $('date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-dailyQuote();
 
 // picker
 const MINS=[1,3,5,10,15,20,30];
@@ -157,11 +188,10 @@ function showTime(s){$('time').textContent=fmt(s)}
 drawPicker();showTime(S.min*60);
 const SNAME={bowl:'Bowl',gong:'Gong',chime:'Chime'};$('soundBtn').textContent=SNAME[S.sound];
 
-// ---- sound synthesis ----
+// ---- bells ----
 let ac;function ctx(){ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();return ac}
 function strike(type=S.sound,gain=S.vol){
  const a=ctx(),t=a.currentTime,out=a.createGain();out.gain.value=gain;
- // gentle reverb-ish via delay feedback
  const dl=a.createDelay();dl.delayTime.value=.13;const fb=a.createGain();fb.gain.value=.28;const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2400;
  out.connect(a.destination);out.connect(dl);dl.connect(lp);lp.connect(fb);fb.connect(dl);lp.connect(a.destination);
  const P={bowl:{f:220,parts:[[1,1,9],[2.76,.5,6],[5.40,.25,4],[8.93,.12,2.5],[1.006,.6,9]]},
@@ -173,72 +203,121 @@ function strike(type=S.sound,gain=S.vol){
   o.connect(g);g.connect(out);o.start(t);o.stop(t+dec+.1)});
  if(type==='gong'){const n=a.createBufferSource(),b=a.createBuffer(1,a.sampleRate*.4,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);n.buffer=b;const bp=a.createBiquadFilter();bp.type='bandpass';bp.frequency.value=180;const g=a.createGain();g.gain.value=.25;n.connect(bp);bp.connect(g);g.connect(out);n.start(t)}
 }
-function finalBell(){strike();setTimeout(()=>strike(S.sound,S.vol*.75),S.sound==='chime'?2200:4200);setTimeout(()=>strike(S.sound,S.vol*.55),S.sound==='chime'?4400:8400)}
+function finalBell(){const gap=S.sound==='chime'?2200:4200;strike();if(S.strikes>1){setTimeout(()=>strike(S.sound,S.vol*.75),gap);setTimeout(()=>strike(S.sound,S.vol*.55),gap*2)}}
+
+// ---- ambient soundscapes ----
+let amb=null;
+function noiseBuf(a,kind){const len=a.sampleRate*4,b=a.createBuffer(2,len,a.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);let last=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;if(kind==='brown'){last=(last+.02*w)/1.02;d[i]=last*3.5}else d[i]=w}}return b}
+function startAmbient(kind=S.ambient,preview=false){
+ stopAmbient(0);if(kind==='off')return;
+ const a=ctx(),t=a.currentTime,master=a.createGain();master.gain.setValueAtTime(0,t);master.gain.linearRampToValueAtTime(S.ambVol*.6,t+(preview?.5:4));master.connect(a.destination);
+ const nodes=[];const src=b=>{const s=a.createBufferSource();s.buffer=b;s.loop=true;s.start();nodes.push(s);return s};
+ const lfo=(f,depth,target)=>{const o=a.createOscillator(),g=a.createGain();o.frequency.value=f;g.gain.value=depth;o.connect(g);g.connect(target);o.start();nodes.push(o)};
+ if(kind==='rain'){const s=src(noiseBuf(a,'white'));const hp=a.createBiquadFilter();hp.type='highpass';hp.frequency.value=500;const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4500;const g=a.createGain();g.gain.value=.35;s.connect(hp);hp.connect(lp);lp.connect(g);g.connect(master);
+   const s2=src(noiseBuf(a,'brown'));const g2=a.createGain();g2.gain.value=.5;s2.connect(g2);g2.connect(master)}
+ if(kind==='ocean'){const s=src(noiseBuf(a,'brown'));const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=650;const g=a.createGain();g.gain.value=.55;lfo(.075,.45,g.gain);lfo(.075,400,lp.frequency);s.connect(lp);lp.connect(g);g.connect(master)}
+ if(kind==='brown'){const s=src(noiseBuf(a,'brown'));const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;s.connect(lp);lp.connect(master)}
+ if(kind==='om'){[[136.1,.22],[204.15,.09],[272.2,.07],[136.6,.15]].forEach(([f,v])=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(master);o.start();nodes.push(o)});const tg=a.createGain();master.disconnect();master.connect(tg);tg.connect(a.destination);tg.gain.value=.8;lfo(.1,.2,tg.gain)}
+ amb={master,nodes};
+}
+function stopAmbient(fade=3){if(!amb)return;const a=ctx(),{master,nodes}=amb;amb=null;const t=a.currentTime;master.gain.cancelScheduledValues(t);master.gain.setValueAtTime(master.gain.value,t);master.gain.linearRampToValueAtTime(0,t+fade+.05);setTimeout(()=>nodes.forEach(n=>{try{n.stop()}catch(_){}}),(fade+.2)*1000)}
+let previewTimer;function previewAmbient(k){clearTimeout(previewTimer);startAmbient(k,true);previewTimer=setTimeout(()=>{if(!T)stopAmbient(1.5)},5000)}
+
+// ---- breathing guide ----
+const BREATH={natural:null,calm:[['breathe in',4],['breathe out',6]],box:[['breathe in',4],['hold',4],['breathe out',4],['hold',4]],relax:[['breathe in',4],['hold',7],['breathe out',8]]};
+function breathState(el){const p=BREATH[S.breath];const cyc=p.reduce((a,x)=>a+x[1],0);let t=el%cyc,lvl=.82;for(let i=0;i<p.length;i++){const [n,d]=p[i];if(t<d){const f=t/d;if(n==='breathe in')lvl=.82+.26*f;else if(n==='breathe out')lvl=1.08-.26*f;else lvl=(i>0&&p[i-1][0]==='breathe in')?1.08:.82;return [n,lvl,Math.ceil(d-t)]}t-=d}return ['',lvl,0]}
 
 // ---- timer ----
 let T=null,wake=null;const C=301.6;
 async function begin(){
- ctx();
- try{wake=await navigator.wakeLock.request('screen')}catch(_){}
- document.body.classList.add('sitting');
- const total=S.min*60;T={total,end:Date.now()+total*1000+ (S.start?0:0),paused:false,remain:total,lastInt:0,settle:5};
- setGo('pause');$('hint').textContent='settle in';
- if(S.start) strike(S.sound,S.vol*.6);
- T.iv=setInterval(loop,250);loop();
+ ctx();try{wake=await navigator.wakeLock.request('screen')}catch(_){}
+ document.body.classList.add('sitting');const total=S.min*60;
+ T={total,paused:false,remain:total,lastInt:0,prep:S.prep,prepEnd:Date.now()+S.prep*1000,started:false};
+ setGo('pause');T.iv=setInterval(loop,200);
+ if(!S.prep)startSit();else{$('hint').textContent='get comfortable';}
+ loop();
 }
+function startSit(){T.started=true;T.end=Date.now()+T.total*1000;if(S.start)strike(S.sound,S.vol*.6);startAmbient()}
 function loop(){
  if(T.paused)return;
- T.remain=(T.end-Date.now())/1000;
- const el=T.total-T.remain;
- $('arc').style.strokeDashoffset=C*(1-Math.min(1,el/T.total));
- showTime(T.remain);
- $('hint').textContent=el<8?'settle in':(Math.floor(el/5)%2?'breathe out':'breathe in');
+ if(!T.started){const r=(T.prepEnd-Date.now())/1000;$('time').textContent=Math.max(1,Math.ceil(r));$('hint').textContent='get comfortable';if(r<=0)startSit();return}
+ T.remain=(T.end-Date.now())/1000;const el=T.total-T.remain;
+ $('arc').style.strokeDashoffset=C*(1-Math.min(1,el/T.total));showTime(T.remain);
+ if(S.breath==='natural')$('hint').textContent=el<8?'settle in':(Math.floor(el/5)%2?'breathe out':'breathe in');
+ else{const [n,l,c]=breathState(el);document.body.style.setProperty('--s',l);$('hint').textContent=n+(c?' · '+c:'')}
  if(S.interval&&el>0){const k=Math.floor(el/(S.interval*60));if(k>T.lastInt&&T.remain>5){T.lastInt=k;strike(S.sound,S.vol*.4)}}
+ if(amb&&T.remain<8&&!T.fading){T.fading=true;stopAmbient(Math.max(1,T.remain))}
  if(T.remain<=0)complete();
 }
 function pauseResume(){
  if(!T)return begin();
- if(T.paused){T.end=Date.now()+T.remain*1000;T.paused=false;setGo('pause');document.body.classList.add('sitting')}
- else{T.paused=true;setGo('play');$('hint').textContent='paused · hold to end';document.body.classList.remove('sitting')}
+ if(T.paused){if(T.started)T.end=Date.now()+T.remain*1000;else T.prepEnd=Date.now()+1000;T.paused=false;setGo('pause');document.body.classList.add('sitting');if(T.started&&S.ambient!=='off'&&!amb)startAmbient()}
+ else{T.paused=true;setGo('play');$('hint').textContent='paused · hold to end';document.body.classList.remove('sitting');stopAmbient(1.5)}
 }
 function stop(record){
- clearInterval(T.iv);try{wake&&wake.release()}catch(_){}wake=null;
- const sat=Math.round((T.total-Math.max(0,T.remain)));
+ clearInterval(T.iv);try{wake&&wake.release()}catch(_){}wake=null;stopAmbient(2);
+ const sat=T.started?Math.round(T.total-Math.max(0,T.remain)):0;
  if(record&&sat>=30){const l=S.log[today()]||{n:0,s:0};l.n++;l.s+=sat;S.log[today()]=l;save()}
  T=null;document.body.classList.remove('sitting');setGo('play');$('arc').style.strokeDashoffset=C;showTime(S.min*60);$('hint').textContent='breathe';return sat;
 }
-function complete(){const total=T.total;stop(true);finalBell();if(navigator.vibrate)navigator.vibrate([400,200,400]);
+function complete(){const total=T.total;stop(true);finalBell();if(S.vib&&navigator.vibrate)navigator.vibrate([400,200,400]);
  $('endmsg').textContent=`${Math.round(total/60)} minute${total>=120?'s':''} of stillness · ${streak()} day${streak()===1?'':'s'} in a row`;$('end').classList.add('show')}
 $('endOk').onclick=()=>$('end').classList.remove('show');
 function setGo(s){$('goIcon').innerHTML=s==='pause'?'<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/>':'<path d="M8 5v14l11-7z"/>'}
-// tap = start/pause, long press = end early
 let lp;const go=$('go');
-go.addEventListener('pointerdown',()=>{lp=setTimeout(()=>{lp=null;if(T){const s=stop(true);if(navigator.vibrate)navigator.vibrate(60)}},800)});
+go.addEventListener('pointerdown',()=>{lp=setTimeout(()=>{lp=null;if(T){stop(true);if(navigator.vibrate)navigator.vibrate(60)}},800)});
 go.addEventListener('pointerup',()=>{if(lp){clearTimeout(lp);lp=null;pauseResume()}});
 go.addEventListener('pointerleave',()=>{if(lp){clearTimeout(lp);lp=null}});
-
 function streak(){let n=0,d=new Date();if(!S.log[ds(d)])d.setDate(d.getDate()-1);while(S.log[ds(d)]){n++;d.setDate(d.getDate()-1)}return n}
 
 // ---- sheets ----
-function openSheet(html){$('sheetBody').innerHTML=html;$('sheet').classList.add('show');$('scrim').classList.add('show')}
+function openSheet(html){$('sheetBody').innerHTML=html;$('sheet').classList.add('show');$('scrim').classList.add('show');$('sheet').scrollTop=0}
 function closeSheet(){$('sheet').classList.remove('show');$('scrim').classList.remove('show')}
 $('closeSheet').onclick=closeSheet;$('scrim').onclick=closeSheet;
 function openCustom(){openSheet(`<h3>Custom length</h3><div class="opt"><span>Minutes</span><b id="cv">${S.min}</b></div><input type="range" min="1" max="90" value="${S.min}" id="cr" style="margin-top:14px">`);
  $('cr').oninput=e=>{S.min=+e.target.value;$('cv').textContent=S.min;showTime(S.min*60)};$('cr').onchange=()=>{save();drawPicker()}}
-$('soundBtn').onclick=()=>{
- const seg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-k="${k}" data-v="${v}" class="${String(S[k])===String(v)?'on':''}">${l}</button>`).join('')}</div>`;
- openSheet(`<h3>Sound</h3>
+const seg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-k="${k}" data-v="${v}" class="${String(S[k])===String(v)?'on':''}">${l}</button>`).join('')}</div>`;
+function wireSegs(){document.querySelectorAll('.sheet .seg button').forEach(b=>b.onclick=()=>{const k=b.dataset.k;let v=b.dataset.v;v=v==='true'?true:v==='false'?false:isNaN(v)?v:+v;S[k]=v;save();b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+ if(k==='sound'){$('soundBtn').textContent=SNAME[v];strike(v)}
+ if(k==='ambient')previewAmbient(v);
+ applyLook()})}
+function settings(){
+ const sw=Object.entries(THEMES).map(([k,[n,,g]])=>`<button class="sw ${S.theme===k?'on':''}" data-theme="${k}" style="background:${g}"><small>${n}</small></button>`).join('');
+ openSheet(`<h3>Settings</h3>
+ <div class="sec">Look</div>
+ <div class="swrow"><div class="swatches">${sw}</div></div>
+ <div class="opt"><span>Orb</span>${seg('orb',[['glow','Glow'],['ring','Ring'],['minimal','Minimal']])}</div>
+ <div class="opt"><span>Show countdown</span>${seg('showTime',[[true,'On'],[false,'Off']])}</div>
+ <div class="opt"><span>Quote while sitting</span>${seg('keepQuote',[[false,'Hide'],[true,'Show']])}</div>
+ <div class="sec">Session</div>
+ <div class="opt"><span>Settle-in time</span>${seg('prep',[[0,'Off'],[10,'10s'],[30,'30s']])}</div>
+ <div class="opt"><span>Breathing guide</span>${seg('breath',[['natural','Natural'],['calm','4·6'],['box','Box'],['relax','4·7·8']])}</div>
+ <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['rain','Rain'],['ocean','Ocean'],['brown','Hush'],['om','Om']])}</div>
+ <div class="opt" style="border:0"><span>Background volume</span></div><input type="range" min="0.05" max="1" step="0.05" value="${S.ambVol}" id="avol">
+ <div class="sec">Bells</div>
  <div class="opt"><span>Ending sound</span>${seg('sound',[['bowl','Bowl'],['gong','Gong'],['chime','Chime']])}</div>
+ <div class="opt"><span>Ending strikes</span>${seg('strikes',[[1,'1'],[3,'3']])}</div>
  <div class="opt"><span>Starting bell</span>${seg('start',[[true,'On'],[false,'Off']])}</div>
  <div class="opt"><span>Interval bell</span>${seg('interval',[[0,'Off'],[1,'1m'],[5,'5m'],[10,'10m']])}</div>
- <div class="opt" style="border:0"><span>Volume</span></div><input type="range" min="0.1" max="1" step="0.05" value="${S.vol}" id="vol">`);
- document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{const k=b.dataset.k;let v=b.dataset.v;v=v==='true'?true:v==='false'?false:isNaN(v)?v:+v;S[k]=v;save();b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(k==='sound'){$('soundBtn').textContent=SNAME[v];strike(v)}});
+ <div class="opt"><span>Vibrate at end</span>${seg('vib',[[true,'On'],[false,'Off']])}</div>
+ <div class="opt" style="border:0"><span>Bell volume</span></div><input type="range" min="0.1" max="1" step="0.05" value="${S.vol}" id="vol">
+ <div class="sec">More</div>
+ <div class="opt"><button id="resetLook">Restore original look & sound</button></div>
+ <p style="color:var(--mut);line-height:1.6;font-size:13px">Tap the circle to begin or pause, hold it to end early. Tap ↻ for another quote. Sessions stay on this phone and also show in Streak.</p>
+ <p style="color:var(--mut);font-size:12px">Stillness · made for Alan by Hark</p>`);
+ wireSegs();
+ document.querySelectorAll('.sw').forEach(b=>b.onclick=()=>{S.theme=b.dataset.theme;save();applyLook();document.querySelectorAll('.sw').forEach(x=>x.classList.toggle('on',x===b))});
  $('vol').onchange=e=>{S.vol=+e.target.value;save();strike()};
-};
+ $('avol').onchange=e=>{S.ambVol=+e.target.value;save();if(S.ambient!=='off')previewAmbient(S.ambient)};
+ $('resetLook').onclick=()=>{const keep={min:S.min,log:S.log};S=Object.assign({},D,keep);save();applyLook();$('soundBtn').textContent=SNAME[S.sound];settings()};
+}
+$('menuBtn').onclick=settings;
+$('soundBtn').onclick=()=>{openSheet(`<h3>Sound</h3>
+ <div class="opt"><span>Ending sound</span>${seg('sound',[['bowl','Bowl'],['gong','Gong'],['chime','Chime']])}</div>
+ <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['rain','Rain'],['ocean','Ocean'],['brown','Hush'],['om','Om']])}</div>`);wireSegs()};
 $('statsBtn').onclick=()=>{const v=Object.values(S.log);const mins=Math.round(v.reduce((a,l)=>a+l.s,0)/60);
- let dots='';for(let i=27;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const l=S.log[ds(d)];dots+=`<span title="${ds(d)}" style="width:14px;height:14px;border-radius:50%;display:inline-block;margin:3px;background:${l?'rgba(243,217,164,'+Math.min(1,.35+l.s/1800)+')':'rgba(255,255,255,.08)'}"></span>`}
+ let dots='';for(let i=27;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const l=S.log[ds(d)];dots+=`<span title="${ds(d)}" style="width:14px;height:14px;border-radius:50%;display:inline-block;margin:3px;background:${l?'color-mix(in srgb,var(--glow) '+Math.round(Math.min(1,.35+l.s/1800)*100)+'%,transparent)':'rgba(255,255,255,.08)'}"></span>`}
  openSheet(`<h3>Your journey</h3><div class="stats"><div><b>${streak()}</b><span>day streak</span></div><div><b>${v.reduce((a,l)=>a+l.n,0)}</b><span>sessions</span></div><div><b>${mins}</b><span>minutes</span></div></div><div style="text-align:center;margin-top:10px">${dots}</div><p style="text-align:center;color:var(--mut);font-size:12px;letter-spacing:1px;margin-top:10px">LAST 4 WEEKS</p>`)};
-$('menuBtn').onclick=()=>openSheet(`<h3>About</h3><p style="color:var(--mut);line-height:1.6;font-size:14px">Tap the circle button to begin or pause. Hold it to end early. A new quote greets you each day. Your sessions stay on this phone.</p><p style="color:var(--mut);font-size:12px;margin-top:20px">Stillness · made for Alan by Hark</p>`);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 </body>
