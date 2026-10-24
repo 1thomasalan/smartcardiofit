@@ -1,6 +1,6 @@
 // Pulse UI
 const P=Pulse,$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const DEF={theme:'dusk',compare:'prior',rStyle:'navy',rTitle:'Social Media Report',rHead:'DIGITAL MARKETING',rOrg:'MCCS Okinawa',rSec:{summary:1,chart:1,eff:1,top:1,watch:1,team:1},tvSec:12,tvPlat:'all',watch:['Meta replaces Facebook Reach with Viewers on Oct 31, 2026, so we report Views.','Confirm the Instagram account is linked to the Meta business portfolio.','Post metrics are lifetime to date; the newest posts are still growing.']};
+const DEF={theme:'dusk',compare:'prior',rStyle:'navy',rTitle:'Social Media Report',rHead:'DIGITAL MARKETING',rOrg:'MCCS Okinawa',rSec:{summary:1,chart:1,eff:1,top:1,watch:1,team:1},watch:['Meta replaces Facebook Reach with Viewers on Oct 31, 2026, so we report Views.','Confirm the Instagram account is linked to the Meta business portfolio.','Post metrics are lifetime to date; the newest posts are still growing.']};
 let CFG;try{CFG=Object.assign({},DEF,JSON.parse(localStorage.pulseCfg||'{}'));CFG.rSec=Object.assign({},DEF.rSec,CFG.rSec||{});}catch(e){CFG={...DEF}}
 const saveCfg=()=>localStorage.pulseCfg=JSON.stringify(CFG);
 const S={posts:[],preset:localStorage.pulsePreset||'30',s:null,e:null,plat:'all',view:'overview',metric:'v',q:'',acct:'all',sort:'v',limit:40};
@@ -26,7 +26,7 @@ function ctx(plat){plat=plat||S.plat;setRange();const L=P.filter(S.posts,S.s,S.e
 const dl=(a,b,has)=>{const p=P.pct(a,b);if(!has||p==null||!isFinite(p))return '<span class="mut">no comparison data</span>';return `<span class="${p>=0?'up':'down'}">${p>=0?'▲':'▼'} ${Math.abs(p).toFixed(1)}%</span>`};
 const cmpLabel=()=>CFG.compare==='yoy'||S.preset==='ytd'?'same period last year':'prior period';
 function greet(){const h=+new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',hour:'numeric',hour12:false}).format(new Date());return (h<12?'Good morning':h<18?'Good afternoon':'Good evening')+', Alan'}
-const ICON={gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
+const ICON={gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
  imp:'<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>'};
 // ---- chart ----
 function chartSVG(ser,w,h,opt){opt=opt||{};const pts=ser.pts;if(pts.length<2)return '<p class="mut">Not enough data points to chart.</p>';
@@ -54,7 +54,7 @@ function header(){const end=dataEnd();const stale=S.e>end?`Data through ${P.fmtD
   return `<div class="range">${PRESETS.map(([k,l])=>`<button data-p="${k}" class="${S.preset===k?'on':''}">${l}</button>`).join('')}</div>
   <div class="rlabel">${P.rangeLabel(S.s,S.e)}<small>${stale}</small></div>
   <div class="range" style="margin-top:12px">${[['all','All'],['fb','Facebook'],['ig','Instagram']].map(([k,l])=>`<button data-f="${k}" class="chip ${S.plat===k?'on':''}">${l}</button>`).join('')}</div>`}
-function topbar(){return `<div class="top"><span>MCCS Pulse</span><div style="display:flex;gap:10px"><button class="icon" id="impBtn" aria-label="Import">${ICON.imp}</button><button class="icon" id="gear" aria-label="Settings">${ICON.gear}</button></div></div>`}
+function topbar(){return `<div class="top"><span>MCCS Pulse</span><button class="icon" id="gear" aria-label="Settings">${ICON.gear}</button></div>`}
 // ---- render ----
 function render(){const app=$('#app');
   if(S.locked&&SYNC.meta){$('#dock').style.display='none';app.innerHTML=topbar()+lockScreen();bindTop();bindLock();return;}
@@ -73,7 +73,7 @@ function render(){const app=$('#app');
   if(S.view==='explore'){const q=$('#q');q.oninput=()=>{S.q=q.value;S.limit=40;renderList(L)};$('#acctSel').onchange=e=>{S.acct=e.target.value;S.limit=40;renderList(L)};$('#sortSel').onchange=e=>{S.sort=e.target.value;renderList(L)};renderList(L);
     $$('.hm td[data-h]').forEach(td=>td.onclick=()=>{const [w,h]=td.dataset.h.split(',').map(Number);const list=L.filter(r=>{const d=new Date(r.t+9*3600e3);return (d.getUTCDay()+6)%7===w&&Math.floor(d.getUTCHours()/3)===h});listSheet(`${WD[w]} ${hb(h)}`,list)})}
 }
-function bindTop(){$('#gear').onclick=settings;$('#impBtn').onclick=importSheet}
+function bindTop(){$('#gear').onclick=settings}
 const kpi=(k,l,v,d,s)=>`<button class="card kpi" data-k="${k}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div><div class="s">${s}</div></button>`;
 function overview(L,C,t,c){const has=c.n>0;const top=[...L].sort((a,b)=>b.v-a.v).slice(0,5),pages=P.byPage(L),ser=P.series(L,S.s,S.e,S.metric);
   return `<div class="hero"><h1>${greet()}</h1><button class="big" data-k="v">${P.fmt(t.v)}</button><div class="sub">views · ${t.n} posts</div><div class="delta">${dl(t.v,c.v,has)} <span class="mut">vs ${cmpLabel()}</span></div></div>
@@ -132,7 +132,7 @@ document.addEventListener('dragover',e=>e.preventDefault());document.addEventLis
 $('#file').onchange=e=>{importFiles(e.target.files);e.target.value=''};
 async function importFiles(files){files=[...files];const msgs=[];for(const f of files){try{const m=P.mapRows(P.parseCSV(await f.text()));const r=P.merge(S.posts,m.rows);S.posts=dropExcluded(r.posts);msgs.push(`${m.plat==='fb'?'Facebook':'Instagram'}: ${r.add} new, ${r.upd} updated`)}catch(err){msgs.push(`${f.name}: ${err.message}`)}}
   await DB.set('posts',S.posts);closeSheet();render();toast(msgs.join(' · '))}
-function importSheet(){openSheet(`<h3>Import exports</h3><div class="drop" id="drop">Drop Facebook and Instagram CSVs here<br><button class="btn" id="pick" style="margin-top:12px">Choose files</button></div><div class="sec">How to export</div><p class="mut" style="font-size:14px;line-height:1.6;margin:0">Meta Business Suite › Insights › Content › Export data. Facebook tab, all Pages, Content level Post, Data view Lifetime, Filter Creation date. Repeat on the Instagram tab. Re-importing updates metrics; nothing is duplicated.</p>`);bindDrop()}
+function importSheet(){openSheet(`<button class="back" id="toSet">‹ Settings</button><h3>Import exports</h3><div class="drop" id="drop">Drop Facebook and Instagram CSVs here<br><button class="btn" id="pick" style="margin-top:12px">Choose files</button></div><div class="sec">How to export</div><p class="mut" style="font-size:14px;line-height:1.6;margin:0">Meta Business Suite › Insights › Content › Export data. Facebook tab, all Pages, Content level Post, Data view Lifetime, Filter Creation date. Repeat on the Instagram tab. Re-importing updates metrics; nothing is duplicated.</p>`);bindDrop();$('#toSet').onclick=settings}
 function rangeSheet(){const end=dataEnd()||P.todayKey();openSheet(`<h3>Choose a range</h3><div class="range left">${PRESETS.filter(p=>p[0]!=='custom').map(([k,l])=>`<button data-sp="${k}" class="${S.preset===k?'on':''}">${l}</button>`).join('')}</div>
  <div class="sec">Custom</div><div class="opt"><span>From</span><input type="date" id="ds" value="${S.s||P.addDays(end,-29)}"></div><div class="opt"><span>To</span><input type="date" id="de" value="${S.e||end}"></div><button class="btn wide" id="apply">Apply</button>`);
  $$('[data-sp]').forEach(b=>b.onclick=()=>{S.preset=b.dataset.sp;localStorage.pulsePreset=S.preset;closeSheet();render()});
@@ -143,17 +143,20 @@ function settings(){const T={dusk:'#6d5a7a',dawn:'#f2a7a0',ocean:'#2b7a9e',fores
  openSheet(`<h3>Settings</h3>
  <div class="sec">App theme</div><div class="swrow">${Object.entries(T).map(([k,c])=>`<button class="sw ${CFG.theme===k?'on':''}" data-t="${k}" style="background:${c}"><small>${k}</small></button>`).join('')}</div>
  <div class="sec">Compare against</div>${seg('compare',[['prior','Previous period'],['yoy','Same period last year']],CFG.compare)}
- <div class="sec">Report style</div><div class="styles">${RS.map(([k,l,bg,fg,ac])=>`<button class="stile ${CFG.rStyle===k?'on':''}" data-rs="${k}"><span class="pv" style="background:${bg}"><i style="background:${k==='light'?'#f3f4f8':'rgba(255,255,255,.9)'};border-color:${ac}"></i><i style="background:${k==='light'?'#f3f4f8':'rgba(255,255,255,.9)'};border-color:${ac}"></i><em style="background:${k==='light'?'#f3f4f8':'rgba(255,255,255,.9)'};border-color:${ac}"></em></span>${l}</button>`).join('')}</div>
- <div class="sec">Report text</div><label class="fld">Title<input id="rTitle" value="${esc(CFG.rTitle)}"></label><label class="fld">Header<input id="rHead" value="${esc(CFG.rHead)}"></label><label class="fld">Organization<input id="rOrg" value="${esc(CFG.rOrg)}"></label>
- <div class="sec">Report sections</div>${[['summary','Executive summary'],['chart','Views chart'],['eff','Platform efficiency'],['top','Top 3 posts'],['watch','Watch list'],['team','Page 2: account detail']].map(([k,l])=>`<label class="opt tog"><span>${l}</span><input type="checkbox" data-sec="${k}" ${CFG.rSec[k]?'checked':''}><i></i></label>`).join('')}
+ <div class="sec">PDF report style</div><div class="styles">${RS.map(([k,l,bg,fg,ac])=>`<button class="stile ${CFG.rStyle===k?'on':''}" data-rs="${k}"><span class="pv" style="background:${bg}"><i style="background:${k==='light'?'#f3f4f8':'rgba(255,255,255,.9)'};border-color:${ac}"></i><i style="background:${k==='light'?'#f3f4f8':'rgba(255,255,255,.9)'};border-color:${ac}"></i><em style="background:${k==='light'?'#f3f4f8':'rgba(255,255,255,.9)'};border-color:${ac}"></em></span>${l}</button>`).join('')}</div>
+ <div class="sec">PDF report text</div><label class="fld">Title<input id="rTitle" value="${esc(CFG.rTitle)}"></label><label class="fld">Header<input id="rHead" value="${esc(CFG.rHead)}"></label><label class="fld">Organization<input id="rOrg" value="${esc(CFG.rOrg)}"></label>
+ <div class="sec">PDF report sections</div>${[['summary','Executive summary'],['chart','Views chart'],['eff','Platform efficiency'],['top','Top 3 posts'],['watch','Watch list'],['team','Page 2: account detail']].map(([k,l])=>`<label class="opt tog"><span>${l}</span><input type="checkbox" data-sec="${k}" ${CFG.rSec[k]?'checked':''}><i></i></label>`).join('')}
  <div class="sec">Watch list (default lines)</div>${CFG.watch.map((w,i)=>`<label class="fld"><textarea data-w="${i}" rows="2">${esc(w)}</textarea></label>`).join('')}
- <div class="sec">TV mode</div><div class="opt"><span>Seconds per slide</span>${seg('tvSec',[[8,'8'],[12,'12'],[20,'20'],[30,'30']],CFG.tvSec)}</div>
  <div class="sec">Your data</div><div class="opt"><span>${nf(S.posts.length)} posts · through ${dataEnd()?P.fmtDate(dataEnd(),{year:'numeric'}):'—'}</span></div>
+ <div class="opt"><span>Import Meta CSV exports</span><button class="chip" id="imp">${ICON.imp.replace('<svg','<svg class="ci"')}Import</button></div>
  ${localStorage.pulseSynced?`<div class="opt"><span>Synced from Hark ${new Date(localStorage.pulseSynced).toLocaleString('en-US',{timeZone:'Asia/Tokyo',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</span><button class="chip" id="resync">Check now</button></div><div class="opt"><span>Passcode saved on this device</span><button class="chip" id="forget">Forget</button></div>`:''}
  <div class="opt"><span>Back up to a file</span><button class="chip" id="bk">Export</button></div><div class="opt"><span>Restore a backup</span><button class="chip" id="rs">Restore</button></div><div class="opt"><span>Erase all data on this device</span><button class="chip" id="er" style="color:#ffb0a8">Erase</button></div>
- <p class="note">MCCS Pulse never uploads your data. It lives only in this browser.</p>`);
+ <p class="note">MCCS Pulse never uploads your data. It lives only in this browser.</p>
+ <div class="savebar"><button class="btn wide" id="saveHome">Save and return home</button></div>`);
+ $('#saveHome').onclick=()=>{saveCfg();closeSheet();S.view='overview';render();scrollTo({top:0,behavior:'smooth'});toast('Settings saved')};
+ $('#imp').onclick=importSheet;
  $$('[data-t]').forEach(b=>b.onclick=()=>{CFG.theme=b.dataset.t;document.body.dataset.theme=CFG.theme;saveCfg();$$('[data-t]').forEach(x=>x.classList.toggle('on',x===b))});
- $$('[data-seg] button').forEach(b=>b.onclick=()=>{const n=b.parentNode.dataset.seg;CFG[n]=n==='tvSec'?+b.dataset.val:b.dataset.val;saveCfg();b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(n==='compare')render()});
+ $$('[data-seg] button').forEach(b=>b.onclick=()=>{const n=b.parentNode.dataset.seg;CFG[n]=b.dataset.val;saveCfg();b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(n==='compare')render()});
  $$('[data-rs]').forEach(b=>b.onclick=()=>{CFG.rStyle=b.dataset.rs;saveCfg();$$('[data-rs]').forEach(x=>x.classList.toggle('on',x===b))});
  ['rTitle','rHead','rOrg'].forEach(k=>$('#'+k).oninput=e=>{CFG[k]=e.target.value;saveCfg()});
  $$('[data-sec]').forEach(i=>i.onchange=()=>{CFG.rSec[i.dataset.sec]=i.checked?1:0;saveCfg()});
@@ -163,28 +166,6 @@ function settings(){const T={dusk:'#6d5a7a',dawn:'#f2a7a0',ocean:'#2b7a9e',fores
  const rsy=$('#resync');if(rsy)rsy.onclick=async()=>{localStorage.pulseSynced='';closeSheet();await sync();toast('Up to date')};const fg=$('#forget');if(fg)fg.onclick=()=>{delete localStorage.pulsePass;delete localStorage.pulseSynced;toast('Passcode forgotten on this device');closeSheet()};
  $('#er').onclick=async()=>{if(!confirm('Erase all posts stored in MCCS Pulse on this device?'))return;S.posts=[];await DB.set('posts',[]);closeSheet();render()}}
 $('#bfile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const arr=JSON.parse(await f.text());const r=P.merge(S.posts,arr);S.posts=r.posts;await DB.set('posts',S.posts);closeSheet();render();toast(`Restored ${arr.length} posts`)}catch(err){toast('That file is not an MCCS Pulse backup')}e.target.value=''};
-// ---- TV mode ----
-const TV={i:0,timer:null,slides:[]};
-function tvBuild(){const {L,C,t,c}=ctx();const has=c.n>0;const top=[...L].sort((a,b)=>b.v-a.v).slice(0,3),pages=P.byPage(L).slice(0,6),ser=P.series(L,S.s,S.e,'v');const mx=Math.max(1,...pages.map(g=>g.v));
-  const d=(a,b)=>dl(a,b,has);const rl=P.rangeLabel(S.s,S.e);
-  return [
-   `<div class="tvc center"><div class="tvk">${esc(CFG.rOrg)} · Social media</div><div class="tvbig">${P.fmt(t.v)}</div><div class="tvsub">views across ${t.n} posts</div><div class="tvd">${d(t.v,c.v)} <span class="mut">vs ${cmpLabel()}</span></div></div>`,
-   `<div class="tvc"><div class="tvk">The numbers that matter</div><div class="tv4">${[['Views',P.fmt(t.v),d(t.v,c.v)],['Engagement',P.fmt(t.e),d(t.e,c.e)],['Link clicks',nf(t.lc),d(t.lc,c.lc)],['IG follows',nf(t.fo),d(t.fo,c.fo)]].map(([l,v,x])=>`<div class="tvcard"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${x}</div></div>`).join('')}</div></div>`,
-   `<div class="tvc"><div class="tvk">Views by ${ser.step}</div><div class="tvchart">${chartSVG(ser,1000,330,{id:'tv',fs:16,sw:3.5,both:1})}</div><div class="legend tvleg"><span><i style="background:var(--fb)"></i>Facebook ${P.fmt(t.fb.v)}</span><span><i style="background:var(--ig)"></i>Instagram ${P.fmt(t.ig.v)}</span></div></div>`,
-   `<div class="tvc"><div class="tvk">Top posts</div><div class="tv3">${top.map((r,i)=>`<div class="tvcard post3"><div class="rk">${i+1}</div><div class="v">${P.fmt(r.v)}</div><div class="l">views</div><div class="tt">${esc(P.label(r))}</div><div class="mut"><span class="tag ${r.plat}">${r.plat.toUpperCase()}</span>${esc(acctName(r.plat,r.page))} · ${P.fmtDate(r.d)}</div></div>`).join('')}</div></div>`,
-   `<div class="tvc"><div class="tvk">Instagram punches above its weight</div><div class="tvbal">${[['Posts',t.ig.n,t.n],['Views',t.ig.v,t.v],['Engagement',t.ig.e,t.e]].map(([l,a,b])=>`<div><div class="row"><span>${l}</span><b>${b?Math.round(a/b*100):0}%</b></div><div class="bar"><span style="width:${b?a/b*100:0}%"></span></div></div>`).join('')}</div><div class="tvsub" style="margin-top:3vh">Instagram share of the total · Facebook in blue</div></div>`,
-   `<div class="tvc"><div class="tvk">Leading accounts</div><div class="tvlb">${pages.map(g=>`<div class="hbar"><span class="nm"><span class="tag ${g.plat}">${g.plat.toUpperCase()}</span>${esc(acctName(g.plat,g.page))}</span><span class="tr"><span class="${g.plat}" style="width:${g.v/mx*100}%"></span></span><b>${P.fmt(g.v)}</b></div>`).join('')}</div></div>`
-  ].map(h=>`<div class="tvslide">${h}<div class="tvfoot">${rl}</div></div>`)}
-function tvShow(i){const n=TV.slides.length;TV.i=(i+n)%n;$$('#tv .tvslide').forEach((s,k)=>s.classList.toggle('on',k===TV.i));$('#tvdots').innerHTML=TV.slides.map((_,k)=>`<i class="${k===TV.i?'on':''}"></i>`).join('');
-  const pb=$('#tvprog');pb.style.transition='none';pb.style.width='0';requestAnimationFrame(()=>requestAnimationFrame(()=>{pb.style.transition=`width ${CFG.tvSec}s linear`;pb.style.width='100%'}));
-  clearTimeout(TV.timer);if(!TV.paused)TV.timer=setTimeout(()=>tvShow(TV.i+1),CFG.tvSec*1000)}
-let wake=null;
-async function tvOpen(){TV.slides=tvBuild();$('#tvslides').innerHTML=TV.slides.join('');$('#tv').classList.add('show');document.body.classList.add('tvon');TV.paused=false;tvShow(0);tvClock();
-  try{await document.documentElement.requestFullscreen?.()}catch(e){}try{wake=await navigator.wakeLock?.request('screen')}catch(e){}}
-function tvClose(){$('#tv').classList.remove('show');document.body.classList.remove('tvon');clearTimeout(TV.timer);if(document.fullscreenElement)document.exitFullscreen?.();wake?.release?.();wake=null}
-function tvClock(){const c=$('#tvclock');if(!c)return;c.textContent=new Date().toLocaleTimeString('en-US',{timeZone:'Asia/Tokyo',hour:'numeric',minute:'2-digit'});if($('#tv').classList.contains('show'))setTimeout(tvClock,15000)}
-$('#tv').onclick=e=>{if(e.target.closest('#tvx'))return tvClose();if(e.target.closest('#tvpause')){TV.paused=!TV.paused;$('#tvpause').textContent=TV.paused?'Play':'Pause';return tvShow(TV.i)}const x=e.clientX/innerWidth;tvShow(TV.i+(x<.3?-1:1))};
-document.addEventListener('keydown',e=>{if(!$('#tv').classList.contains('show'))return;if(e.key==='Escape')tvClose();if(e.key==='ArrowRight'||e.key===' ')tvShow(TV.i+1);if(e.key==='ArrowLeft')tvShow(TV.i-1)});
 // ---- report ----
 function buildReport(){const {L,C,t,c}=ctx('all');const sm=P.summary(t,c,L,S.s,S.e),top=[...L].sort((a,b)=>b.v-a.v).slice(0,3),pages=P.byPage(L),rl=P.rangeLabel(S.s,S.e),R=CFG.rSec;
  const dd=(a,b)=>{const p=P.pct(a,b);if(p==null||!isFinite(p)||!c.n)return ['—','var(--sub)'];return [(p>=0?'+':'−')+Math.abs(p).toFixed(1)+'%',p>=0?'#16b85c':'#f0363b']};
@@ -217,7 +198,7 @@ window.addEventListener('beforeprint',()=>$$('.a4').forEach(a=>{a.style.transfor
 $('#rBack').onclick=()=>$('#report').classList.remove('show');$('#rPrint').onclick=()=>window.print();
 // ---- dock ----
 $$('#dock [data-v]').forEach(b=>b.onclick=()=>{S.view=b.dataset.v;render();scrollTo({top:0,behavior:'smooth'})});
-$('#bTV').onclick=tvOpen;$('#bReport').onclick=buildReport;
+$('#bReport').onclick=buildReport;
 // ---- synced data from Hark ----
 function dropExcluded(a){let x=[];try{x=JSON.parse(localStorage.pulseExclude||'[]')}catch(e){}return x.length?a.filter(r=>!x.includes(r.page)):a}
 const SYNC={meta:null};
