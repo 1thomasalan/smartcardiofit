@@ -116,6 +116,23 @@ a.btn:visited{color:var(--txt)}
 .fld{display:block;font-size:12px;color:var(--mut);margin:8px 0}.fld input,.fld textarea{display:block;width:100%;margin-top:5px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14.5px;color:var(--txt);resize:vertical}
 .tog input{display:none}.tog i{width:46px;height:28px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;transition:.25s;flex:none}.tog i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.25s}.tog input:checked+i{background:color-mix(in srgb,var(--glow) 70%,transparent)}.tog input:checked+i::after{left:21px}
 .dock button.on{color:var(--txt)}.dock button.on:not(.main){background:rgba(255,255,255,.08)}
+.range.plats{margin-top:12px}
+.acctpick{position:relative;padding:0!important;display:inline-flex;align-items:center}
+.acctpick select{appearance:none;-webkit-appearance:none;background:none;border:0;color:inherit;font:inherit;padding:9px 32px 9px 15px;max-width:230px;text-overflow:ellipsis;cursor:pointer;color-scheme:dark}
+.acctpick::after{content:"";position:absolute;right:14px;top:50%;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.acctpick select option{background:#141b2a;color:#eef1f6}
+@media(max-width:520px){
+ .hero{margin:3vh 0 2vh}
+ .range{gap:6px;margin:14px 0 4px}
+ .range button,.chip{padding:7px 12px;font-size:13px}
+ .range.presets{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;margin-left:calc(-1*clamp(16px,4vw,36px));margin-right:calc(-1*clamp(16px,4vw,36px));padding:2px clamp(16px,4vw,36px);-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 22px),transparent)}
+ .range.presets::-webkit-scrollbar{display:none}
+ .range.presets button{flex:none;white-space:nowrap}
+ .sub{letter-spacing:2px}
+ .rlabel{font-size:16px;margin-top:10px}.rlabel small{font-size:10px;letter-spacing:1.1px;line-height:1.5}
+ .range.plats{margin-top:12px}
+ .acctpick select{padding:7px 28px 7px 12px;max-width:150px}
+}
 @media(max-width:520px){.dock{gap:4px;padding:6px}.dock button{flex-direction:column;gap:3px;padding:8px 14px;font-size:11px}}
 .unlock{display:flex;gap:10px;justify-content:center;margin:26px auto 8px;max-width:420px}.unlock input{flex:1;min-width:0;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:999px;padding:13px 20px;font-size:16px;color:var(--txt)}
 .shake{animation:shk .4s}@keyframes shk{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
