@@ -50,19 +50,22 @@ function bindChart(box,ser,m){const svg=box.querySelector('svg.chart');if(!svg)r
     const tx=x/r.width;tip.style.left=Math.min(Math.max(tx*100,12),88)+'%';};
   svg.addEventListener('pointermove',mv);svg.addEventListener('touchmove',mv,{passive:true});svg.addEventListener('pointerleave',()=>{tip.style.opacity=0;svg.querySelector('.cur').setAttribute('opacity',0)})}
 // ---- shared header ----
-function header(){const end=dataEnd();const stale=S.e>end?`Data through ${P.fmtDate(end,{year:'numeric'})} · Meta lags ~2 days`:`vs ${P.rangeLabel(S.cs,S.ce)}`;
-  return `<div class="range">${PRESETS.map(([k,l])=>`<button data-p="${k}" class="${S.preset===k?'on':''}">${l}</button>`).join('')}</div>
+function header(accts){const end=dataEnd();const stale=S.e>end?`Data through ${P.fmtDate(end,{year:'numeric'})} · Meta lags ~2 days`:`vs ${P.rangeLabel(S.cs,S.ce)}`;
+  return `<div class="range presets">${PRESETS.map(([k,l])=>`<button data-p="${k}" class="${S.preset===k?'on':''}">${l}</button>`).join('')}</div>
   <div class="rlabel">${P.rangeLabel(S.s,S.e)}<small>${stale}</small></div>
-  <div class="range" style="margin-top:12px">${[['all','All'],['fb','Facebook'],['ig','Instagram']].map(([k,l])=>`<button data-f="${k}" class="chip ${S.plat===k?'on':''}">${l}</button>`).join('')}</div>`}
+  <div class="range plats">${[['all','All'],['fb','Facebook'],['ig','Instagram']].map(([k,l])=>`<button data-f="${k}" class="chip ${S.plat===k?'on':''}">${l}</button>`).join('')}${accts?`<label class="chip acctpick ${S.acct!=='all'?'on':''}"><select id="hAcct" aria-label="Account"><option value="all">All accounts</option>${accts.map(g=>`<option value="${g.plat}|${esc(g.page)}" ${S.acct===g.plat+'|'+g.page?'selected':''}>${g.plat.toUpperCase()} · ${esc(acctName(g.plat,g.page))}</option>`).join('')}</select></label>`:''}</div>`}
 function topbar(){return `<div class="top"><span>MCCS Pulse</span><button class="icon" id="gear" aria-label="Settings">${ICON.gear}</button></div>`}
 // ---- render ----
 function render(){const app=$('#app');
   if(S.locked&&SYNC.meta){$('#dock').style.display='none';app.innerHTML=topbar()+lockScreen();bindTop();bindLock();return;}
   if(!S.posts.length){$('#dock').style.display='none';app.innerHTML=`${topbar()}<div class="empty"><div class="orb"></div><h1>Your social, at a glance.</h1><p>Waiting for data. Drop in your Meta Business Suite exports (Facebook and Instagram, Post level, Lifetime). Everything stays on this device.</p><div class="drop" id="drop" style="margin-top:24px">Drop CSV files here<br>or<br><button class="btn" id="pick" style="margin-top:10px">Choose files</button></div></div>`;bindDrop();bindTop();return;}
   $('#dock').style.display='flex';$$('#dock [data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
-  const {L,C,t,c}=ctx();
-  app.innerHTML=topbar()+(S.view==='explore'?explore(L,C,t,c):overview(L,C,t,c));
+  let {L,C,t,c}=ctx();let accts=null;
+  if(S.view==='explore'){accts=P.byPage(L);if(S.acct!=='all'&&!accts.some(g=>g.plat+'|'+g.page===S.acct))S.acct='all';
+    if(S.acct!=='all'){const m=r=>r.plat+'|'+r.page===S.acct;L=L.filter(m);C=C.filter(m);t=P.totals(L);c=P.totals(C)}}
+  app.innerHTML=topbar()+(S.view==='explore'?explore(L,C,t,c,accts):overview(L,C,t,c));
   bindTop();
+  {const pr=$('.range.presets'),on=pr&&pr.querySelector('.on');if(on&&pr.scrollWidth>pr.clientWidth)pr.scrollLeft=on.offsetLeft-(pr.clientWidth-on.offsetWidth)/2}
   $$('[data-p]').forEach(b=>b.onclick=()=>{if(b.dataset.p==='custom')return rangeSheet();S.preset=b.dataset.p;localStorage.pulsePreset=S.preset;render()});
   $$('[data-f]').forEach(b=>b.onclick=()=>{S.plat=b.dataset.f;S.acct='all';render()});
   $$('[data-m]').forEach(b=>b.onclick=()=>{S.metric=b.dataset.m;render()});
@@ -70,7 +73,7 @@ function render(){const app=$('#app');
   $$('[data-post]').forEach(b=>b.onclick=e=>{if(e.target.closest('a'))return;postSheet(b.dataset.post)});
   $$('[data-acct]').forEach(b=>b.onclick=()=>accountSheet(b.dataset.acct));
   const cb=$('.chartbox');if(cb)bindChart(cb,P.series(L,S.s,S.e,S.metric),S.metric);
-  if(S.view==='explore'){const q=$('#q');q.oninput=()=>{S.q=q.value;S.limit=40;renderList(L)};$('#acctSel').onchange=e=>{S.acct=e.target.value;S.limit=40;renderList(L)};$('#sortSel').onchange=e=>{S.sort=e.target.value;renderList(L)};renderList(L);
+  if(S.view==='explore'){const q=$('#q');q.oninput=()=>{S.q=q.value;S.limit=40;renderList(L)};$('#acctSel').onchange=e=>{S.acct=e.target.value;S.limit=40;render()};$('#hAcct').onchange=e=>{S.acct=e.target.value;S.limit=40;render()};$('#sortSel').onchange=e=>{S.sort=e.target.value;renderList(L)};renderList(L);
     $$('.hm td[data-h]').forEach(td=>td.onclick=()=>{const [w,h]=td.dataset.h.split(',').map(Number);const list=L.filter(r=>{const d=new Date(r.t+9*3600e3);return (d.getUTCDay()+6)%7===w&&Math.floor(d.getUTCHours()/3)===h});listSheet(`${WD[w]} ${hb(h)}`,list)})}
 }
 function bindTop(){$('#gear').onclick=settings}
@@ -87,18 +90,18 @@ function overview(L,C,t,c){const has=c.n>0;const top=[...L].sort((a,b)=>b.v-a.v)
 function balance(t){return [['Posts',t.ig.n,t.n],['Views',t.ig.v,t.v],['Engagement',t.ig.e,t.e]].map(([l,a,b])=>`<div class="share"><div class="row"><span>${l}</span><b>${b?Math.round(a/b*100):0}%</b></div><div class="bar"><span style="width:${b?a/b*100:0}%"></span></div></div>`).join('')}
 function postRow(r,rank){return `<div class="post" data-post="${esc(r.id)}">${rank?`<div class="rank">${rank}</div>`:''}<div class="pb"><div class="t">${esc(P.label(r))}</div><div class="m"><span class="tag ${r.plat}">${r.plat==='fb'?'FB':'IG'}</span>${esc(acctName(r.plat,r.page))} · ${P.fmtDate(r.d)} · ${P.fmt(P.eng(r))} eng${r.lc?` · ${r.lc} clicks`:''}</div></div><div class="n"><b>${P.fmt(r.v)}</b><span>views</span></div></div>`}
 const WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];const hb=h=>['12–3a','3–6a','6–9a','9a–12','12–3p','3–6p','6–9p','9p–12'][h];
-function explore(L,C,t,c){const has=c.n>0;const days=P.daysBetween(S.s,S.e);const pages=P.byPage(L),types=P.byType(L),heat=P.heat(L);
+function explore(L,C,t,c,accts){const has=c.n>0;const days=P.daysBetween(S.s,S.e);const pages=P.byPage(L),types=P.byType(L),heat=P.heat(L);
   const hmMax=Math.max(1,...heat.flat().filter(x=>x.n>=2).map(x=>x.med));
   let best=null;heat.forEach((row,w)=>row.forEach((x,h)=>{if(x.n>=3&&(!best||x.med>best.med))best={w,h,...x}}));
   const mini=(k,l,v,d)=>`<button class="card kpi mini" data-k="${k}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div></button>`;
-  return `<div class="hero small"><h1>Explore</h1><div class="sub">every metric, every account, every post</div></div>${header()}
+  return `<div class="hero small"><h1>Explore</h1><div class="sub">every metric, every account, every post</div></div>${header(accts)}
   <div class="grid g4">${mini('v','Views',P.fmt(t.v),dl(t.v,c.v,has))}${mini('rx','Reactions & likes',P.fmt(t.rx),dl(t.rx,c.rx,has))}${mini('cm','Comments',P.fmt(t.cm),dl(t.cm,c.cm,has))}${mini('sh','Shares',P.fmt(t.sh),dl(t.sh,c.sh,has))}
   ${mini('sv','Saves (IG)',P.fmt(t.sv),dl(t.sv,c.sv,has))}${mini('n','Posts',nf(t.n),dl(t.n,c.n,has))}${mini('avg','Avg views / post',P.fmt(t.n?t.v/t.n:0),dl(t.n?t.v/t.n:0,c.n?c.v/c.n:0,has))}${mini('ppd','Posts per day',(t.n/days).toFixed(1),dl(t.n/days,c.n/days,has))}</div>
   <div class="cols"><div class="card"><h2>Best time to post<small>median views · JST</small></h2>${best?`<p class="mut sm" style="margin-top:-4px">Sweet spot: <b style="color:var(--glow)">${WD[best.w]} ${hb(best.h)}</b>, ${P.fmt(best.med)} median views across ${best.n} posts.</p>`:''}
    <div class="scroll"><table class="hm"><tr><th></th>${[0,1,2,3,4,5,6,7].map(h=>`<th>${hb(h)}</th>`).join('')}</tr>${heat.map((row,w)=>`<tr><th>${WD[w]}</th>${row.map((x,h)=>`<td data-h="${w},${h}" style="--a:${x.n?Math.min(1,x.med/hmMax):0}" title="${x.n} posts">${x.n?P.fmt(x.med):''}</td>`).join('')}</tr>`).join('')}</table></div><p class="mut sm">Tap a cell to see its posts. Cells with one post can mislead.</p></div>
    <div class="card"><h2>What works<small>by format</small></h2><table><tr><th>Format</th><th>Posts</th><th>Median</th><th>Eng/1K</th></tr>${types.map(x=>`<tr><td><span class="tag ${x.plat}">${x.plat.toUpperCase()}</span>${esc(x.type.replace(/^IG /,''))}</td><td>${x.n}</td><td>${P.fmt(x.med)}</td><td>${x.epk.toFixed(1)}</td></tr>`).join('')}</table></div></div>
   <div class="card" style="margin-top:14px"><h2>Every account<small>${pages.length} active · tap a row</small></h2><div class="scroll"><table><tr><th>Account</th><th>Posts</th><th>Views</th><th>Median</th><th>Eng.</th><th>Eng/1K</th><th>Clicks</th></tr>${pages.map(g=>`<tr class="tap" data-acct="${g.plat}|${esc(g.page)}"><td><span class="tag ${g.plat}">${g.plat.toUpperCase()}</span>${esc(acctName(g.plat,g.page))}</td><td>${g.n}</td><td>${nf(g.v)}</td><td>${P.fmt(g.med)}</td><td>${P.fmt(g.e)}</td><td>${g.epk.toFixed(1)}</td><td>${g.lc||''}</td></tr>`).join('')}</table></div></div>
-  <div class="card" style="margin-top:14px"><h2>All posts<small id="cnt"></small></h2><div class="filters"><input id="q" type="search" placeholder="Search captions" value="${esc(S.q)}"><select id="acctSel"><option value="all">All accounts</option>${pages.map(g=>`<option value="${g.plat}|${esc(g.page)}" ${S.acct===g.plat+'|'+g.page?'selected':''}>${esc(acctName(g.plat,g.page))}</option>`).join('')}</select><select id="sortSel">${[['v','Most views'],['e','Most engagement'],['lc','Most clicks'],['epk','Best eng. rate'],['d','Newest']].map(([k,l])=>`<option value="${k}" ${S.sort===k?'selected':''}>${l}</option>`).join('')}</select></div><div id="plist"></div></div>`}
+  <div class="card" style="margin-top:14px"><h2>All posts<small id="cnt"></small></h2><div class="filters"><input id="q" type="search" placeholder="Search captions" value="${esc(S.q)}"><select id="acctSel"><option value="all">All accounts</option>${(accts||pages).map(g=>`<option value="${g.plat}|${esc(g.page)}" ${S.acct===g.plat+'|'+g.page?'selected':''}>${esc(acctName(g.plat,g.page))}</option>`).join('')}</select><select id="sortSel">${[['v','Most views'],['e','Most engagement'],['lc','Most clicks'],['epk','Best eng. rate'],['d','Newest']].map(([k,l])=>`<option value="${k}" ${S.sort===k?'selected':''}>${l}</option>`).join('')}</select></div><div id="plist"></div></div>`}
 function renderList(L){let list=L;if(S.acct!=='all')list=list.filter(r=>r.plat+'|'+r.page===S.acct);if(S.q){const q=S.q.toLowerCase();list=list.filter(r=>r.cap.toLowerCase().includes(q))}
   const key={v:r=>r.v,e:r=>P.eng(r),lc:r=>r.lc,epk:r=>r.v>=200?P.eng(r)/r.v:0,d:r=>r.t}[S.sort];list=[...list].sort((a,b)=>key(b)-key(a));
   $('#cnt').textContent=`${list.length} posts`;$('#plist').innerHTML=list.slice(0,S.limit).map(r=>postRow(r)).join('')+(list.length>S.limit?`<button class="more" id="moreBtn">Show more</button>`:'')||'<p class="mut">No posts match.</p>';
