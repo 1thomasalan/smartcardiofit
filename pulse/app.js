@@ -130,7 +130,7 @@ function listSheet(title,list){openSheet(`<h3>${esc(title)}</h3><p class="mut sm
 function bindDrop(){const d=$('#drop');if(!d)return;$('#pick').onclick=()=>$('#file').click();d.ondragover=e=>{e.preventDefault();d.classList.add('over')};d.ondragleave=()=>d.classList.remove('over');d.ondrop=e=>{e.preventDefault();d.classList.remove('over');importFiles(e.dataTransfer.files)}}
 document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)importFiles(e.dataTransfer.files)});
 $('#file').onchange=e=>{importFiles(e.target.files);e.target.value=''};
-async function importFiles(files){files=[...files];const msgs=[];for(const f of files){try{const m=P.mapRows(P.parseCSV(await f.text()));const r=P.merge(S.posts,m.rows);S.posts=r.posts;msgs.push(`${m.plat==='fb'?'Facebook':'Instagram'}: ${r.add} new, ${r.upd} updated`)}catch(err){msgs.push(`${f.name}: ${err.message}`)}}
+async function importFiles(files){files=[...files];const msgs=[];for(const f of files){try{const m=P.mapRows(P.parseCSV(await f.text()));const r=P.merge(S.posts,m.rows);S.posts=dropExcluded(r.posts);msgs.push(`${m.plat==='fb'?'Facebook':'Instagram'}: ${r.add} new, ${r.upd} updated`)}catch(err){msgs.push(`${f.name}: ${err.message}`)}}
   await DB.set('posts',S.posts);closeSheet();render();toast(msgs.join(' · '))}
 function importSheet(){openSheet(`<h3>Import exports</h3><div class="drop" id="drop">Drop Facebook and Instagram CSVs here<br><button class="btn" id="pick" style="margin-top:12px">Choose files</button></div><div class="sec">How to export</div><p class="mut" style="font-size:14px;line-height:1.6;margin:0">Meta Business Suite › Insights › Content › Export data. Facebook tab, all Pages, Content level Post, Data view Lifetime, Filter Creation date. Repeat on the Instagram tab. Re-importing updates metrics; nothing is duplicated.</p>`);bindDrop()}
 function rangeSheet(){const end=dataEnd()||P.todayKey();openSheet(`<h3>Choose a range</h3><div class="range left">${PRESETS.filter(p=>p[0]!=='custom').map(([k,l])=>`<button data-sp="${k}" class="${S.preset===k?'on':''}">${l}</button>`).join('')}</div>
@@ -219,6 +219,7 @@ $('#rBack').onclick=()=>$('#report').classList.remove('show');$('#rPrint').oncli
 $$('#dock [data-v]').forEach(b=>b.onclick=()=>{S.view=b.dataset.v;render();scrollTo({top:0,behavior:'smooth'})});
 $('#bTV').onclick=tvOpen;$('#bReport').onclick=buildReport;
 // ---- synced data from Hark ----
+function dropExcluded(a){let x=[];try{x=JSON.parse(localStorage.pulseExclude||'[]')}catch(e){}return x.length?a.filter(r=>!x.includes(r.page)):a}
 const SYNC={meta:null};
 async function decryptRemote(meta,pass){const b=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));const enc=new TextEncoder();
   const base=await crypto.subtle.importKey('raw',enc.encode(pass),'PBKDF2',false,['deriveKey']);
@@ -227,7 +228,7 @@ async function decryptRemote(meta,pass){const b=x=>Uint8Array.from(atob(x),c=>c.
   let pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b(meta.iv)},key,ct);
   if(meta.gzip)pt=await new Response(new Blob([pt]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   return JSON.parse(new TextDecoder().decode(pt))}
-async function applyRemote(meta,pass){const arr=await decryptRemote(meta,pass);S.posts=P.merge(S.posts,arr).posts;await DB.set('posts',S.posts);localStorage.pulsePass=pass;localStorage.pulseSynced=meta.updated;localStorage.pulseThrough=meta.through;S.locked=false}
+async function applyRemote(meta,pass){const arr=await decryptRemote(meta,pass);if(meta.exclude)localStorage.pulseExclude=JSON.stringify(meta.exclude);S.posts=dropExcluded(P.merge(S.posts,arr).posts);await DB.set('posts',S.posts);localStorage.pulsePass=pass;localStorage.pulseSynced=meta.updated;localStorage.pulseThrough=meta.through;S.locked=false}
 async function sync(){let meta;try{const r=await fetch('data.enc.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;meta=await r.json()}catch(e){return}
   SYNC.meta=meta;const pass=localStorage.pulsePass;
   if(pass){if(localStorage.pulseSynced===meta.updated&&S.posts.length)return;try{await applyRemote(meta,pass);render();toast(`Latest data loaded · through ${P.fmtDate(meta.through,{year:'numeric'})}`)}catch(e){delete localStorage.pulsePass;S.locked=!S.posts.length;render()}}
