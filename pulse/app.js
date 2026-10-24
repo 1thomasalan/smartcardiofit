@@ -1,0 +1,219 @@
+// Pulse UI
+const P=Pulse,$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const DEF={theme:'dusk',compare:'prior',rStyle:'navy',rTitle:'Social Media Report',rHead:'DIGITAL MARKETING',rOrg:'MCCS Okinawa',rSec:{summary:1,chart:1,eff:1,top:1,watch:1,team:1},tvSec:12,tvPlat:'all',watch:['Meta replaces Facebook Reach with Viewers on Oct 31, 2026, so we report Views.','Confirm the Instagram account is linked to the Meta business portfolio.','Post metrics are lifetime to date; the newest posts are still growing.']};
+let CFG;try{CFG=Object.assign({},DEF,JSON.parse(localStorage.pulseCfg||'{}'));CFG.rSec=Object.assign({},DEF.rSec,CFG.rSec||{});}catch(e){CFG={...DEF}}
+const saveCfg=()=>localStorage.pulseCfg=JSON.stringify(CFG);
+const S={posts:[],preset:localStorage.pulsePreset||'30',s:null,e:null,plat:'all',view:'overview',metric:'v',q:'',acct:'all',sort:'v',limit:40};
+const M={v:['Views','views'],e:['Engagement','engagements'],lc:['Link clicks','clicks'],n:['Posts','posts'],fo:['IG follows','follows'],sh:['Shares','shares'],cm:['Comments','comments'],sv:['Saves','saves'],rx:['Reactions & likes','reactions']};
+// ---- storage ----
+const DB={open(){return new Promise((ok,no)=>{const r=indexedDB.open('pulse',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})},
+ async get(k){const d=await this.open();return new Promise(ok=>{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>ok(null)})},
+ async set(k,v){const d=await this.open();return new Promise(ok=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=ok})}};
+// ---- helpers ----
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nf=n=>Math.round(n).toLocaleString('en-US');
+const acctName=(plat,page)=>plat==='ig'?'@'+page:P.short(page);
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2800)}
+function openSheet(html,wide){$('#sheetBody').innerHTML=html;$('#sheet').classList.toggle('wide',!!wide);$('#sheet').classList.add('show');$('#scrim').classList.add('show');$('#sheet').scrollTop=0}
+function closeSheet(){$('#sheet').classList.remove('show');$('#scrim').classList.remove('show')}
+$('#closeSheet').onclick=closeSheet;$('#scrim').onclick=closeSheet;
+const dataEnd=()=>S.posts.reduce((m,r)=>r.d>m?r.d:m,'');
+const PRESETS=[['lastweek','Last week'],['7','7 days'],['30','30 days'],['month','This month'],['lastmonth','Last month'],['ytd','Year to date'],['custom','Custom']];
+function setRange(){if(!(S.preset==='custom'&&S.s)){const r=P.preset(S.preset);S.s=r.s;S.e=r.e;S.cs=r.cs;S.ce=r.ce;}
+  if(CFG.compare==='yoy'){const c=P.yoy(S.s,S.e);S.cs=c.cs;S.ce=c.ce}else if(S.preset==='custom'||!['month','lastmonth','ytd'].includes(S.preset)){const c=P.compareFor(S.s,S.e);S.cs=c.cs;S.ce=c.ce}
+  else if(S.preset==='ytd'){const c=P.yoy(S.s,S.e);S.cs=c.cs;S.ce=c.ce}}
+function ctx(plat){plat=plat||S.plat;setRange();const L=P.filter(S.posts,S.s,S.e,plat),C=P.filter(S.posts,S.cs,S.ce,plat);return {L,C,t:P.totals(L),c:P.totals(C)}}
+const dl=(a,b,has)=>{const p=P.pct(a,b);if(!has||p==null||!isFinite(p))return '<span class="mut">no comparison data</span>';return `<span class="${p>=0?'up':'down'}">${p>=0?'▲':'▼'} ${Math.abs(p).toFixed(1)}%</span>`};
+const cmpLabel=()=>CFG.compare==='yoy'||S.preset==='ytd'?'same period last year':'prior period';
+function greet(){const h=+new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',hour:'numeric',hour12:false}).format(new Date());return (h<12?'Good morning':h<18?'Good afternoon':'Good evening')+', Alan'}
+const ICON={gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
+ imp:'<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>'};
+// ---- chart ----
+function chartSVG(ser,w,h,opt){opt=opt||{};const pts=ser.pts;if(pts.length<2)return '<p class="mut">Not enough data points to chart.</p>';
+  const max=Math.max(1,...pts.map(p=>Math.max(p.fb,p.ig)));const px=i=>i/(pts.length-1)*w,py=v=>h-6-(v/max)*(h-24);
+  const line=k=>pts.map((p,i)=>`${i?'L':'M'}${px(i).toFixed(1)},${py(p[k]).toFixed(1)}`).join('');const area=k=>line(k)+`L${w},${h}L0,${h}Z`;
+  const fs=opt.fs||11;const ticks=[0,Math.floor((pts.length-1)/2),pts.length-1].map(i=>`<text x="${px(i)}" y="${h+fs+6}" text-anchor="${i?i===pts.length-1?'end':'middle':'start'}" fill="rgba(238,241,246,.5)" font-size="${fs}">${P.fmtDate(pts[i].k)}</text>`).join('');
+  const show=k=>S.plat==='all'||S.plat===k||opt.both;
+  return `<svg class="chart" viewBox="0 0 ${w} ${h+fs+8}" data-w="${w}" style="width:100%;height:auto;overflow:visible"><defs>
+   <linearGradient id="gf${opt.id||''}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--fb)" stop-opacity=".32"/><stop offset="1" stop-color="var(--fb)" stop-opacity="0"/></linearGradient>
+   <linearGradient id="gi${opt.id||''}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--ig)" stop-opacity=".32"/><stop offset="1" stop-color="var(--ig)" stop-opacity="0"/></linearGradient>
+   <filter id="gl${opt.id||''}"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+   <text x="0" y="${fs}" fill="rgba(238,241,246,.5)" font-size="${fs}">${P.fmt(max)}</text>
+   ${show('fb')?`<path d="${area('fb')}" fill="url(#gf${opt.id||''})"/>`:''}${show('ig')?`<path d="${area('ig')}" fill="url(#gi${opt.id||''})"/>`:''}
+   ${show('fb')?`<path d="${line('fb')}" fill="none" stroke="var(--fb)" stroke-width="${opt.sw||2}" filter="url(#gl${opt.id||''})"/>`:''}${show('ig')?`<path d="${line('ig')}" fill="none" stroke="var(--ig)" stroke-width="${opt.sw||2}" filter="url(#gl${opt.id||''})"/>`:''}
+   <line class="cur" x1="0" x2="0" y1="0" y2="${h}" stroke="var(--glow)" stroke-width="1" opacity="0"/>${ticks}</svg>`;}
+function bindChart(box,ser,m){const svg=box.querySelector('svg.chart');if(!svg)return;const tip=box.querySelector('.tip');const pts=ser.pts;const w=+svg.dataset.w;
+  const mv=e=>{const r=svg.getBoundingClientRect();const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;const i=Math.max(0,Math.min(pts.length-1,Math.round(x/r.width*(pts.length-1))));const p=pts[i];
+    const cur=svg.querySelector('.cur');cur.setAttribute('x1',i/(pts.length-1)*w);cur.setAttribute('x2',i/(pts.length-1)*w);cur.setAttribute('opacity',.7);
+    const lab=ser.step==='day'?P.fmtDate(p.k,{weekday:'short'}):ser.step==='week'?'Week of '+P.fmtDate(p.k):P.fmtDate(p.k,{month:'long',day:undefined});
+    tip.innerHTML=`<b>${lab}</b><span style="color:var(--fb)">FB ${nf(p.fb)}</span><span style="color:var(--ig)">IG ${nf(p.ig)}</span>`;tip.style.opacity=1;
+    const tx=x/r.width;tip.style.left=Math.min(Math.max(tx*100,12),88)+'%';};
+  svg.addEventListener('pointermove',mv);svg.addEventListener('touchmove',mv,{passive:true});svg.addEventListener('pointerleave',()=>{tip.style.opacity=0;svg.querySelector('.cur').setAttribute('opacity',0)})}
+// ---- shared header ----
+function header(){const end=dataEnd();const stale=S.e>end?`Data through ${P.fmtDate(end,{year:'numeric'})} · Meta lags ~2 days`:`vs ${P.rangeLabel(S.cs,S.ce)}`;
+  return `<div class="range">${PRESETS.map(([k,l])=>`<button data-p="${k}" class="${S.preset===k?'on':''}">${l}</button>`).join('')}</div>
+  <div class="rlabel">${P.rangeLabel(S.s,S.e)}<small>${stale}</small></div>
+  <div class="range" style="margin-top:12px">${[['all','All'],['fb','Facebook'],['ig','Instagram']].map(([k,l])=>`<button data-f="${k}" class="chip ${S.plat===k?'on':''}">${l}</button>`).join('')}</div>`}
+function topbar(){return `<div class="top"><span>Pulse · ${esc(CFG.rOrg)}</span><div style="display:flex;gap:10px"><button class="icon" id="impBtn" aria-label="Import">${ICON.imp}</button><button class="icon" id="gear" aria-label="Settings">${ICON.gear}</button></div></div>`}
+// ---- render ----
+function render(){const app=$('#app');
+  if(!S.posts.length){$('#dock').style.display='none';app.innerHTML=`${topbar()}<div class="empty"><div class="orb"></div><h1>Your social, at a glance.</h1><p>Drop in your Meta Business Suite exports (Facebook and Instagram, Post level, Lifetime). Everything stays on this device.</p><div class="drop" id="drop" style="margin-top:24px">Drop CSV files here<br>or<br><button class="btn" id="pick" style="margin-top:10px">Choose files</button></div></div>`;bindDrop();bindTop();return;}
+  $('#dock').style.display='flex';$$('#dock [data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
+  const {L,C,t,c}=ctx();
+  app.innerHTML=topbar()+(S.view==='explore'?explore(L,C,t,c):overview(L,C,t,c));
+  bindTop();
+  $$('[data-p]').forEach(b=>b.onclick=()=>{if(b.dataset.p==='custom')return rangeSheet();S.preset=b.dataset.p;localStorage.pulsePreset=S.preset;render()});
+  $$('[data-f]').forEach(b=>b.onclick=()=>{S.plat=b.dataset.f;S.acct='all';render()});
+  $$('[data-m]').forEach(b=>b.onclick=()=>{S.metric=b.dataset.m;render()});
+  $$('[data-k]').forEach(b=>b.onclick=()=>metricSheet(b.dataset.k));
+  $$('[data-post]').forEach(b=>b.onclick=e=>{if(e.target.closest('a'))return;postSheet(b.dataset.post)});
+  $$('[data-acct]').forEach(b=>b.onclick=()=>accountSheet(b.dataset.acct));
+  const cb=$('.chartbox');if(cb)bindChart(cb,P.series(L,S.s,S.e,S.metric),S.metric);
+  if(S.view==='explore'){const q=$('#q');q.oninput=()=>{S.q=q.value;S.limit=40;renderList(L)};$('#acctSel').onchange=e=>{S.acct=e.target.value;S.limit=40;renderList(L)};$('#sortSel').onchange=e=>{S.sort=e.target.value;renderList(L)};renderList(L);
+    $$('.hm td[data-h]').forEach(td=>td.onclick=()=>{const [w,h]=td.dataset.h.split(',').map(Number);const list=L.filter(r=>{const d=new Date(r.t+9*3600e3);return (d.getUTCDay()+6)%7===w&&Math.floor(d.getUTCHours()/3)===h});listSheet(`${WD[w]} ${hb(h)}`,list)})}
+}
+function bindTop(){$('#gear').onclick=settings;$('#impBtn').onclick=importSheet}
+const kpi=(k,l,v,d,s)=>`<button class="card kpi" data-k="${k}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div><div class="s">${s}</div></button>`;
+function overview(L,C,t,c){const has=c.n>0;const top=[...L].sort((a,b)=>b.v-a.v).slice(0,5),pages=P.byPage(L),ser=P.series(L,S.s,S.e,S.metric);
+  return `<div class="hero"><h1>${greet()}</h1><button class="big" data-k="v">${P.fmt(t.v)}</button><div class="sub">views · ${t.n} posts</div><div class="delta">${dl(t.v,c.v,has)} <span class="mut">vs ${cmpLabel()}</span></div></div>
+  ${header()}
+  <div class="grid">${kpi('e','Engagement',P.fmt(t.e),dl(t.e,c.e,has),'reactions, comments, shares, saves')}${kpi('lc','Link clicks',nf(t.lc),dl(t.lc,c.lc,has),'Facebook')}${kpi('epk','Eng. per 1K views',t.epk.toFixed(1),dl(t.epk,c.epk,has),'how hard content works')}${kpi('fo','IG follows',nf(t.fo),dl(t.fo,c.fo,has),'from posts')}</div>
+  <div class="cols"><div class="card chartbox"><h2>${M[S.metric][0]} over time<small>by ${ser.step} · tap the line</small></h2><div class="range left" style="margin:0 0 12px">${['v','e','lc','n'].map(m=>`<button class="chip sm ${S.metric===m?'on':''}" data-m="${m}">${M[m][0]}</button>`).join('')}</div><div style="position:relative">${chartSVG(ser,640,190)}<div class="tip"></div></div><div class="legend">${S.plat!=='ig'?`<span><i style="background:var(--fb)"></i>Facebook ${P.fmt(ser.pts.reduce((a,p)=>a+p.fb,0))}</span>`:''}${S.plat!=='fb'?`<span><i style="background:var(--ig)"></i>Instagram ${P.fmt(ser.pts.reduce((a,p)=>a+p.ig,0))}</span>`:''}</div></div>
+   <div class="card"><h2>Platform balance<small>Instagram share</small></h2>${balance(t)}<p class="mut sm">Median post: Instagram ${P.fmt(P.median(L.filter(r=>r.plat==='ig').map(r=>r.v)))} views, Facebook ${P.fmt(P.median(L.filter(r=>r.plat==='fb').map(r=>r.v)))}.</p></div></div>
+  <div class="cols"><div class="card"><h2>Top posts<small>tap for detail</small></h2>${top.map((r,i)=>postRow(r,i+1)).join('')||'<p class="mut">No posts in this range.</p>'}</div>
+   <div class="card"><h2>Accounts<small>tap to explore</small></h2>${pages.slice(0,8).map(g=>`<button class="arow" data-acct="${g.plat}|${esc(g.page)}"><span><span class="tag ${g.plat}">${g.plat.toUpperCase()}</span>${esc(acctName(g.plat,g.page))}</span><span class="mut">${g.n} posts</span><b>${P.fmt(g.v)}</b></button>`).join('')}${pages.length>8?`<button class="more" id="allAccts" onclick="S.view='explore';render();scrollTo(0,0)">All ${pages.length} accounts in Explore</button>`:''}</div></div>
+  <p class="note">${nf(S.posts.length)} posts stored on this device · metrics are lifetime to date, so recent posts are still growing</p>`}
+function balance(t){return [['Posts',t.ig.n,t.n],['Views',t.ig.v,t.v],['Engagement',t.ig.e,t.e]].map(([l,a,b])=>`<div class="share"><div class="row"><span>${l}</span><b>${b?Math.round(a/b*100):0}%</b></div><div class="bar"><span style="width:${b?a/b*100:0}%"></span></div></div>`).join('')}
+function postRow(r,rank){return `<div class="post" data-post="${esc(r.id)}">${rank?`<div class="rank">${rank}</div>`:''}<div class="pb"><div class="t">${esc(P.label(r))}</div><div class="m"><span class="tag ${r.plat}">${r.plat==='fb'?'FB':'IG'}</span>${esc(acctName(r.plat,r.page))} · ${P.fmtDate(r.d)} · ${P.fmt(P.eng(r))} eng${r.lc?` · ${r.lc} clicks`:''}</div></div><div class="n"><b>${P.fmt(r.v)}</b><span>views</span></div></div>`}
+const WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];const hb=h=>['12–3a','3–6a','6–9a','9a–12','12–3p','3–6p','6–9p','9p–12'][h];
+function explore(L,C,t,c){const has=c.n>0;const days=P.daysBetween(S.s,S.e);const pages=P.byPage(L),types=P.byType(L),heat=P.heat(L);
+  const hmMax=Math.max(1,...heat.flat().filter(x=>x.n>=2).map(x=>x.med));
+  let best=null;heat.forEach((row,w)=>row.forEach((x,h)=>{if(x.n>=3&&(!best||x.med>best.med))best={w,h,...x}}));
+  const mini=(k,l,v,d)=>`<button class="card kpi mini" data-k="${k}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div></button>`;
+  return `<div class="hero small"><h1>Explore</h1><div class="sub">every metric, every account, every post</div></div>${header()}
+  <div class="grid g4">${mini('v','Views',P.fmt(t.v),dl(t.v,c.v,has))}${mini('rx','Reactions & likes',P.fmt(t.rx),dl(t.rx,c.rx,has))}${mini('cm','Comments',P.fmt(t.cm),dl(t.cm,c.cm,has))}${mini('sh','Shares',P.fmt(t.sh),dl(t.sh,c.sh,has))}
+  ${mini('sv','Saves (IG)',P.fmt(t.sv),dl(t.sv,c.sv,has))}${mini('n','Posts',nf(t.n),dl(t.n,c.n,has))}${mini('avg','Avg views / post',P.fmt(t.n?t.v/t.n:0),dl(t.n?t.v/t.n:0,c.n?c.v/c.n:0,has))}${mini('ppd','Posts per day',(t.n/days).toFixed(1),dl(t.n/days,c.n/days,has))}</div>
+  <div class="cols"><div class="card"><h2>Best time to post<small>median views · JST</small></h2>${best?`<p class="mut sm" style="margin-top:-4px">Sweet spot: <b style="color:var(--glow)">${WD[best.w]} ${hb(best.h)}</b>, ${P.fmt(best.med)} median views across ${best.n} posts.</p>`:''}
+   <div class="scroll"><table class="hm"><tr><th></th>${[0,1,2,3,4,5,6,7].map(h=>`<th>${hb(h)}</th>`).join('')}</tr>${heat.map((row,w)=>`<tr><th>${WD[w]}</th>${row.map((x,h)=>`<td data-h="${w},${h}" style="--a:${x.n?Math.min(1,x.med/hmMax):0}" title="${x.n} posts">${x.n?P.fmt(x.med):''}</td>`).join('')}</tr>`).join('')}</table></div><p class="mut sm">Tap a cell to see its posts. Cells with one post can mislead.</p></div>
+   <div class="card"><h2>What works<small>by format</small></h2><table><tr><th>Format</th><th>Posts</th><th>Median</th><th>Eng/1K</th></tr>${types.map(x=>`<tr><td><span class="tag ${x.plat}">${x.plat.toUpperCase()}</span>${esc(x.type.replace(/^IG /,''))}</td><td>${x.n}</td><td>${P.fmt(x.med)}</td><td>${x.epk.toFixed(1)}</td></tr>`).join('')}</table></div></div>
+  <div class="card" style="margin-top:14px"><h2>Every account<small>${pages.length} active · tap a row</small></h2><div class="scroll"><table><tr><th>Account</th><th>Posts</th><th>Views</th><th>Median</th><th>Eng.</th><th>Eng/1K</th><th>Clicks</th></tr>${pages.map(g=>`<tr class="tap" data-acct="${g.plat}|${esc(g.page)}"><td><span class="tag ${g.plat}">${g.plat.toUpperCase()}</span>${esc(acctName(g.plat,g.page))}</td><td>${g.n}</td><td>${nf(g.v)}</td><td>${P.fmt(g.med)}</td><td>${P.fmt(g.e)}</td><td>${g.epk.toFixed(1)}</td><td>${g.lc||''}</td></tr>`).join('')}</table></div></div>
+  <div class="card" style="margin-top:14px"><h2>All posts<small id="cnt"></small></h2><div class="filters"><input id="q" type="search" placeholder="Search captions" value="${esc(S.q)}"><select id="acctSel"><option value="all">All accounts</option>${pages.map(g=>`<option value="${g.plat}|${esc(g.page)}" ${S.acct===g.plat+'|'+g.page?'selected':''}>${esc(acctName(g.plat,g.page))}</option>`).join('')}</select><select id="sortSel">${[['v','Most views'],['e','Most engagement'],['lc','Most clicks'],['epk','Best eng. rate'],['d','Newest']].map(([k,l])=>`<option value="${k}" ${S.sort===k?'selected':''}>${l}</option>`).join('')}</select></div><div id="plist"></div></div>`}
+function renderList(L){let list=L;if(S.acct!=='all')list=list.filter(r=>r.plat+'|'+r.page===S.acct);if(S.q){const q=S.q.toLowerCase();list=list.filter(r=>r.cap.toLowerCase().includes(q))}
+  const key={v:r=>r.v,e:r=>P.eng(r),lc:r=>r.lc,epk:r=>r.v>=200?P.eng(r)/r.v:0,d:r=>r.t}[S.sort];list=[...list].sort((a,b)=>key(b)-key(a));
+  $('#cnt').textContent=`${list.length} posts`;$('#plist').innerHTML=list.slice(0,S.limit).map(r=>postRow(r)).join('')+(list.length>S.limit?`<button class="more" id="moreBtn">Show more</button>`:'')||'<p class="mut">No posts match.</p>';
+  $$('#plist [data-post]').forEach(b=>b.onclick=()=>postSheet(b.dataset.post));const mb=$('#moreBtn');if(mb)mb.onclick=()=>{S.limit+=40;renderList(L)}}
+// ---- drill-down sheets ----
+function postSheet(id){const r=S.posts.find(x=>x.id===id);if(!r)return;const peers=S.posts.filter(x=>x.plat===r.plat&&x.page===r.page&&x.d>=P.addDays(r.d,-60)&&x.d<=P.addDays(r.d,60));const med=P.median(peers.map(x=>x.v));const x=med?r.v/med:0;
+  const cell=(l,v)=>`<div><b>${v}</b><span>${l}</span></div>`;
+  openSheet(`<div class="mut sm"><span class="tag ${r.plat}">${r.plat==='fb'?'FACEBOOK':'INSTAGRAM'}</span>${esc(acctName(r.plat,r.page))} · ${P.fmtDate(r.d,{weekday:'short',year:'numeric'})} · ${new Date(r.t).toLocaleTimeString('en-US',{timeZone:'Asia/Tokyo',hour:'numeric',minute:'2-digit'})} JST · ${esc(r.type)}</div>
+  <h3 style="margin-top:10px">${esc(P.label(r))}</h3><div class="bigline">${P.fmt(r.v)}<small>views</small></div>
+  <p class="mut sm" style="margin:2px 0 14px">${x?`<b class="${x>=1?'up':'down'}">${x.toFixed(1)}×</b> the typical ${esc(acctName(r.plat,r.page))} post around then (median ${P.fmt(med)})`:''}</p>
+  <div class="stats">${cell(r.plat==='ig'?'Likes':'Reactions',nf(r.rx))}${cell('Comments',nf(r.cm))}${cell('Shares',nf(r.sh))}${r.plat==='ig'?cell('Saves',nf(r.sv))+cell('Follows',nf(r.fo)):cell('Link clicks',nf(r.lc))}${cell('Eng / 1K',r.v?(P.eng(r)/r.v*1000).toFixed(1):'–')}${r.re?cell('Reach',nf(r.re)):''}</div>
+  <div class="sec">Caption</div><p class="cap">${esc(r.cap||'No caption')}${r.cap.length>=279?'…':''}</p>${r.link?`<a class="btn" href="${esc(r.link)}" target="_blank" rel="noopener" style="margin-top:16px">Open the post</a>`:''}`)}
+function accountSheet(key){const [plat,...rest]=key.split('|');const page=rest.join('|');const {L,C}=ctx(plat);const l=L.filter(r=>r.page===page),c=C.filter(r=>r.page===page);const t=P.totals(l),pc=P.totals(c);const ser=P.series(l,S.s,S.e,'v');const has=pc.n>0;
+  openSheet(`<div class="mut sm"><span class="tag ${plat}">${plat==='fb'?'FACEBOOK PAGE':'INSTAGRAM'}</span>${P.rangeLabel(S.s,S.e)}</div><h3 style="margin-top:8px">${esc(plat==='ig'?'@'+page:page)}</h3>
+  <div class="grid g4 tight">${[['Views',P.fmt(t.v),dl(t.v,pc.v,has)],['Posts',t.n,dl(t.n,pc.n,has)],['Engagement',P.fmt(t.e),dl(t.e,pc.e,has)],[plat==='ig'?'Follows':'Link clicks',nf(plat==='ig'?t.fo:t.lc),plat==='ig'?dl(t.fo,pc.fo,has):dl(t.lc,pc.lc,has)]].map(([a,b,d])=>`<div class="card kpi mini"><div class="l">${a}</div><div class="v">${b}</div><div class="d">${d}</div></div>`).join('')}</div>
+  <div class="card chartbox" style="margin-top:12px"><div style="position:relative">${chartSVG(ser,600,150,{id:'a',both:1})}<div class="tip"></div></div></div>
+  <div class="sec">Top posts</div>${[...l].sort((a,b)=>b.v-a.v).slice(0,6).map((r,i)=>postRow(r,i+1)).join('')||'<p class="mut">No posts in this range.</p>'}`,1);
+  bindChart($('#sheet .chartbox'),ser,'v');$$('#sheet [data-post]').forEach(b=>b.onclick=()=>postSheet(b.dataset.post))}
+function metricSheet(k){const {L,t,c}=ctx();const val=r=>k==='epk'||k==='avg'||k==='ppd'?r.v:P.metric(r,k);const mk=['epk','avg','ppd'].includes(k)?'v':k;const name=(M[k]||{epk:['Engagement per 1K views'],avg:['Average views per post'],ppd:['Posts per day']}[k])[0];
+  const pages=P.byPage(L).map(g=>({...g,val:k==='epk'?g.epk:k==='avg'?(g.n?g.v/g.n:0):k==='ppd'?g.n:g.rows.reduce((a,r)=>a+P.metric(r,mk),0)})).filter(g=>g.val>0).sort((a,b)=>b.val-a.val);const mx=Math.max(1,...pages.map(g=>g.val));
+  const ser=P.series(L,S.s,S.e,mk);const top=[...L].sort((a,b)=>val(b)-val(a)).slice(0,5);
+  openSheet(`<div class="mut sm">${P.rangeLabel(S.s,S.e)}</div><h3 style="margin-top:8px">${name}</h3>
+  <div class="card chartbox"><div style="position:relative">${chartSVG(ser,600,150,{id:'m'})}<div class="tip"></div></div></div>
+  <div class="sec">By account</div>${pages.map(g=>`<button class="hbar" data-acct="${g.plat}|${esc(g.page)}"><span class="nm"><span class="tag ${g.plat}">${g.plat.toUpperCase()}</span>${esc(acctName(g.plat,g.page))}</span><span class="tr"><span class="${g.plat}" style="width:${g.val/mx*100}%"></span></span><b>${k==='epk'?g.val.toFixed(1):P.fmt(g.val)}</b></button>`).join('')}
+  ${['epk','avg','ppd'].includes(k)?'':`<div class="sec">Top posts by ${name.toLowerCase()}</div>${top.map((r,i)=>postRow(r,i+1)).join('')}`}`,1);
+  bindChart($('#sheet .chartbox'),ser,mk);$$('#sheet [data-acct]').forEach(b=>b.onclick=()=>accountSheet(b.dataset.acct));$$('#sheet [data-post]').forEach(b=>b.onclick=()=>postSheet(b.dataset.post))}
+function listSheet(title,list){openSheet(`<h3>${esc(title)}</h3><p class="mut sm">${list.length} posts · median ${P.fmt(P.median(list.map(r=>r.v)))} views</p>${[...list].sort((a,b)=>b.v-a.v).map(r=>postRow(r)).join('')}`,1);$$('#sheet [data-post]').forEach(b=>b.onclick=()=>postSheet(b.dataset.post))}
+// ---- import ----
+function bindDrop(){const d=$('#drop');if(!d)return;$('#pick').onclick=()=>$('#file').click();d.ondragover=e=>{e.preventDefault();d.classList.add('over')};d.ondragleave=()=>d.classList.remove('over');d.ondrop=e=>{e.preventDefault();d.classList.remove('over');importFiles(e.dataTransfer.files)}}
+document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)importFiles(e.dataTransfer.files)});
+$('#file').onchange=e=>{importFiles(e.target.files);e.target.value=''};
+async function importFiles(files){files=[...files];const msgs=[];for(const f of files){try{const m=P.mapRows(P.parseCSV(await f.text()));const r=P.merge(S.posts,m.rows);S.posts=r.posts;msgs.push(`${m.plat==='fb'?'Facebook':'Instagram'}: ${r.add} new, ${r.upd} updated`)}catch(err){msgs.push(`${f.name}: ${err.message}`)}}
+  await DB.set('posts',S.posts);closeSheet();render();toast(msgs.join(' · '))}
+function importSheet(){openSheet(`<h3>Import exports</h3><div class="drop" id="drop">Drop Facebook and Instagram CSVs here<br><button class="btn" id="pick" style="margin-top:12px">Choose files</button></div><div class="sec">How to export</div><p class="mut" style="font-size:14px;line-height:1.6;margin:0">Meta Business Suite › Insights › Content › Export data. Facebook tab, all Pages, Content level Post, Data view Lifetime, Filter Creation date. Repeat on the Instagram tab. Re-importing updates metrics; nothing is duplicated.</p>`);bindDrop()}
+function rangeSheet(){const end=dataEnd()||P.todayKey();openSheet(`<h3>Choose a range</h3><div class="range left">${PRESETS.filter(p=>p[0]!=='custom').map(([k,l])=>`<button data-sp="${k}" class="${S.preset===k?'on':''}">${l}</button>`).join('')}</div>
+ <div class="sec">Custom</div><div class="opt"><span>From</span><input type="date" id="ds" value="${S.s||P.addDays(end,-29)}"></div><div class="opt"><span>To</span><input type="date" id="de" value="${S.e||end}"></div><button class="btn wide" id="apply">Apply</button>`);
+ $$('[data-sp]').forEach(b=>b.onclick=()=>{S.preset=b.dataset.sp;localStorage.pulsePreset=S.preset;closeSheet();render()});
+ $('#apply').onclick=()=>{let s=$('#ds').value,e=$('#de').value;if(!s||!e)return;if(s>e)[s,e]=[e,s];S.preset='custom';S.s=s;S.e=e;closeSheet();render()}}
+// ---- settings ----
+function seg(name,opts,val){return `<div class="seg" data-seg="${name}">${opts.map(([k,l])=>`<button data-val="${k}" class="${String(val)===String(k)?'on':''}">${l}</button>`).join('')}</div>`}
+function settings(){const T={dusk:'#6d5a7a',dawn:'#f2a7a0',ocean:'#2b7a9e',forest:'#55806a',midnight:'#1b2131'};const RS=[['navy','Navy','#060b33','#fff','#f0363b'],['light','Clean','#ffffff','#0b1a3a','#c8102e'],['dusk','Dusk','linear-gradient(160deg,#2b3352,#6d5a7a 60%,#c98f6b)','#fff','#f3d9a4']];
+ openSheet(`<h3>Settings</h3>
+ <div class="sec">App theme</div><div class="swrow">${Object.entries(T).map(([k,c])=>`<button class="sw ${CFG.theme===k?'on':''}" data-t="${k}" style="background:${c}"><small>${k}</small></button>`).join('')}</div>
+ <div class="sec">Compare against</div>${seg('compare',[['prior','Previous period'],['yoy','Same period last year']],CFG.compare)}
+ <div class="sec">Report style</div><div class="styles">${RS.map(([k,l,bg,fg,ac])=>`<button class="stile ${CFG.rStyle===k?'on':''}" data-rs="${k}"><span class="pv" style="background:${bg}"><i style="background:${k==='light'?'#f3f4f8':'rgba(255,255,255,.9)'};border-color:${ac}"></i><i style="background:${k==='light'?'#f3f4f8':'rgba(255,255,255,.9)'};border-color:${ac}"></i><em style="background:${k==='light'?'#f3f4f8':'rgba(255,255,255,.9)'};border-color:${ac}"></em></span>${l}</button>`).join('')}</div>
+ <div class="sec">Report text</div><label class="fld">Title<input id="rTitle" value="${esc(CFG.rTitle)}"></label><label class="fld">Header<input id="rHead" value="${esc(CFG.rHead)}"></label><label class="fld">Organization<input id="rOrg" value="${esc(CFG.rOrg)}"></label>
+ <div class="sec">Report sections</div>${[['summary','Executive summary'],['chart','Views chart'],['eff','Platform efficiency'],['top','Top 3 posts'],['watch','Watch list'],['team','Page 2: account detail']].map(([k,l])=>`<label class="opt tog"><span>${l}</span><input type="checkbox" data-sec="${k}" ${CFG.rSec[k]?'checked':''}><i></i></label>`).join('')}
+ <div class="sec">Watch list (default lines)</div>${CFG.watch.map((w,i)=>`<label class="fld"><textarea data-w="${i}" rows="2">${esc(w)}</textarea></label>`).join('')}
+ <div class="sec">TV mode</div><div class="opt"><span>Seconds per slide</span>${seg('tvSec',[[8,'8'],[12,'12'],[20,'20'],[30,'30']],CFG.tvSec)}</div>
+ <div class="sec">Your data</div><div class="opt"><span>${nf(S.posts.length)} posts · through ${dataEnd()?P.fmtDate(dataEnd(),{year:'numeric'}):'—'}</span></div>
+ <div class="opt"><span>Back up to a file</span><button class="chip" id="bk">Export</button></div><div class="opt"><span>Restore a backup</span><button class="chip" id="rs">Restore</button></div><div class="opt"><span>Erase all data on this device</span><button class="chip" id="er" style="color:#ffb0a8">Erase</button></div>
+ <p class="note">Pulse never uploads your data. It lives only in this browser.</p>`);
+ $$('[data-t]').forEach(b=>b.onclick=()=>{CFG.theme=b.dataset.t;document.body.dataset.theme=CFG.theme;saveCfg();$$('[data-t]').forEach(x=>x.classList.toggle('on',x===b))});
+ $$('[data-seg] button').forEach(b=>b.onclick=()=>{const n=b.parentNode.dataset.seg;CFG[n]=n==='tvSec'?+b.dataset.val:b.dataset.val;saveCfg();b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(n==='compare')render()});
+ $$('[data-rs]').forEach(b=>b.onclick=()=>{CFG.rStyle=b.dataset.rs;saveCfg();$$('[data-rs]').forEach(x=>x.classList.toggle('on',x===b))});
+ ['rTitle','rHead','rOrg'].forEach(k=>$('#'+k).oninput=e=>{CFG[k]=e.target.value;saveCfg()});
+ $$('[data-sec]').forEach(i=>i.onchange=()=>{CFG.rSec[i.dataset.sec]=i.checked?1:0;saveCfg()});
+ $$('[data-w]').forEach(t=>t.oninput=()=>{CFG.watch[+t.dataset.w]=t.value;saveCfg()});
+ $('#bk').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S.posts)],{type:'application/json'}));a.download=`pulse-backup-${P.todayKey()}.json`;a.click()};
+ $('#rs').onclick=()=>$('#bfile').click();
+ $('#er').onclick=async()=>{if(!confirm('Erase all posts stored in Pulse on this device?'))return;S.posts=[];await DB.set('posts',[]);closeSheet();render()}}
+$('#bfile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const arr=JSON.parse(await f.text());const r=P.merge(S.posts,arr);S.posts=r.posts;await DB.set('posts',S.posts);closeSheet();render();toast(`Restored ${arr.length} posts`)}catch(err){toast('That file is not a Pulse backup')}e.target.value=''};
+// ---- TV mode ----
+const TV={i:0,timer:null,slides:[]};
+function tvBuild(){const {L,C,t,c}=ctx();const has=c.n>0;const top=[...L].sort((a,b)=>b.v-a.v).slice(0,3),pages=P.byPage(L).slice(0,6),ser=P.series(L,S.s,S.e,'v');const mx=Math.max(1,...pages.map(g=>g.v));
+  const d=(a,b)=>dl(a,b,has);const rl=P.rangeLabel(S.s,S.e);
+  return [
+   `<div class="tvc center"><div class="tvk">${esc(CFG.rOrg)} · Social media</div><div class="tvbig">${P.fmt(t.v)}</div><div class="tvsub">views across ${t.n} posts</div><div class="tvd">${d(t.v,c.v)} <span class="mut">vs ${cmpLabel()}</span></div></div>`,
+   `<div class="tvc"><div class="tvk">The numbers that matter</div><div class="tv4">${[['Views',P.fmt(t.v),d(t.v,c.v)],['Engagement',P.fmt(t.e),d(t.e,c.e)],['Link clicks',nf(t.lc),d(t.lc,c.lc)],['IG follows',nf(t.fo),d(t.fo,c.fo)]].map(([l,v,x])=>`<div class="tvcard"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${x}</div></div>`).join('')}</div></div>`,
+   `<div class="tvc"><div class="tvk">Views by ${ser.step}</div><div class="tvchart">${chartSVG(ser,1000,330,{id:'tv',fs:16,sw:3.5,both:1})}</div><div class="legend tvleg"><span><i style="background:var(--fb)"></i>Facebook ${P.fmt(t.fb.v)}</span><span><i style="background:var(--ig)"></i>Instagram ${P.fmt(t.ig.v)}</span></div></div>`,
+   `<div class="tvc"><div class="tvk">Top posts</div><div class="tv3">${top.map((r,i)=>`<div class="tvcard post3"><div class="rk">${i+1}</div><div class="v">${P.fmt(r.v)}</div><div class="l">views</div><div class="tt">${esc(P.label(r))}</div><div class="mut"><span class="tag ${r.plat}">${r.plat.toUpperCase()}</span>${esc(acctName(r.plat,r.page))} · ${P.fmtDate(r.d)}</div></div>`).join('')}</div></div>`,
+   `<div class="tvc"><div class="tvk">Instagram punches above its weight</div><div class="tvbal">${[['Posts',t.ig.n,t.n],['Views',t.ig.v,t.v],['Engagement',t.ig.e,t.e]].map(([l,a,b])=>`<div><div class="row"><span>${l}</span><b>${b?Math.round(a/b*100):0}%</b></div><div class="bar"><span style="width:${b?a/b*100:0}%"></span></div></div>`).join('')}</div><div class="tvsub" style="margin-top:3vh">Instagram share of the total · Facebook in blue</div></div>`,
+   `<div class="tvc"><div class="tvk">Leading accounts</div><div class="tvlb">${pages.map(g=>`<div class="hbar"><span class="nm"><span class="tag ${g.plat}">${g.plat.toUpperCase()}</span>${esc(acctName(g.plat,g.page))}</span><span class="tr"><span class="${g.plat}" style="width:${g.v/mx*100}%"></span></span><b>${P.fmt(g.v)}</b></div>`).join('')}</div></div>`
+  ].map(h=>`<div class="tvslide">${h}<div class="tvfoot">${rl}</div></div>`)}
+function tvShow(i){const n=TV.slides.length;TV.i=(i+n)%n;$$('#tv .tvslide').forEach((s,k)=>s.classList.toggle('on',k===TV.i));$('#tvdots').innerHTML=TV.slides.map((_,k)=>`<i class="${k===TV.i?'on':''}"></i>`).join('');
+  const pb=$('#tvprog');pb.style.transition='none';pb.style.width='0';requestAnimationFrame(()=>requestAnimationFrame(()=>{pb.style.transition=`width ${CFG.tvSec}s linear`;pb.style.width='100%'}));
+  clearTimeout(TV.timer);if(!TV.paused)TV.timer=setTimeout(()=>tvShow(TV.i+1),CFG.tvSec*1000)}
+let wake=null;
+async function tvOpen(){TV.slides=tvBuild();$('#tvslides').innerHTML=TV.slides.join('');$('#tv').classList.add('show');document.body.classList.add('tvon');TV.paused=false;tvShow(0);tvClock();
+  try{await document.documentElement.requestFullscreen?.()}catch(e){}try{wake=await navigator.wakeLock?.request('screen')}catch(e){}}
+function tvClose(){$('#tv').classList.remove('show');document.body.classList.remove('tvon');clearTimeout(TV.timer);if(document.fullscreenElement)document.exitFullscreen?.();wake?.release?.();wake=null}
+function tvClock(){const c=$('#tvclock');if(!c)return;c.textContent=new Date().toLocaleTimeString('en-US',{timeZone:'Asia/Tokyo',hour:'numeric',minute:'2-digit'});if($('#tv').classList.contains('show'))setTimeout(tvClock,15000)}
+$('#tv').onclick=e=>{if(e.target.closest('#tvx'))return tvClose();if(e.target.closest('#tvpause')){TV.paused=!TV.paused;$('#tvpause').textContent=TV.paused?'Play':'Pause';return tvShow(TV.i)}const x=e.clientX/innerWidth;tvShow(TV.i+(x<.3?-1:1))};
+document.addEventListener('keydown',e=>{if(!$('#tv').classList.contains('show'))return;if(e.key==='Escape')tvClose();if(e.key==='ArrowRight'||e.key===' ')tvShow(TV.i+1);if(e.key==='ArrowLeft')tvShow(TV.i-1)});
+// ---- report ----
+function buildReport(){const {L,C,t,c}=ctx('all');const sm=P.summary(t,c,L,S.s,S.e),top=[...L].sort((a,b)=>b.v-a.v).slice(0,3),pages=P.byPage(L),rl=P.rangeLabel(S.s,S.e),R=CFG.rSec;
+ const dd=(a,b)=>{const p=P.pct(a,b);if(p==null||!isFinite(p)||!c.n)return ['—','var(--sub)'];return [(p>=0?'+':'−')+Math.abs(p).toFixed(1)+'%',p>=0?'#16b85c':'#f0363b']};
+ const K=[['Views',P.fmt(t.v),`FB ${P.fmt(t.fb.v)} · IG ${P.fmt(t.ig.v)}`,dd(t.v,c.v)],['Engagement',P.fmt(t.e),'reactions, comments, shares, saves',dd(t.e,c.e)],['Link Clicks',nf(t.lc),'Facebook, all Pages',dd(t.lc,c.lc)],['IG Follows',nf(t.fo),'from Instagram posts',dd(t.fo,c.fo)]];
+ const ser=P.series(L,S.s,S.e,'v');const pts=ser.pts,mx=Math.max(1,...pts.map(p=>Math.max(p.fb,p.ig)));const W=300,H=110;
+ const ln=k=>pts.map((p,i)=>`${i?'L':'M'}${(pts.length>1?i/(pts.length-1)*W:0).toFixed(1)},${(H-(p[k]/mx)*(H-12)).toFixed(1)}`).join('');
+ const why=r=>[r.lc>50?`${r.lc} link clicks`:'',P.eng(r)>200?`${P.fmt(P.eng(r))} engagements`:'',r.plat==='ig'?'Instagram '+(r.type||'').replace('IG ',''):(r.type||'')].filter(Boolean).slice(0,2).join(' · ');
+ const chart=`<div class="wc"><span class="pill" style="min-width:40%">Views by ${ser.step}</span><svg viewBox="-4 -4 ${W+8} ${H+22}" style="width:100%"><path d="${ln('fb')}" fill="none" stroke="var(--cfb)" stroke-width="2.2"/><path d="${ln('ig')}" fill="none" stroke="var(--cig)" stroke-width="2.2"/>${pts.length?`<text x="0" y="${H+14}" font-size="7" fill="currentColor" opacity=".6">${P.fmtDate(pts[0].k)}</text><text x="${W}" y="${H+14}" font-size="7" fill="currentColor" opacity=".6" text-anchor="end">${P.fmtDate(pts[pts.length-1].k)}</text>`:''}<text x="0" y="4" font-size="7" fill="currentColor" opacity=".6">${P.fmt(mx)}</text></svg><div style="font-size:7pt;display:flex;gap:5mm;justify-content:center"><span style="color:var(--cfb);font-weight:700">● Facebook ${P.fmt(t.fb.v)}</span><span style="color:var(--cig);font-weight:700">● Instagram ${P.fmt(t.ig.v)}</span></div></div>`;
+ const eff=`<div class="wc eff"><span class="pill">Platform Efficiency</span><div style="font-size:8pt;font-weight:700">Instagram share of the total</div>${[['Posts',t.ig.n,t.n],['Views',t.ig.v,t.v],['Engagement',t.ig.e,t.e]].map(([l,a,b])=>`<div class="row"><span>${l}</span><b>IG ${b?Math.round(a/b*100):0}%</b></div><div class="bar"><span style="width:${b?a/b*100:0}%"></span></div>`).join('')}</div>`;
+ const summ=`<div class="wc"><h4>Executive Summary</h4><p class="lab">What happened</p><ul contenteditable>${sm.out.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="lab">What we'll do next</p><ul contenteditable>${(sm.next.length?sm.next:['Add a next action']).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
+ const tops=`<div class="wc"><span class="pill" style="min-width:55%">Top Performing Posts</span><div class="tp">${top.map(r=>`<div class="it"><div class="ph" title="Tap to add the post's image">${esc(P.label(r))}</div><div class="vp">${P.fmt(r.v)}</div><div class="wy"><b>${esc(acctName(r.plat,r.page))}</b><span contenteditable>${esc(why(r))}</span></div></div>`).join('')}</div></div>`;
+ const pair=(a,b,cls)=>a&&b?`<div class="${cls}">${a}${b}</div>`:(a||b?`<div class="r1">${a||b}</div>`:'');
+ const fbN=new Set(L.filter(r=>r.plat==='fb').map(r=>r.page)).size,igN=new Set(L.filter(r=>r.plat==='ig').map(r=>r.page)).size;
+ $('#pages').innerHTML=`<div class="a4 st-${CFG.rStyle}"><div class="hd"><b>${esc(CFG.rHead)}</b><span>${rl}</span></div><div class="ttl">${esc(CFG.rTitle)}</div><div class="st">${esc(CFG.rOrg)} · ${fbN} Facebook Pages · ${igN} Instagram accounts · ${t.n} posts</div>
+ <div class="k4">${K.map(([l,v,s,[d,col]])=>`<div class="wc"><span class="pill" style="min-width:80%">${l}</span><div class="bv">${v}</div><div class="bs">${s}</div><div class="bd" style="color:${col}">${d}</div><div class="bds">vs ${P.rangeLabel(S.cs,S.ce)}</div></div>`).join('')}</div>
+ ${pair(R.chart?chart:'',R.eff?eff:'','r2')}${pair(R.summary?summ:'',R.top?tops:'','r3')}
+ ${R.watch?`<div class="wc wl"><h4 style="font-size:11pt">Watch List</h4><div class="g3" contenteditable>${CFG.watch.filter(Boolean).map(w=>`<div>${esc(w)}</div>`).join('')}</div></div>`:''}
+ <div class="ft">Source: Meta Business Suite post exports · ${rl} · generated ${P.fmtDate(P.todayKey(),{year:'numeric'})}</div></div>
+ ${R.team?`<div class="a4 st-${CFG.rStyle}"><div class="hd"><b>${esc(CFG.rHead)}</b><span>${rl}</span></div><div class="ttl" style="font-size:28pt">Account Detail</div><div class="st">Team page</div>
+ <div class="wc"><span class="pill" style="min-width:30%">Account Scorecard</span><table><tr><th style="text-align:left">Account</th><th>Posts</th><th>Views</th><th>Median</th><th>Engagement</th><th>Eng/1K</th><th>Link clicks</th></tr>${pages.slice(0,15).map(g=>`<tr><td>${g.plat==='ig'?'IG @'+esc(g.page):'FB '+esc(P.short(g.page))}</td><td>${g.n}</td><td>${nf(g.v)}</td><td>${P.fmt(g.med)}</td><td>${nf(g.e)}</td><td>${g.epk.toFixed(1)}</td><td>${g.lc||'–'}</td></tr>`).join('')}</table></div>
+ <div class="wc" style="margin-top:3mm"><span class="pill" style="min-width:30%">Top 10 Posts</span><table><tr><th style="text-align:left">Post</th><th>Account</th><th>Date</th><th>Views</th><th>Eng.</th><th>Clicks</th></tr>${[...L].sort((a,b)=>b.v-a.v).slice(0,10).map(r=>`<tr><td>${esc(P.label(r))}</td><td>${esc(acctName(r.plat,r.page))}</td><td>${P.fmtDate(r.d)}</td><td>${nf(r.v)}</td><td>${P.eng(r)}</td><td>${r.lc||'–'}</td></tr>`).join('')}</table></div>
+ <div class="ft">Source: Meta Business Suite post exports · team use</div></div>`:''}`;
+ $$('.tp .ph').forEach(ph=>ph.onclick=()=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{ph.style.backgroundImage=`url(${rd.result})`;ph.textContent=''};rd.readAsDataURL(f)};i.click()});
+ $('#rStyleBar').innerHTML=[['navy','Navy'],['light','Clean'],['dusk','Dusk']].map(([k,l])=>`<button data-rsb="${k}" class="${CFG.rStyle===k?'on':''}">${l}</button>`).join('');
+ $$('[data-rsb]').forEach(b=>b.onclick=()=>{CFG.rStyle=b.dataset.rsb;saveCfg();$$('.a4').forEach(a=>a.className='a4 st-'+CFG.rStyle);$$('[data-rsb]').forEach(x=>x.classList.toggle('on',x===b))});
+ $('#report').classList.add('show');fit()}
+function fit(){const w=Math.min(window.innerWidth-20,794);$$('.a4').forEach(a=>{const s=w/794;a.style.transform=s<1?`scale(${s})`:'';a.style.marginBottom=s<1?`${-(1-s)*1123+16}px`:'16px'})}
+window.addEventListener('resize',()=>{if($('#report').classList.contains('show'))fit()});
+window.addEventListener('beforeprint',()=>$$('.a4').forEach(a=>{a.style.transform='';a.style.marginBottom='0'}));window.addEventListener('afterprint',fit);
+$('#rBack').onclick=()=>$('#report').classList.remove('show');$('#rPrint').onclick=()=>window.print();
+// ---- dock ----
+$$('#dock [data-v]').forEach(b=>b.onclick=()=>{S.view=b.dataset.v;render();scrollTo({top:0,behavior:'smooth'})});
+$('#bTV').onclick=tvOpen;$('#bReport').onclick=buildReport;
+// ---- boot ----
+(async()=>{document.body.dataset.theme=CFG.theme;S.posts=(await DB.get('posts'))||[];render();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})})();
