@@ -67,18 +67,20 @@ P.preset=function(name,today){today=today||P.todayKey();const d=toD(today);const
   if(!cs){const n=P.daysBetween(s,e);ce=P.addDays(s,-1);cs=P.addDays(ce,-(n-1));}
   return {s,e,cs,ce};
 };
+P.yoy=function(s,e){const f=k=>(+k.slice(0,4)-1)+k.slice(4);return {cs:f(s),ce:f(e)}};
 P.compareFor=function(s,e){const n=P.daysBetween(s,e);const ce=P.addDays(s,-1);return {cs:P.addDays(ce,-(n-1)),ce}};
 P.eng=r=>r.rx+r.cm+r.sh+r.sv;
 const med=a=>{if(!a.length)return 0;const b=[...a].sort((x,y)=>x-y);const h=b.length>>1;return b.length%2?b[h]:(b[h-1]+b[h])/2};
 P.median=med;
 P.filter=(posts,s,e,f)=>posts.filter(r=>r.d>=s&&r.d<=e&&(!f||f==='all'||r.plat===f));
-P.totals=function(list){const t={n:list.length,v:0,e:0,lc:0,fo:0,fb:{n:0,v:0,e:0},ig:{n:0,v:0,e:0}};
-  for(const r of list){const e=P.eng(r);t.v+=r.v;t.e+=e;t.lc+=r.lc;t.fo+=r.fo;const p=t[r.plat];p.n++;p.v+=r.v;p.e+=e;}
+P.totals=function(list){const t={n:list.length,v:0,e:0,lc:0,fo:0,rx:0,cm:0,sh:0,sv:0,fb:{n:0,v:0,e:0},ig:{n:0,v:0,e:0}};
+  for(const r of list){const e=P.eng(r);t.v+=r.v;t.e+=e;t.lc+=r.lc;t.fo+=r.fo;t.rx+=r.rx;t.cm+=r.cm;t.sh+=r.sh;t.sv+=r.sv;const p=t[r.plat];p.n++;p.v+=r.v;p.e+=e;}
   t.med=med(list.map(r=>r.v));t.epk=t.v?t.e/t.v*1000:0;return t;};
-P.series=function(list,s,e){const n=P.daysBetween(s,e);const step=n>120?'month':(n>45?'week':'day');const b=new Map();
+P.metric=(r,m)=>m==='e'?P.eng(r):m==='n'?1:(r[m]||0);
+P.series=function(list,s,e,m){m=m||'v';const n=P.daysBetween(s,e);const step=n>120?'month':(n>45?'week':'day');const b=new Map();
   const keyOf=d=>{if(step==='day')return d;if(step==='month')return d.slice(0,7)+'-01';const dt=toD(d);const dow=(dt.getUTCDay()+6)%7;return P.addDays(d,-dow)};
   let k=keyOf(s);while(k<=e){b.set(k,{k,fb:0,ig:0});k=step==='day'?P.addDays(k,1):step==='week'?P.addDays(k,7):(()=>{const d=toD(k);d.setUTCMonth(d.getUTCMonth()+1);return toK(d)})();}
-  for(const r of list){const x=b.get(keyOf(r.d));if(x)x[r.plat]+=r.v;}
+  for(const r of list){const x=b.get(keyOf(r.d));if(x)x[r.plat]+=P.metric(r,m);}
   return {step,pts:[...b.values()]};};
 P.byPage=function(list){const m=new Map();for(const r of list){const k=r.plat+'|'+r.page;if(!m.has(k))m.set(k,{plat:r.plat,page:r.page,rows:[]});m.get(k).rows.push(r);}
   return [...m.values()].map(g=>({...g,...P.totals(g.rows)})).sort((a,b)=>b.v-a.v);};
@@ -100,5 +102,10 @@ P.summary=function(cur,prev,list,s,e){const out=[],next=[];const d=P.pct(cur.v,p
   const ty=P.byType(list)[0];if(ty)next.push(`Lean into ${ty.type.replace(/^IG /,'Instagram ')}s: best median views (${P.fmt(ty.med)}).`);
   return {out:out.slice(0,3),next:next.slice(0,3)};
 };
+// heatmap: weekday (Mon=0) x 3-hour block in JST, median views
+P.heat=function(list){const g=Array.from({length:7},()=>Array.from({length:8},()=>[]));
+  for(const r of list){const d=new Date(r.t+9*3600e3);const wd=(d.getUTCDay()+6)%7,hb=Math.floor(d.getUTCHours()/3);g[wd][hb].push(r.v);}
+  return g.map(row=>row.map(a=>({n:a.length,med:med(a)})));};
+P.hourJST=r=>new Date(r.t+9*3600e3).getUTCHours();
 G.Pulse=P;
 })(typeof window!=='undefined'?window:globalThis);
