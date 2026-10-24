@@ -90,7 +90,7 @@ body.keepquote.sitting #quote{opacity:.85!important}
   </div>
   <div class="picker hide" id="picker"></div>
   <button class="go" id="go" aria-label="Begin"><svg viewBox="0 0 24 24" id="goIcon"><path d="M8 5v14l11-7z"/></svg></button>
-  <div class="row2 hide"><button id="soundBtn">Bowl</button><button id="statsBtn">Journey</button></div>
+  <div class="row2 hide"><button id="soundBtn">Bowl</button><button id="statsBtn">Journey</button><button id="wkBtn">🔥 Workout</button></div>
 </div>
 
 <div class="end" id="end"><h2>Be well, Alan.</h2><p id="endmsg"></p><button class="go" id="endOk" style="width:64px;height:64px;font-family:system-ui;font-size:13px;letter-spacing:1px">OK</button></div>
@@ -313,6 +313,7 @@ function settings(){
 }
 $('menuBtn').onclick=settings;
 const EMBED=new URLSearchParams(location.search).has('embed');
+$('wkBtn').onclick=()=>{if(EMBED)parent.postMessage('stillness-close','*');else location.href='../streak/'};
 if(EMBED){const b=document.createElement('button');b.textContent='‹ Streak';b.style.cssText='font:inherit;letter-spacing:2px;color:inherit';b.onclick=()=>{if(T)stop(true);parent.postMessage('stillness-close','*')};$('date').replaceWith(b)}
 // fullscreen like a native app: installed apps open fullscreen via the manifest; in a browser tab, go fullscreen on first touch
 (function(){const inApp=matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches||window.self!==window.top;
