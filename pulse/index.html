@@ -64,14 +64,14 @@ table{width:100%;border-collapse:collapse;font-size:13px}th{font-weight:500;text
 .empty p{color:var(--mut);line-height:1.6}
 .orb{width:150px;height:150px;margin:0 auto 26px;border-radius:50%;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--glow) 32%,transparent),color-mix(in srgb,var(--glow) 9%,transparent) 60%,transparent 72%);box-shadow:0 0 80px color-mix(in srgb,var(--glow) 20%,transparent);animation:breathe 12s ease-in-out infinite}
 @keyframes breathe{0%,100%{transform:scale(.84);opacity:.7}50%{transform:scale(1.06);opacity:1}}
-.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 24px;border-radius:999px;border:1px solid color-mix(in srgb,var(--glow) 60%,transparent);background:color-mix(in srgb,var(--glow) 10%,transparent);box-shadow:0 0 40px color-mix(in srgb,var(--glow) 15%,transparent);font-size:15px;letter-spacing:.5px}
+.btn{color:var(--txt);text-decoration:none;display:inline-flex;align-items:center;gap:10px;padding:14px 24px;border-radius:999px;border:1px solid color-mix(in srgb,var(--glow) 60%,transparent);background:color-mix(in srgb,var(--glow) 10%,transparent);box-shadow:0 0 40px color-mix(in srgb,var(--glow) 15%,transparent);font-size:15px;letter-spacing:.5px}
 .dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 18px);display:flex;gap:10px;padding:8px;border-radius:999px;background:rgba(14,20,32,.72);border:1px solid var(--line);backdrop-filter:blur(18px);z-index:3}
 .dock button{padding:12px 18px;border-radius:999px;font-size:14px;display:flex;gap:8px;align-items:center;color:var(--mut)}
 .dock button.main{color:var(--txt);background:color-mix(in srgb,var(--glow) 16%,transparent);border:1px solid color-mix(in srgb,var(--glow) 55%,transparent)}
 .dock svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .sheet{position:fixed;left:0;right:0;bottom:0;max-width:640px;margin:0 auto;background:rgba(14,20,32,.95);backdrop-filter:blur(18px);border:1px solid var(--line);border-bottom:0;border-radius:24px 24px 0 0;padding:22px 24px calc(env(safe-area-inset-bottom) + 28px);transform:translateY(105%);transition:transform .45s cubic-bezier(.2,.8,.2,1);z-index:6;max-height:86vh;overflow-y:auto}
 .sheet.show{transform:none}.sheet h3{font-family:var(--serif);font-weight:400;font-size:23px;margin:0 0 14px}
-.close{position:absolute;top:14px;right:18px;font-size:24px;color:var(--mut)}
+.close{position:sticky;top:-8px;float:right;z-index:3;margin:-8px -8px 0 8px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:24px;line-height:1;color:var(--txt);background:rgba(40,48,66,.9);border:1px solid var(--line)}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:.3s;z-index:5}.scrim.show{opacity:1;pointer-events:auto}
 .sec{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:20px 0 8px}
 .drop{border:1.5px dashed color-mix(in srgb,var(--glow) 50%,transparent);border-radius:20px;padding:26px;text-align:center;color:var(--mut);line-height:1.6}
@@ -103,6 +103,11 @@ tr.tap{cursor:pointer}tr.tap:hover td{background:rgba(255,255,255,.04)}
 .cap{font-family:var(--serif);font-size:16px;line-height:1.55;margin:0}
 .hbar{display:grid;grid-template-columns:minmax(110px,38%) 1fr 58px;gap:10px;align-items:center;width:100%;padding:8px 0;font-size:13.5px;text-align:left}.hbar .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hbar b{font-weight:400;text-align:right}
 .hbar .tr{height:8px;border-radius:8px;background:rgba(255,255,255,.07)}.hbar .tr span{display:block;height:100%;border-radius:8px}.hbar .tr .fb{background:var(--fb);box-shadow:0 0 10px var(--fb)}.hbar .tr .ig{background:var(--ig);box-shadow:0 0 10px var(--ig)}
+a.btn:visited{color:var(--txt)}
+.savebar{position:sticky;bottom:calc(-28px - env(safe-area-inset-bottom));margin:22px -24px calc(-28px - env(safe-area-inset-bottom));padding:6px 24px calc(env(safe-area-inset-bottom) + 18px);background:linear-gradient(to top,rgba(14,20,32,1) 70%,rgba(14,20,32,0))}
+.savebar .btn{margin-top:8px}
+.chip .ci{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:5px}
+.back{font-size:14px;color:var(--mut);margin:-4px 0 10px;padding:4px 0}
 .btn.wide{width:100%;justify-content:center;margin-top:18px}
 .seg{display:flex;gap:6px;flex-wrap:wrap}.seg button{padding:8px 13px;border-radius:999px;border:1px solid var(--line);font-size:13px;color:var(--mut)}.seg button.on{border-color:var(--glow);color:var(--txt);background:color-mix(in srgb,var(--glow) 12%,transparent)}
 .swrow{display:flex;gap:14px;flex-wrap:wrap;padding-bottom:16px}.sw{position:relative}.sw small{position:absolute;top:47px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--mut);text-transform:capitalize}
@@ -114,32 +119,6 @@ tr.tap{cursor:pointer}tr.tap:hover td{background:rgba(255,255,255,.04)}
 @media(max-width:520px){.dock{gap:4px;padding:6px}.dock button{flex-direction:column;gap:3px;padding:8px 14px;font-size:11px}}
 .unlock{display:flex;gap:10px;justify-content:center;margin:26px auto 8px;max-width:420px}.unlock input{flex:1;min-width:0;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:999px;padding:13px 20px;font-size:16px;color:var(--txt)}
 .shake{animation:shk .4s}@keyframes shk{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
-/* ---------- TV ---------- */
-#tv{position:fixed;inset:0;z-index:20;display:none;overflow:hidden;cursor:none}#tv.show{display:block}
-body.tvon{overflow:hidden}
-#tv .sky{z-index:0}
-.tvslide{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;justify-content:center;padding:7vh 7vw;opacity:0;transform:scale(1.02);transition:opacity 1.2s,transform 1.4s;pointer-events:none}
-.tvslide.on{opacity:1;transform:none}
-.tvc.center{text-align:center}
-.tvk{font-size:clamp(14px,1.6vw,26px);letter-spacing:.35em;text-transform:uppercase;color:var(--mut);margin-bottom:4vh}
-.tvbig{font-weight:200;font-size:clamp(90px,20vw,340px);line-height:1;text-shadow:0 0 90px color-mix(in srgb,var(--glow) 45%,transparent)}
-.tvsub{font-family:var(--serif);font-style:italic;font-size:clamp(18px,2.4vw,40px);color:var(--mut);margin-top:2vh}
-.tvd{font-size:clamp(16px,2vw,32px);margin-top:3vh}
-.tv4{display:grid;grid-template-columns:repeat(4,1fr);gap:2.2vw}.tv3{display:grid;grid-template-columns:repeat(3,1fr);gap:2.2vw}
-.tvcard{background:var(--card);border:1px solid var(--line);border-radius:2vw;padding:3.2vh 2vw;backdrop-filter:blur(14px)}
-.tvcard .l{font-size:clamp(12px,1.2vw,20px);letter-spacing:.2em;text-transform:uppercase;color:var(--mut)}.tvcard .v{font-weight:200;font-size:clamp(40px,6.4vw,110px);margin:1.5vh 0}.tvcard .d{font-size:clamp(14px,1.5vw,26px)}
-.post3 .rk{font-family:var(--serif);color:var(--glow);font-size:clamp(28px,3.4vw,60px)}.post3 .v{margin:.5vh 0 0}.post3 .tt{font-family:var(--serif);font-size:clamp(16px,1.9vw,32px);line-height:1.3;margin:2.4vh 0 1.4vh}.post3 .mut{font-size:clamp(12px,1.2vw,20px)}
-.tvchart svg{max-height:58vh}.tvleg{font-size:clamp(14px,1.5vw,24px);gap:3vw;margin-top:2vh}.tvleg i{width:1vw;height:1vw;min-width:10px;min-height:10px}
-.tvbal{display:flex;flex-direction:column;gap:5vh}.tvbal .row{display:flex;justify-content:space-between;font-size:clamp(18px,2.4vw,40px);margin-bottom:1.6vh}.tvbal .row b{color:var(--ig);font-weight:300}.tvbal .bar{height:2.2vh}
-.tvlb .hbar{grid-template-columns:30% 1fr 12%;font-size:clamp(16px,2vw,34px);padding:1.6vh 0;gap:2vw}.tvlb .hbar .tr{height:1.8vh}.tvlb .tag{font-size:.5em}
-.tvfoot{position:absolute;left:7vw;bottom:5vh;font-size:clamp(12px,1.2vw,20px);letter-spacing:.2em;text-transform:uppercase;color:var(--mut)}
-#tvclock{position:absolute;right:7vw;top:5vh;z-index:2;font-weight:200;font-size:clamp(18px,2.2vw,38px);color:var(--mut)}
-#tvbrand{position:absolute;left:7vw;top:5vh;z-index:2;font-family:var(--serif);font-style:italic;font-size:clamp(16px,1.8vw,30px);color:var(--mut)}
-#tvdots{position:absolute;right:7vw;bottom:5vh;z-index:2;display:flex;gap:10px}#tvdots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.25)}#tvdots i.on{background:var(--glow);box-shadow:0 0 10px var(--glow)}
-#tvprog{position:absolute;left:0;bottom:0;height:3px;background:var(--glow);z-index:2;box-shadow:0 0 12px var(--glow)}
-.tvctl{position:absolute;top:5vh;left:50%;transform:translateX(-50%);z-index:3;display:flex;gap:10px;opacity:0;transition:opacity .4s}#tv:hover .tvctl,#tv:active .tvctl{opacity:1}#tv:hover{cursor:default}
-.tvctl button{padding:9px 18px;border-radius:999px;border:1px solid var(--line);background:rgba(14,20,32,.7);font-size:14px}
-@media(max-width:700px){.tv4,.tv3{grid-template-columns:1fr 1fr}.tv3 .tvcard:nth-child(3){display:none}}
 
 /* ---------- report ---------- */
 #report{position:fixed;inset:0;z-index:8;background:#1a1f33;overflow:auto;display:none;padding:118px 10px 40px}
@@ -192,7 +171,6 @@ body.tvon{overflow:hidden}
 <div class="dock" id="dock" style="display:none">
   <button data-v="overview"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>Today</button>
   <button data-v="explore"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>Explore</button>
-  <button id="bTV"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>TV</button>
   <button id="bReport" class="main"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 13h7M9 17h5"/></svg>Report</button>
 </div>
 <input type="file" id="file" accept=".csv,text/csv" multiple hidden>
@@ -201,7 +179,6 @@ body.tvon{overflow:hidden}
 <div class="sheet" id="sheet"><button class="close" id="closeSheet">×</button><div id="sheetBody"></div></div>
 <div class="toast" id="toast"></div>
 <div id="report"><div class="rbar"><button id="rBack">← Back</button><div id="rStyleBar"></div><button class="main" id="rPrint">Save as PDF</button><span>Tap text to edit · tap a post tile to add its image · more options in Settings</span></div><div id="pages"></div></div>
-<div id="tv"><div class="sky"></div><div id="tvbrand">MCCS Pulse</div><div id="tvclock"></div><div class="tvctl"><button id="tvpause">Pause</button><button id="tvx">Exit</button></div><div id="tvslides"></div><div id="tvdots"></div><div id="tvprog"></div></div>
 <script src="core.js"></script>
 <script src="app.js"></script>
 </body>
