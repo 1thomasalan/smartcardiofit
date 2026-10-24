@@ -79,39 +79,101 @@ input[type=date]{background:rgba(255,255,255,.06);border:1px solid var(--line);b
 .sw{width:42px;height:42px;border-radius:50%;border:2px solid transparent}.sw.on{border-color:#fff}
 .toast{max-width:92vw;text-align:center;position:fixed;top:calc(env(safe-area-inset-top) + 16px);left:50%;transform:translate(-50%,-150%);background:rgba(14,20,32,.92);border:1px solid var(--line);padding:12px 20px;border-radius:999px;font-size:14px;transition:.4s;z-index:9}.toast.show{transform:translate(-50%,0)}
 .note{font-size:11.5px;color:var(--mut);text-align:center;margin-top:22px;line-height:1.6}
-/* ---------- report (Canva navy style) ---------- */
-#report{position:fixed;inset:0;z-index:8;background:#1a1f33;overflow:auto;display:none;padding:70px 10px 40px}
+
+.mut{color:var(--mut)}.sm{font-size:12.5px;line-height:1.5}
+button.card{text-align:left;width:100%;cursor:pointer;transition:transform .2s,border-color .2s}button.card:hover{border-color:color-mix(in srgb,var(--glow) 45%,transparent)}button.card:active{transform:scale(.98)}
+button.big{display:block;margin:6px auto 2px;color:inherit}
+.hero.small{margin:3vh 0 1vh}.hero.small h1{font-size:clamp(30px,7vw,44px);font-style:normal;color:var(--txt)}
+.range.left{justify-content:flex-start}.chip.sm{padding:6px 12px;font-size:12.5px}
+.grid.g4{grid-template-columns:repeat(2,1fr)}@media(min-width:820px){.grid.g4{grid-template-columns:repeat(4,1fr)}}
+.grid.tight{margin-top:10px;gap:10px}.kpi.mini .v{font-size:clamp(24px,6vw,30px);margin:6px 0 2px}
+.tip{position:absolute;top:-6px;transform:translateX(-50%);background:rgba(14,20,32,.92);border:1px solid var(--line);border-radius:12px;padding:7px 11px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .2s;display:flex;flex-direction:column;gap:2px;white-space:nowrap}
+svg.chart{touch-action:pan-y;cursor:crosshair}
+.post{cursor:pointer}.post .pb{flex:1;min-width:0}.post .n span{font-size:10.5px;color:var(--mut);letter-spacing:1px;text-transform:uppercase}
+.arow{display:grid;grid-template-columns:1fr auto 64px;gap:10px;align-items:center;width:100%;padding:11px 0;border-bottom:1px solid var(--line);text-align:left;font-size:14px}.arow b{font-weight:300;font-size:18px;text-align:right}.arow .mut{font-size:12px}
+.more{width:100%;margin-top:12px;padding:12px;border-radius:999px;border:1px solid var(--line);color:var(--mut);font-size:13.5px}
+tr.tap{cursor:pointer}tr.tap:hover td{background:rgba(255,255,255,.04)}
+.hm th{font-size:9.5px;padding:4px 2px;text-align:center;white-space:nowrap}.hm td{text-align:center;font-size:11px;padding:8px 2px;border:2px solid transparent;border-radius:8px;cursor:pointer;background:color-mix(in srgb,var(--glow) calc(var(--a)*70%),rgba(255,255,255,.03));color:var(--txt)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}.filters input,.filters select{flex:1;min-width:140px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color-scheme:dark}
+.sheet.wide{max-width:760px}
+.bigline{font-weight:200;font-size:54px;line-height:1}.bigline small{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-left:10px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stats div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px}.stats b{display:block;font-weight:300;font-size:22px}.stats span{font-size:11px;color:var(--mut);letter-spacing:1px;text-transform:uppercase}
+.cap{font-family:var(--serif);font-size:16px;line-height:1.55;margin:0}
+.hbar{display:grid;grid-template-columns:minmax(110px,38%) 1fr 58px;gap:10px;align-items:center;width:100%;padding:8px 0;font-size:13.5px;text-align:left}.hbar .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hbar b{font-weight:400;text-align:right}
+.hbar .tr{height:8px;border-radius:8px;background:rgba(255,255,255,.07)}.hbar .tr span{display:block;height:100%;border-radius:8px}.hbar .tr .fb{background:var(--fb);box-shadow:0 0 10px var(--fb)}.hbar .tr .ig{background:var(--ig);box-shadow:0 0 10px var(--ig)}
+.btn.wide{width:100%;justify-content:center;margin-top:18px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}.seg button{padding:8px 13px;border-radius:999px;border:1px solid var(--line);font-size:13px;color:var(--mut)}.seg button.on{border-color:var(--glow);color:var(--txt);background:color-mix(in srgb,var(--glow) 12%,transparent)}
+.swrow{display:flex;gap:14px;flex-wrap:wrap;padding-bottom:16px}.sw{position:relative}.sw small{position:absolute;top:47px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--mut);text-transform:capitalize}
+.styles{display:flex;gap:12px}.stile{flex:1;display:flex;flex-direction:column;gap:7px;align-items:center;font-size:13px;color:var(--mut);padding:8px;border-radius:16px;border:1px solid var(--line)}.stile.on{border-color:var(--glow);color:var(--txt)}
+.pv{width:100%;aspect-ratio:.72;border-radius:8px;padding:12% 10%;display:grid;grid-template-columns:1fr 1fr;gap:8%;align-content:start}.pv i,.pv em{display:block;height:28px;border-radius:5px;border:1px solid}.pv em{grid-column:span 2;height:44px}
+.fld{display:block;font-size:12px;color:var(--mut);margin:8px 0}.fld input,.fld textarea{display:block;width:100%;margin-top:5px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14.5px;color:var(--txt);resize:vertical}
+.tog input{display:none}.tog i{width:46px;height:28px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;transition:.25s;flex:none}.tog i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.25s}.tog input:checked+i{background:color-mix(in srgb,var(--glow) 70%,transparent)}.tog input:checked+i::after{left:21px}
+.dock button.on{color:var(--txt)}.dock button.on:not(.main){background:rgba(255,255,255,.08)}
+@media(max-width:520px){.dock{gap:4px;padding:6px}.dock button{flex-direction:column;gap:3px;padding:8px 14px;font-size:11px}}
+/* ---------- TV ---------- */
+#tv{position:fixed;inset:0;z-index:20;display:none;overflow:hidden;cursor:none}#tv.show{display:block}
+body.tvon{overflow:hidden}
+#tv .sky{z-index:0}
+.tvslide{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;justify-content:center;padding:7vh 7vw;opacity:0;transform:scale(1.02);transition:opacity 1.2s,transform 1.4s;pointer-events:none}
+.tvslide.on{opacity:1;transform:none}
+.tvc.center{text-align:center}
+.tvk{font-size:clamp(14px,1.6vw,26px);letter-spacing:.35em;text-transform:uppercase;color:var(--mut);margin-bottom:4vh}
+.tvbig{font-weight:200;font-size:clamp(90px,20vw,340px);line-height:1;text-shadow:0 0 90px color-mix(in srgb,var(--glow) 45%,transparent)}
+.tvsub{font-family:var(--serif);font-style:italic;font-size:clamp(18px,2.4vw,40px);color:var(--mut);margin-top:2vh}
+.tvd{font-size:clamp(16px,2vw,32px);margin-top:3vh}
+.tv4{display:grid;grid-template-columns:repeat(4,1fr);gap:2.2vw}.tv3{display:grid;grid-template-columns:repeat(3,1fr);gap:2.2vw}
+.tvcard{background:var(--card);border:1px solid var(--line);border-radius:2vw;padding:3.2vh 2vw;backdrop-filter:blur(14px)}
+.tvcard .l{font-size:clamp(12px,1.2vw,20px);letter-spacing:.2em;text-transform:uppercase;color:var(--mut)}.tvcard .v{font-weight:200;font-size:clamp(40px,6.4vw,110px);margin:1.5vh 0}.tvcard .d{font-size:clamp(14px,1.5vw,26px)}
+.post3 .rk{font-family:var(--serif);color:var(--glow);font-size:clamp(28px,3.4vw,60px)}.post3 .v{margin:.5vh 0 0}.post3 .tt{font-family:var(--serif);font-size:clamp(16px,1.9vw,32px);line-height:1.3;margin:2.4vh 0 1.4vh}.post3 .mut{font-size:clamp(12px,1.2vw,20px)}
+.tvchart svg{max-height:58vh}.tvleg{font-size:clamp(14px,1.5vw,24px);gap:3vw;margin-top:2vh}.tvleg i{width:1vw;height:1vw;min-width:10px;min-height:10px}
+.tvbal{display:flex;flex-direction:column;gap:5vh}.tvbal .row{display:flex;justify-content:space-between;font-size:clamp(18px,2.4vw,40px);margin-bottom:1.6vh}.tvbal .row b{color:var(--ig);font-weight:300}.tvbal .bar{height:2.2vh}
+.tvlb .hbar{grid-template-columns:30% 1fr 12%;font-size:clamp(16px,2vw,34px);padding:1.6vh 0;gap:2vw}.tvlb .hbar .tr{height:1.8vh}.tvlb .tag{font-size:.5em}
+.tvfoot{position:absolute;left:7vw;bottom:5vh;font-size:clamp(12px,1.2vw,20px);letter-spacing:.2em;text-transform:uppercase;color:var(--mut)}
+#tvclock{position:absolute;right:7vw;top:5vh;z-index:2;font-weight:200;font-size:clamp(18px,2.2vw,38px);color:var(--mut)}
+#tvbrand{position:absolute;left:7vw;top:5vh;z-index:2;font-family:var(--serif);font-style:italic;font-size:clamp(16px,1.8vw,30px);color:var(--mut)}
+#tvdots{position:absolute;right:7vw;bottom:5vh;z-index:2;display:flex;gap:10px}#tvdots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.25)}#tvdots i.on{background:var(--glow);box-shadow:0 0 10px var(--glow)}
+#tvprog{position:absolute;left:0;bottom:0;height:3px;background:var(--glow);z-index:2;box-shadow:0 0 12px var(--glow)}
+.tvctl{position:absolute;top:5vh;left:50%;transform:translateX(-50%);z-index:3;display:flex;gap:10px;opacity:0;transition:opacity .4s}#tv:hover .tvctl,#tv:active .tvctl{opacity:1}#tv:hover{cursor:default}
+.tvctl button{padding:9px 18px;border-radius:999px;border:1px solid var(--line);background:rgba(14,20,32,.7);font-size:14px}
+@media(max-width:700px){.tv4,.tv3{grid-template-columns:1fr 1fr}.tv3 .tvcard:nth-child(3){display:none}}
+
+/* ---------- report ---------- */
+#report{position:fixed;inset:0;z-index:8;background:#1a1f33;overflow:auto;display:none;padding:118px 10px 40px}
 #report.show{display:block}
 .rbar{position:fixed;top:0;left:0;right:0;display:flex;gap:10px;justify-content:center;align-items:center;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;background:rgba(14,20,32,.92);backdrop-filter:blur(12px);z-index:9;flex-wrap:wrap}
-.rbar button{padding:10px 18px;border-radius:999px;border:1px solid var(--line);font-size:14px}.rbar button.main{border-color:var(--glow);background:color-mix(in srgb,var(--glow) 14%,transparent)}
-.rbar span{font-size:12px;color:var(--mut)}
-.a4{width:210mm;min-height:297mm;margin:0 auto 16px;background:#060b33;color:#fff;padding:12mm 11mm;font-family:Inter,"Helvetica Neue",Arial,sans-serif;transform-origin:top center;position:relative}
-.a4 .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #3a3f6b;padding-bottom:5mm}
-.a4 .hd b{font-size:15pt;font-weight:800;letter-spacing:.3px}.a4 .hd span{border:1px solid #fff;border-radius:999px;padding:2mm 6mm;font-size:9.5pt;font-weight:700}
-.a4 .ttl{text-align:center;font-size:36pt;font-weight:800;margin:6mm 0 1mm;letter-spacing:-.5px}.a4 .st{text-align:center;font-size:8.5pt;color:#b8bce0;margin-bottom:6mm}
-.wc{background:#fff;color:#0b0f2e;border:1px solid #f0363b;border-radius:12px;padding:4mm}
-.pill{display:block;background:#000;color:#fff;border-radius:999px;text-align:center;font-weight:700;font-size:9pt;padding:1.6mm 4mm;margin:0 auto 3mm;width:fit-content;min-width:60%}
+.rbar button{padding:9px 16px;border-radius:999px;border:1px solid var(--line);font-size:14px}.rbar button.main,.rbar button.on{border-color:var(--glow);background:color-mix(in srgb,var(--glow) 14%,transparent)}
+.rbar span{font-size:12px;color:var(--mut);width:100%;text-align:center}#rStyleBar{display:flex;gap:6px}
+.a4{--bg:#060b33;--fg:#fff;--sub:#b8bce0;--cbg:#fff;--cfg:#0b0f2e;--cline:#f0363b;--pbg:#000;--pfg:#fff;--muted:#6b7280;--cfb:#1877f2;--cig:#e1306c;--rule:#3a3f6b;--stripe:#f3f4f8;
+ width:210mm;min-height:297mm;margin:0 auto 16px;background:var(--bg);color:var(--fg);padding:12mm 11mm;font-family:Inter,"Helvetica Neue",Arial,sans-serif;transform-origin:top center;position:relative}
+.a4.st-light{--bg:#fff;--fg:#0b1a3a;--sub:#5b6478;--cbg:#f6f7fb;--cfg:#0b1a3a;--cline:#dfe3ec;--pbg:#0b1a3a;--pfg:#fff;--rule:#dfe3ec;--stripe:#eef0f6}
+.a4.st-light .hd b{color:#c8102e}.a4.st-light .wc{border-left:3px solid #c8102e}
+.a4.st-dusk{--bg:linear-gradient(170deg,#0e1420 0%,#2b3352 45%,#6d5a7a 80%,#c98f6b 115%);--fg:#eef1f6;--sub:rgba(238,241,246,.65);--cbg:rgba(255,255,255,.09);--cfg:#eef1f6;--cline:rgba(243,217,164,.45);--pbg:rgba(243,217,164,.18);--pfg:#f3d9a4;--muted:rgba(238,241,246,.6);--cfb:#8fb4ff;--cig:#f3a6b8;--rule:rgba(255,255,255,.18);--stripe:rgba(255,255,255,.05)}
+.a4.st-dusk .ttl{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-weight:400;font-style:italic}.a4.st-dusk .bv{font-weight:300!important}.a4.st-dusk .tp .ph{background-color:rgba(0,0,0,.35)}.a4.st-dusk .tp .vp{background:rgba(243,217,164,.2);color:#f3d9a4}.a4.st-dusk th{color:#f3d9a4!important}
+.a4 .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--rule);padding-bottom:5mm}
+.a4 .hd b{font-size:15pt;font-weight:800;letter-spacing:.3px}.a4 .hd span{border:1px solid currentColor;border-radius:999px;padding:2mm 6mm;font-size:9.5pt;font-weight:700}
+.a4 .ttl{text-align:center;font-size:36pt;font-weight:800;margin:6mm 0 1mm;letter-spacing:-.5px}.a4 .st{text-align:center;font-size:8.5pt;color:var(--sub);margin-bottom:6mm}
+.wc{background:var(--cbg);color:var(--cfg);border:1px solid var(--cline);border-radius:12px;padding:4mm}
+.pill{display:block;background:var(--pbg);color:var(--pfg);border-radius:999px;text-align:center;font-weight:700;font-size:9pt;padding:1.6mm 4mm;margin:0 auto 3mm;width:fit-content;min-width:60%}
 .k4{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm}
-.k4 .wc{text-align:center}.k4 .bv{font-size:23pt;font-weight:800;margin:1mm 0}.k4 .bs{font-size:6.5pt;color:#6b7280}.k4 .bd{font-size:13pt;font-weight:800;margin-top:2mm}.k4 .bds{font-size:6.2pt;color:#6b7280}
-.r2{display:grid;grid-template-columns:1.55fr 1fr;gap:3mm;margin-top:3mm}
-.r3{display:grid;grid-template-columns:1fr 1.15fr;gap:3mm;margin-top:3mm}
+.k4 .wc{text-align:center}.k4 .bv{font-size:23pt;font-weight:800;margin:1mm 0}.k4 .bs{font-size:6.5pt;color:var(--muted)}.k4 .bd{font-size:13pt;font-weight:800;margin-top:2mm}.k4 .bds{font-size:6.2pt;color:var(--muted)}
+.r1,.r2,.r3{display:grid;gap:3mm;margin-top:3mm}.r1{grid-template-columns:1fr}.r2{grid-template-columns:1.55fr 1fr}.r3{grid-template-columns:1fr 1.15fr}
 .wc h4{margin:0 0 2mm;font-size:12.5pt;font-weight:800}
 .wc ul{margin:0 0 2mm;padding-left:4mm;font-size:8pt;line-height:1.38}.wc p.lab{font-weight:700;font-size:8pt;margin:2mm 0 1mm}
-[contenteditable]{outline:none}[contenteditable]:focus{background:#fff7e0}
-.eff .row{display:flex;justify-content:space-between;font-size:7.5pt;font-weight:600;margin:3mm 0 1mm}.eff .row b{color:#e1306c}
-.eff .bar{height:2.6mm;background:#1877f2}.eff .bar span{background:#e1306c;box-shadow:none}
+[contenteditable]{outline:none}[contenteditable]:focus{background:rgba(255,230,150,.25)}
+.eff .row{display:flex;justify-content:space-between;font-size:7.5pt;font-weight:600;margin:3mm 0 1mm}.eff .row b{color:var(--cig)}
+.eff .bar{height:2.6mm;background:var(--cfb);border-radius:9px;overflow:hidden}.eff .bar span{display:block;height:100%;background:var(--cig);box-shadow:none}
 .tp{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5mm}
 .tp .it{text-align:center}.tp .ph{cursor:pointer;background:#000 center/cover no-repeat;border-radius:9px;padding:2mm;height:30mm;display:flex;align-items:center;justify-content:center;color:#fff;font-size:7pt;line-height:1.3;overflow:hidden;text-align:left}
 .tp .vp{background:#000;color:#fff;border-radius:999px;font-weight:800;font-size:13pt;margin:-3mm 2mm 1.5mm;position:relative}
 .tp .wy{font-size:6.4pt;line-height:1.3}.tp .wy b{display:block;font-size:6.8pt}
 .wl{margin-top:3mm}.wl .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;font-size:7.2pt;line-height:1.38}
-.ft{position:absolute;bottom:6mm;left:11mm;right:11mm;font-size:6.5pt;color:#8a8fbf}
-.a4 table{font-size:7.6pt}.a4 th{color:#fff;background:#000;padding:1.6mm;font-size:7pt;letter-spacing:.4px}.a4 td{border-top:1px solid #e5e7eb;padding:1.4mm}
-.a4 tr:nth-child(even) td{background:#f3f4f8}
+.ft{position:absolute;bottom:6mm;left:11mm;right:11mm;font-size:6.5pt;color:var(--sub)}
+.a4 table{font-size:7.6pt;width:100%;border-collapse:collapse}.a4 th{color:var(--pfg);background:var(--pbg);padding:1.6mm;font-size:7pt;letter-spacing:.4px;text-align:right;text-transform:none}.a4 td{border-top:1px solid var(--rule);padding:1.4mm;text-align:right}.a4 td:first-child,.a4 th:first-child{text-align:left}
+.a4 tr:nth-child(even) td{background:var(--stripe)}
 @media print{
   @page{size:A4;margin:0}
   body>*:not(#report){display:none!important}
-  html,body{background:#060b33}
+  html,body{background:#fff}
   #report{display:block!important;position:static;padding:0;background:none;overflow:visible}
   .rbar{display:none}
   .a4:last-child{page-break-after:auto}
@@ -124,8 +186,9 @@ input[type=date]{background:rgba(255,255,255,.06);border:1px solid var(--line);b
 <div class="sky"></div>
 <div class="wrap" id="app"></div>
 <div class="dock" id="dock" style="display:none">
-  <button id="bImport"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Import</button>
-  <button id="bRange"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Range</button>
+  <button data-v="overview"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>Today</button>
+  <button data-v="explore"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>Explore</button>
+  <button id="bTV"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>TV</button>
   <button id="bReport" class="main"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 13h7M9 17h5"/></svg>Report</button>
 </div>
 <input type="file" id="file" accept=".csv,text/csv" multiple hidden>
@@ -133,141 +196,9 @@ input[type=date]{background:rgba(255,255,255,.06);border:1px solid var(--line);b
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"><button class="close" id="closeSheet">×</button><div id="sheetBody"></div></div>
 <div class="toast" id="toast"></div>
-<div id="report"><div class="rbar"><button id="rBack">← Back</button><button class="main" id="rPrint">Save as PDF / Print</button><span>Tap text to edit · tap a post tile to add its image</span></div><div id="pages"></div></div>
-
+<div id="report"><div class="rbar"><button id="rBack">← Back</button><div id="rStyleBar"></div><button class="main" id="rPrint">Save as PDF</button><span>Tap text to edit · tap a post tile to add its image · more options in Settings</span></div><div id="pages"></div></div>
+<div id="tv"><div class="sky"></div><div id="tvbrand">Pulse</div><div id="tvclock"></div><div class="tvctl"><button id="tvpause">Pause</button><button id="tvx">Exit</button></div><div id="tvslides"></div><div id="tvdots"></div><div id="tvprog"></div></div>
 <script src="core.js"></script>
-<script>
-const P=Pulse,$=s=>document.querySelector(s);
-const S={posts:[],preset:localStorage.pulsePreset||'30',s:null,e:null,plat:'all'};
-// ---- IndexedDB ----
-const DB={open(){return new Promise((ok,no)=>{const r=indexedDB.open('pulse',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})},
- async get(k){const d=await this.open();return new Promise(ok=>{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>ok(null)})},
- async set(k,v){const d=await this.open();return new Promise(ok=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=ok})}};
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600)}
-function openSheet(html){$('#sheetBody').innerHTML=html;$('#sheet').classList.add('show');$('#scrim').classList.add('show')}
-function closeSheet(){$('#sheet').classList.remove('show');$('#scrim').classList.remove('show')}
-$('#closeSheet').onclick=closeSheet;$('#scrim').onclick=closeSheet;
-const dataEnd=()=>S.posts.reduce((m,r)=>r.d>m?r.d:m,'');
-function setRange(){if(S.preset==='custom'&&S.s){const c=P.compareFor(S.s,S.e);S.cs=c.cs;S.ce=c.ce;return}
-  const r=P.preset(S.preset);Object.assign(S,r);}
-const dl=(a,b)=>{const p=P.pct(a,b);if(p==null||!isFinite(p))return '<span class="sub" style="letter-spacing:1px">no prior data</span>';return `<span class="${p>=0?'up':'down'}">${p>=0?'▲':'▼'} ${Math.abs(p).toFixed(1)}%</span>`};
-const PRESETS=[['lastweek','Last week'],['7','7 days'],['30','30 days'],['month','This month'],['lastmonth','Last month'],['ytd','Year to date'],['custom','Custom']];
-// ---- chart ----
-function chart(series,w,h){const pts=series.pts;if(pts.length<2)return '<p class="sub">Not enough days to chart.</p>';
-  const max=Math.max(1,...pts.map(p=>Math.max(p.fb,p.ig)));const px=i=>i/(pts.length-1)*w,py=v=>h-8-(v/max)*(h-26);
-  const line=k=>pts.map((p,i)=>`${i?'L':'M'}${px(i).toFixed(1)},${py(p[k]).toFixed(1)}`).join('');
-  const area=k=>line(k)+`L${w},${h}L0,${h}Z`;
-  const ticks=[0,Math.floor((pts.length-1)/2),pts.length-1].map(i=>`<text x="${px(i)}" y="${h+16}" text-anchor="${i?i===pts.length-1?'end':'middle':'start'}" fill="rgba(238,241,246,.5)" font-size="11">${P.fmtDate(pts[i].k)}</text>`).join('');
-  return `<svg viewBox="0 0 ${w} ${h+20}" style="width:100%;height:auto;overflow:visible"><defs>
-   <linearGradient id="gf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--fb)" stop-opacity=".35"/><stop offset="1" stop-color="var(--fb)" stop-opacity="0"/></linearGradient>
-   <linearGradient id="gi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--ig)" stop-opacity=".35"/><stop offset="1" stop-color="var(--ig)" stop-opacity="0"/></linearGradient>
-   <filter id="gl"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-   <text x="0" y="10" fill="rgba(238,241,246,.5)" font-size="11">${P.fmt(max)}</text>
-   <path d="${area('fb')}" fill="url(#gf)"/><path d="${area('ig')}" fill="url(#gi)"/>
-   <path d="${line('fb')}" fill="none" stroke="var(--fb)" stroke-width="2" filter="url(#gl)"/><path d="${line('ig')}" fill="none" stroke="var(--ig)" stroke-width="2" filter="url(#gl)"/>${ticks}</svg>`;}
-// ---- render ----
-function render(){
-  const app=$('#app');
-  if(!S.posts.length){$('#dock').style.display='none';
-    app.innerHTML=`<div class="top"><span>Pulse</span><button class="icon" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>
-    <div class="empty"><div class="orb"></div><h1>Your social, at a glance.</h1><p>Drop in your Meta Business Suite exports (Facebook and Instagram, Post level, Lifetime). Everything stays on this device.</p>
-    <div class="drop" id="drop" style="margin-top:24px">Drop CSV files here<br>or<br><button class="btn" id="pick" style="margin-top:10px">Choose files</button></div></div>`;
-    bindDrop();$('#gear').onclick=settings;return;}
-  $('#dock').style.display='flex';setRange();
-  const L=P.filter(S.posts,S.s,S.e,S.plat),C=P.filter(S.posts,S.cs,S.ce,S.plat);
-  const t=P.totals(L),c=P.totals(C),end=dataEnd();
-  const top=[...L].sort((a,b)=>b.v-a.v).slice(0,5),pages=P.byPage(L),types=P.byType(L).slice(0,6),ser=P.series(L,S.s,S.e);
-  const stale=S.e>end?`<small>Data through ${P.fmtDate(end,{year:'numeric'})} · Meta lags ~2 days</small>`:`<small>vs ${P.rangeLabel(S.cs,S.ce)}</small>`;
-  app.innerHTML=`<div class="top"><span>Pulse · MCCS Okinawa</span><button class="icon" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button></div>
-  <div class="hero"><h1>${greet()}</h1><div class="big">${P.fmt(t.v)}</div><div class="sub">views · ${t.n} posts</div><div class="delta">${dl(t.v,c.v)}</div></div>
-  <div class="range">${PRESETS.map(([k,l])=>`<button data-p="${k}" class="${S.preset===k?'on':''}">${l}</button>`).join('')}</div>
-  <div class="rlabel">${P.rangeLabel(S.s,S.e)}${stale}</div>
-  <div class="range" style="margin-top:12px">${[['all','All'],['fb','Facebook'],['ig','Instagram']].map(([k,l])=>`<button data-f="${k}" class="chip ${S.plat===k?'on':''}">${l}</button>`).join('')}</div>
-  <div class="grid">
-   ${kpi('Engagement',P.fmt(t.e),dl(t.e,c.e),'reactions, comments, shares, saves')}
-   ${kpi('Link clicks',t.lc.toLocaleString('en-US'),dl(t.lc,c.lc),'Facebook')}
-   ${kpi('Eng. per 1K views',t.epk.toFixed(1),dl(t.epk,c.epk),'how hard content works')}
-   ${kpi('IG follows',t.fo.toLocaleString('en-US'),dl(t.fo,c.fo),'from posts')}
-  </div>
-  <div class="cols">
-   <div class="card"><h2>Views over time<small>by ${ser.step}</small></h2>${chart(ser,640,190)}<div class="legend"><span><i style="background:var(--fb)"></i>Facebook ${P.fmt(t.fb.v)}</span><span><i style="background:var(--ig)"></i>Instagram ${P.fmt(t.ig.v)}</span></div></div>
-   <div class="card"><h2>Platform balance<small>Instagram share</small></h2>
-    ${[['Posts',t.ig.n,t.n],['Views',t.ig.v,t.v],['Engagement',t.ig.e,t.e]].map(([l,a,b])=>`<div class="share"><div class="row"><span>${l}</span><b>${b?Math.round(a/b*100):0}%</b></div><div class="bar"><span style="width:${b?a/b*100:0}%"></span></div></div>`).join('')}
-    <p class="sub" style="letter-spacing:1px;text-transform:none;font-size:12.5px;line-height:1.5">Median post: Instagram ${P.fmt(P.median(L.filter(r=>r.plat==='ig').map(r=>r.v)))} views, Facebook ${P.fmt(P.median(L.filter(r=>r.plat==='fb').map(r=>r.v)))}.</p></div>
-  </div>
-  <div class="cols">
-   <div class="card"><h2>Top posts<small>by views</small></h2>${top.map((r,i)=>`<div class="post"><div class="rank">${i+1}</div><div><div class="t">${esc(P.label(r))}</div><div class="m"><span class="tag ${r.plat}">${r.plat==='fb'?'FB':'IG'}</span>${esc(P.short(r.page))} · ${P.fmtDate(r.d)} · ${P.fmt(P.eng(r))} eng${r.lc?` · ${r.lc} clicks`:''}</div></div><div class="n"><b>${P.fmt(r.v)}</b>${r.link?`<a href="${r.link}" target="_blank" rel="noopener">Open</a>`:''}</div></div>`).join('')||'<p class="sub">No posts in this range.</p>'}</div>
-   <div class="card"><h2>What works<small>median views</small></h2><table><tr><th>Format</th><th>Posts</th><th>Median</th><th>Eng/1K</th></tr>${types.map(x=>`<tr><td><span class="tag ${x.plat}">${x.plat.toUpperCase()}</span>${esc(x.type.replace(/^IG /,''))}</td><td>${x.n}</td><td>${P.fmt(x.med)}</td><td>${x.epk.toFixed(1)}</td></tr>`).join('')}</table></div>
-  </div>
-  <div class="card" style="margin-top:14px"><h2>Every account<small>${pages.length} active</small></h2><div class="scroll"><table><tr><th>Account</th><th>Posts</th><th>Views</th><th>Median</th><th>Eng.</th><th>Eng/1K</th><th>Clicks</th></tr>${pages.map(g=>`<tr><td><span class="tag ${g.plat}">${g.plat.toUpperCase()}</span>${esc(g.plat==='ig'?'@'+g.page:P.short(g.page))}</td><td>${g.n}</td><td>${g.v.toLocaleString('en-US')}</td><td>${P.fmt(g.med)}</td><td>${P.fmt(g.e)}</td><td>${g.epk.toFixed(1)}</td><td>${g.lc||''}</td></tr>`).join('')}</table></div></div>
-  <p class="note">${S.posts.length.toLocaleString('en-US')} posts stored on this device · post metrics are lifetime to date, so recent posts are still growing</p>`;
-  app.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{if(b.dataset.p==='custom')return rangeSheet();S.preset=b.dataset.p;localStorage.pulsePreset=S.preset;render()});
-  app.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{S.plat=b.dataset.f;render()});
-  $('#gear').onclick=settings;
-}
-const kpi=(l,v,d,s)=>`<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div><div class="s">${s}</div></div>`;
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function greet(){const h=+new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',hour:'numeric',hour12:false}).format(new Date());return (h<12?'Good morning':h<18?'Good afternoon':'Good evening')+', Alan'}
-// ---- import ----
-function bindDrop(){const d=$('#drop');if(!d)return;$('#pick').onclick=()=>$('#file').click();
-  d.ondragover=e=>{e.preventDefault();d.classList.add('over')};d.ondragleave=()=>d.classList.remove('over');
-  d.ondrop=e=>{e.preventDefault();d.classList.remove('over');importFiles(e.dataTransfer.files)}}
-document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)importFiles(e.dataTransfer.files)});
-$('#file').onchange=e=>{importFiles(e.target.files);e.target.value=''};
-async function importFiles(files){files=[...files];let msgs=[];for(const f of files){try{const m=P.mapRows(P.parseCSV(await f.text()));const r=P.merge(S.posts,m.rows);S.posts=r.posts;msgs.push(`${m.plat==='fb'?'Facebook':'Instagram'}: ${r.add} new, ${r.upd} updated`)}catch(err){msgs.push(`${f.name}: ${err.message}`)}}
-  await DB.set('posts',S.posts);closeSheet();render();toast(msgs.join(' · '))}
-$('#bImport').onclick=()=>openSheet(`<h3>Import exports</h3><div class="drop" id="drop">Drop Facebook and Instagram CSVs here<br><button class="btn" id="pick" style="margin-top:12px">Choose files</button></div>
- <div class="sec">How to export</div><p style="color:var(--mut);font-size:14px;line-height:1.6;margin:0">Meta Business Suite › Insights › Content › Export data. Facebook tab, all Pages, Content level Post, Data view Lifetime, Filter Creation date. Repeat on the Instagram tab. Re-importing updates metrics; nothing is duplicated.</p>`)||bindDrop();
-$('#bRange').onclick=rangeSheet;
-function rangeSheet(){const end=dataEnd()||P.todayKey();openSheet(`<h3>Choose a range</h3><div class="range" style="justify-content:flex-start">${PRESETS.filter(p=>p[0]!=='custom').map(([k,l])=>`<button data-sp="${k}" class="${S.preset===k?'on':''}">${l}</button>`).join('')}</div>
- <div class="sec">Custom</div><div class="opt"><span>From</span><input type="date" id="ds" value="${S.s||P.addDays(end,-29)}"></div><div class="opt"><span>To</span><input type="date" id="de" value="${S.e||end}"></div>
- <button class="btn" id="apply" style="margin-top:18px;width:100%;justify-content:center">Apply</button>`);
- document.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{S.preset=b.dataset.sp;localStorage.pulsePreset=S.preset;closeSheet();render()});
- $('#apply').onclick=()=>{let s=$('#ds').value,e=$('#de').value;if(!s||!e)return;if(s>e)[s,e]=[e,s];S.preset='custom';S.s=s;S.e=e;closeSheet();render()}}
-// ---- settings ----
-function settings(){const th=document.body.dataset.theme||'dusk';const T={dusk:'#6d5a7a',dawn:'#f2a7a0',ocean:'#2b7a9e',forest:'#55806a',midnight:'#1b2131'};
- openSheet(`<h3>Settings</h3><div class="sec">Theme</div><div style="display:flex;gap:12px;flex-wrap:wrap">${Object.entries(T).map(([k,c])=>`<button class="sw ${th===k?'on':''}" data-t="${k}" style="background:${c}" title="${k}"></button>`).join('')}</div>
- <div class="sec">Your data</div><div class="opt"><span>${S.posts.length.toLocaleString('en-US')} posts · through ${dataEnd()?P.fmtDate(dataEnd(),{year:'numeric'}):'—'}</span></div>
- <div class="opt"><span>Back up to a file</span><button class="chip" id="bk">Export</button></div>
- <div class="opt"><span>Restore a backup</span><button class="chip" id="rs">Restore</button></div>
- <div class="opt"><span>Erase all data on this device</span><button class="chip" id="er" style="color:#ffb0a8">Erase</button></div>
- <p class="note">Pulse never uploads your data. It lives only in this browser.</p>`);
- document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{document.body.dataset.theme=b.dataset.t;localStorage.pulseTheme=b.dataset.t;settings()});
- $('#bk').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S.posts)],{type:'application/json'}));a.download=`pulse-backup-${P.todayKey()}.json`;a.click()};
- $('#rs').onclick=()=>$('#bfile').click();
- $('#er').onclick=async()=>{if(!confirm('Erase all posts stored in Pulse on this device?'))return;S.posts=[];await DB.set('posts',[]);closeSheet();render()}}
-$('#bfile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const arr=JSON.parse(await f.text());const r=P.merge(S.posts,arr);S.posts=r.posts;await DB.set('posts',S.posts);closeSheet();render();toast(`Restored ${arr.length} posts`)}catch(err){toast('That file is not a Pulse backup')}e.target.value=''};
-// ---- report ----
-$('#bReport').onclick=buildReport;$('#rBack').onclick=()=>$('#report').classList.remove('show');$('#rPrint').onclick=()=>window.print();
-function buildReport(){setRange();const L=P.filter(S.posts,S.s,S.e),C=P.filter(S.posts,S.cs,S.ce);const t=P.totals(L),c=P.totals(C);
- const sm=P.summary(t,c,L,S.s,S.e),top=[...L].sort((a,b)=>b.v-a.v).slice(0,3),pages=P.byPage(L),rl=P.rangeLabel(S.s,S.e);
- const dd=(a,b)=>{const p=P.pct(a,b);if(p==null||!isFinite(p)||!c.n)return ['—','#6b7280'];return [(p>=0?'+':'−')+Math.abs(p).toFixed(1)+'%',p>=0?'#16b85c':'#f0363b']};
- const K=[['Views',P.fmt(t.v),`FB ${P.fmt(t.fb.v)} · IG ${P.fmt(t.ig.v)}`,dd(t.v,c.v)],['Engagement',P.fmt(t.e),'reactions, comments, shares, saves',dd(t.e,c.e)],['Link Clicks',t.lc.toLocaleString('en-US'),'Facebook, all Pages',dd(t.lc,c.lc)],['IG Follows',t.fo.toLocaleString('en-US'),'from Instagram posts',dd(t.fo,c.fo)]];
- const ser=P.series(L,S.s,S.e);const pts=ser.pts,mx=Math.max(1,...pts.map(p=>Math.max(p.fb,p.ig)));const W=300,H=110;
- const ln=k=>pts.map((p,i)=>`${i?'L':'M'}${(pts.length>1?i/(pts.length-1)*W:0).toFixed(1)},${(H-(p[k]/mx)*(H-12)).toFixed(1)}`).join('');
- const why=r=>[r.lc>50?`${r.lc} link clicks`:'',P.eng(r)>200?`${P.fmt(P.eng(r))} engagements`:'',r.plat==='ig'?'Instagram '+(r.type||'').replace('IG ',''):(r.type||'')].filter(Boolean).slice(0,2).join(' · ');
- const hi=pages.slice(0,14);
- $('#pages').innerHTML=`<div class="a4" id="p1"><div class="hd"><b>DIGITAL MARKETING</b><span>${rl}</span></div><div class="ttl">Social Media Report</div><div class="st">MCCS Okinawa · ${new Set(L.filter(r=>r.plat==='fb').map(r=>r.page)).size} Facebook Pages · ${new Set(L.filter(r=>r.plat==='ig').map(r=>r.page)).size} Instagram accounts · ${t.n} posts</div>
- <div class="k4">${K.map(([l,v,s,[d,col]])=>`<div class="wc"><span class="pill" style="min-width:80%">${l}</span><div class="bv">${v}</div><div class="bs">${s}</div><div class="bd" style="color:${col}">${d}</div><div class="bds">vs ${P.rangeLabel(S.cs,S.ce)}</div></div>`).join('')}</div>
- <div class="r2"><div class="wc"><span class="pill" style="min-width:40%">Views by ${ser.step}</span><svg viewBox="-4 -4 ${W+8} ${H+22}" style="width:100%"><path d="${ln('fb')}" fill="none" stroke="#1877f2" stroke-width="2.2"/><path d="${ln('ig')}" fill="none" stroke="#e1306c" stroke-width="2.2"/>${pts.length?`<text x="0" y="${H+14}" font-size="7" fill="#6b7280">${P.fmtDate(pts[0].k)}</text><text x="${W}" y="${H+14}" font-size="7" fill="#6b7280" text-anchor="end">${P.fmtDate(pts[pts.length-1].k)}</text>`:''}<text x="0" y="4" font-size="7" fill="#6b7280">${P.fmt(mx)}</text></svg><div style="font-size:7pt;display:flex;gap:5mm;justify-content:center"><span style="color:#1877f2;font-weight:700">● Facebook ${P.fmt(t.fb.v)}</span><span style="color:#e1306c;font-weight:700">● Instagram ${P.fmt(t.ig.v)}</span></div></div>
-  <div class="wc eff"><span class="pill">Platform Efficiency</span><div style="font-size:8pt;font-weight:700">Instagram share of the total</div>${[['Posts',t.ig.n,t.n],['Views',t.ig.v,t.v],['Engagement',t.ig.e,t.e]].map(([l,a,b])=>`<div class="row"><span>${l}</span><b>IG ${b?Math.round(a/b*100):0}%</b></div><div class="bar"><span style="width:${b?a/b*100:0}%"></span></div>`).join('')}</div></div>
- <div class="r3"><div class="wc"><h4>Executive Summary</h4><p class="lab">What happened</p><ul contenteditable>${sm.out.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="lab">What we'll do next</p><ul contenteditable>${(sm.next.length?sm.next:['Add a next action']).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
-  <div class="wc"><span class="pill" style="min-width:55%">Top Performing Posts</span><div class="tp">${top.map(r=>`<div class="it"><div class="ph" title="Tap to add the post's image">${esc(P.label(r))}</div><div class="vp">${P.fmt(r.v)}</div><div class="wy"><b>${esc(r.plat==='ig'?'@'+r.page:P.short(r.page))}</b><span contenteditable>${esc(why(r))}</span></div></div>`).join('')}</div></div></div>
- <div class="wc wl"><h4 style="font-size:11pt">Watch List</h4><div class="g3" contenteditable><div><b>Measurement:</b> Meta replaces Facebook Reach with Viewers on Oct 31, 2026, so we report Views.</div><div><b>Instagram access:</b> confirm the account is linked to the Meta business portfolio.</div><div><b>Data note:</b> post metrics are lifetime to date; the newest posts are still growing.</div></div></div>
- <div class="ft">Source: Meta Business Suite post exports · ${rl} · generated ${P.fmtDate(P.todayKey(),{year:'numeric'})}</div></div>
- <div class="a4" id="p2"><div class="hd"><b>DIGITAL MARKETING</b><span>${rl}</span></div><div class="ttl" style="font-size:28pt">Account Detail</div><div class="st">Team page</div>
- <div class="wc"><span class="pill" style="min-width:30%">Account Scorecard</span><table><tr><th style="text-align:left">Account</th><th>Posts</th><th>Views</th><th>Median</th><th>Engagement</th><th>Eng/1K</th><th>Link clicks</th></tr>${hi.map(g=>`<tr><td>${g.plat==='ig'?'IG @'+esc(g.page):'FB '+esc(P.short(g.page))}</td><td>${g.n}</td><td>${g.v.toLocaleString('en-US')}</td><td>${P.fmt(g.med)}</td><td>${g.e.toLocaleString('en-US')}</td><td>${g.epk.toFixed(1)}</td><td>${g.lc||'–'}</td></tr>`).join('')}</table></div>
- <div class="wc" style="margin-top:3mm"><span class="pill" style="min-width:30%">Top 10 Posts</span><table><tr><th style="text-align:left">Post</th><th>Account</th><th>Date</th><th>Views</th><th>Eng.</th><th>Clicks</th></tr>${[...L].sort((a,b)=>b.v-a.v).slice(0,10).map(r=>`<tr><td>${esc(P.label(r))}</td><td>${esc(r.plat==='ig'?'@'+r.page:P.short(r.page))}</td><td>${P.fmtDate(r.d)}</td><td>${r.v.toLocaleString('en-US')}</td><td>${P.eng(r)}</td><td>${r.lc||'–'}</td></tr>`).join('')}</table></div>
- <div class="ft">Source: Meta Business Suite post exports · team use</div></div>`;
- document.querySelectorAll('.tp .ph').forEach(ph=>ph.onclick=()=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{ph.style.backgroundImage=`url(${rd.result})`;ph.textContent=''};rd.readAsDataURL(f)};i.click()});
- $('#report').classList.add('show');fit();}
-function fit(){const w=Math.min(window.innerWidth-20,794);document.querySelectorAll('.a4').forEach(a=>{const s=w/794;a.style.transform=s<1?`scale(${s})`:'';a.style.marginBottom=s<1?`${-(1-s)*1123+16}px`:'16px'})}
-window.addEventListener('resize',()=>{if($('#report').classList.contains('show'))fit()});
-window.addEventListener('beforeprint',()=>document.querySelectorAll('.a4').forEach(a=>{a.style.transform='';a.style.marginBottom='0'}));
-window.addEventListener('afterprint',fit);
-// ---- boot ----
-(async()=>{if(localStorage.pulseTheme)document.body.dataset.theme=localStorage.pulseTheme;S.posts=(await DB.get('posts'))||[];render();
- if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});})();
-</script>
+<script src="app.js"></script>
 </body>
 </html>
