@@ -84,6 +84,7 @@ nav button.on{color:var(--acc)}
 .mind{display:flex;align-items:center;gap:14px;margin-top:12px;background:linear-gradient(135deg,#2b3352,#5b4a6e);border-radius:var(--r);padding:16px;text-decoration:none;color:var(--txt)}
 .mind .ic{font-size:34px}.mind .tx{flex:1}.mind b{display:block;font-size:17px}.mind small{color:#d9d3e6}.mind .go2{background:#f3d9a4;color:#1d1d26;border-radius:999px;padding:9px 16px;font-weight:800;font-size:14px}
 .dot{position:relative}.dot .m{position:absolute;bottom:-3px;right:-3px;width:12px;height:12px;border-radius:50%;background:#f3d9a4;border:2px solid var(--bg)}
+#mindFrame{position:fixed;inset:0;z-index:30;display:none;background:#0e1420}#mindFrame.show{display:block}#mindFrame iframe{width:100%;height:100%;border:0}
 </style>
 </head>
 <body>
@@ -92,6 +93,7 @@ nav button.on{color:var(--acc)}
 <nav><div class="in">
 <button data-tab="home" class="on"><span>🔥</span>Today</button>
 <button data-tab="ex"><span>💪</span>Exercises</button>
+<button data-tab="mind"><span>🧘</span>Meditate</button>
 <button data-tab="hist"><span>📅</span>History</button>
 <button data-tab="set"><span>⚙️</span>Settings</button>
 </div></nav>
@@ -99,6 +101,7 @@ nav button.on{color:var(--acc)}
 
 <div id="player"></div>
 <div id="toast"></div>
+<div id="mindFrame"></div>
 
 <script>
 // ---------- Exercise library (low-impact, heart-friendly options flagged) ----------
@@ -168,8 +171,10 @@ function restsThisWeek(){let c=0;for(let i=0;i<7;i++){const l=S.log[addDays(toda
 const $=s=>document.querySelector(s);
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),1800)}
 let tab='home';
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));render();scrollTo(0,0)});
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='mind'){openMind();return}tab=b.dataset.tab;document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));render();scrollTo(0,0)});
 
+function openMind(){const m=$('#mindFrame');if(!m.firstChild)m.innerHTML='<iframe src="../stillness/?embed=1" allow="screen-wake-lock; autoplay; fullscreen"></iframe>';m.classList.add('show')}
+window.addEventListener('message',e=>{if(e.data==='stillness-close'){$('#mindFrame').classList.remove('show');if(tab==='home')render()}});
 function render(){({home,ex:exView,hist,set:settings})[tab]();}
 
 function home(){
@@ -189,7 +194,7 @@ function home(){
     <div class="streak"><div class="flame ${st?'':'off'}">🔥</div><div><div class="big">${st}</div><div class="sub" style="margin:4px 0 0">day streak · best ${Math.max(S.best||0,st)}</div></div></div>
     <div class="week">${week}</div>
   </div>
-  <a class="mind" href="../stillness/"><div class="ic">🧘</div><div class="tx"><b>${mt?'Meditated today · '+Math.round(mt.s/60)+' min':'Stillness'}</b><small>${ms?ms+' day mindfulness streak':'A few quiet minutes to round out today'}</small></div><span class="go2">${mt?'Again':'Meditate'}</span></a>
+  <a class="mind" href="#" id="mindCard"><div class="ic">🧘</div><div class="tx"><b>${mt?'Meditated today · '+Math.round(mt.s/60)+' min':'Stillness'}</b><small>${ms?ms+' day mindfulness streak':'A few quiet minutes to round out today'}</small></div><span class="go2">${mt?'Again':'Meditate'}</span></a>
   <h2>How long today?</h2>
   <div class="chips" id="mins">${mins}</div>
   <div style="margin-top:14px"><div class="row"><span class="sub" style="margin:0">Custom</span><b id="mv">${S.minutes} min</b></div>
@@ -205,6 +210,7 @@ function home(){
   $('#mr').oninput=e=>{S.minutes=+e.target.value;$('#mv').textContent=S.minutes+' min'};$('#mr').onchange=()=>{save();home()};
   document.querySelectorAll('#ints button').forEach(c=>c.onclick=()=>{S.interval=c.dataset.i;save();home()});
   $('#go').onclick=startWorkout;
+  $('#mindCard').onclick=e=>{e.preventDefault();openMind()};
   const rb=$('#restbtn'); if(rb) rb.onclick=()=>{if(restsThisWeek()>=S.restPerWeek){toast('No rest days left this week');return}S.log[t]={type:'rest'};save();toast('Rest day logged. Streak safe 💤');home()};
 }
 
@@ -250,7 +256,7 @@ function settings(){
   <div class="set"><div class="row"><b>Rest days per week</b><b id="rpv">${S.restPerWeek}</b></div><div class="sub" style="font-size:13px;margin:2px 0 8px">A logged rest day keeps your streak alive.</div><input type="range" min="0" max="3" value="${S.restPerWeek}" id="rpr"></div>
   <h2>Your data</h2><p class="sub">Everything stays on this phone. Back it up before switching phones.</p>
   <button class="btn sec" id="exp">⬇️ Export backup</button><button class="btn sec" id="imp" style="margin-top:10px">⬆️ Import backup</button><input type="file" id="file" accept="application/json" hidden>
-  <p class="sub" style="margin-top:24px;font-size:13px">Streak · built for Alan by Hark · the gold dot on a day means you meditated in Stillness</p>`;
+  <p class="sub" style="margin-top:24px;font-size:13px">Streak · built for Alan by Hark · Meditate opens Stillness right here · the gold dot on a day means you meditated in Stillness</p>`;
   document.querySelectorAll('.toggle').forEach(b=>b.onclick=()=>{S[b.dataset.k]=!S[b.dataset.k];save();b.classList.toggle('on')});
   $('#hrr').oninput=e=>{S.hrcap=+e.target.value;$('#hrv').textContent=S.hrcap+' BPM';save()};
   $('#rpr').oninput=e=>{S.restPerWeek=+e.target.value;$('#rpv').textContent=S.restPerWeek;save()};
@@ -351,6 +357,11 @@ function finish(){
 
 render();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+// fullscreen like a native app: installed apps open fullscreen via the manifest; in a browser tab, go fullscreen on first touch
+(function(){const inApp=matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches||window.self!==window.top;
+ if(inApp)return;const f=()=>{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)d.requestFullscreen({navigationUI:'hide'}).catch(()=>{})};
+ document.addEventListener('pointerdown',f,{once:true})})();
+
 window.addEventListener('pageshow',()=>{if(tab==='home'&&!W)render()});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&tab==='home'&&!W)render()});
 </script>
 </body>
