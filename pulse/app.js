@@ -61,9 +61,10 @@ function render(){const app=$('#app');
   if(!S.posts.length){$('#dock').style.display='none';app.innerHTML=`${topbar()}<div class="empty"><div class="orb"></div><h1>Your social, at a glance.</h1><p>Waiting for data. Drop in your Meta Business Suite exports (Facebook and Instagram, Post level, Lifetime). Everything stays on this device.</p><div class="drop" id="drop" style="margin-top:24px">Drop CSV files here<br>or<br><button class="btn" id="pick" style="margin-top:10px">Choose files</button></div></div>`;bindDrop();bindTop();return;}
   $('#dock').style.display='flex';$$('#dock [data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
   let {L,C,t,c}=ctx();let accts=null;
-  if(S.view==='explore'){accts=P.byPage(L);if(S.acct!=='all'&&!accts.some(g=>g.plat+'|'+g.page===S.acct))S.acct='all';
+  {accts=P.byPage(L);if(S.acct!=='all'&&!accts.some(g=>g.plat+'|'+g.page===S.acct))S.acct='all';
     if(S.acct!=='all'){const m=r=>r.plat+'|'+r.page===S.acct;L=L.filter(m);C=C.filter(m);t=P.totals(L);c=P.totals(C)}}
-  app.innerHTML=topbar()+(S.view==='explore'?explore(L,C,t,c,accts):overview(L,C,t,c));
+  app.innerHTML=topbar()+(S.view==='explore'?explore(L,C,t,c,accts):overview(L,C,t,c,accts));
+  {const ha=$('#hAcct');if(ha)ha.onchange=e=>{S.acct=e.target.value;S.limit=40;render()}}
   bindTop();
   {const pr=$('.range.presets'),on=pr&&pr.querySelector('.on');if(on&&pr.scrollWidth>pr.clientWidth)pr.scrollLeft=on.offsetLeft-(pr.clientWidth-on.offsetWidth)/2}
   $$('[data-p]').forEach(b=>b.onclick=()=>{if(b.dataset.p==='custom')return rangeSheet();S.preset=b.dataset.p;localStorage.pulsePreset=S.preset;render()});
@@ -73,14 +74,14 @@ function render(){const app=$('#app');
   $$('[data-post]').forEach(b=>b.onclick=e=>{if(e.target.closest('a'))return;postSheet(b.dataset.post)});
   $$('[data-acct]').forEach(b=>b.onclick=()=>accountSheet(b.dataset.acct));
   const cb=$('.chartbox');if(cb)bindChart(cb,P.series(L,S.s,S.e,S.metric),S.metric);
-  if(S.view==='explore'){const q=$('#q');q.oninput=()=>{S.q=q.value;S.limit=40;renderList(L)};$('#acctSel').onchange=e=>{S.acct=e.target.value;S.limit=40;render()};$('#hAcct').onchange=e=>{S.acct=e.target.value;S.limit=40;render()};$('#sortSel').onchange=e=>{S.sort=e.target.value;renderList(L)};renderList(L);
+  if(S.view==='explore'){const q=$('#q');q.oninput=()=>{S.q=q.value;S.limit=40;renderList(L)};$('#acctSel').onchange=e=>{S.acct=e.target.value;S.limit=40;render()};$('#sortSel').onchange=e=>{S.sort=e.target.value;renderList(L)};renderList(L);
     $$('.hm td[data-h]').forEach(td=>td.onclick=()=>{const [w,h]=td.dataset.h.split(',').map(Number);const list=L.filter(r=>{const d=new Date(r.t+9*3600e3);return (d.getUTCDay()+6)%7===w&&Math.floor(d.getUTCHours()/3)===h});listSheet(`${WD[w]} ${hb(h)}`,list)})}
 }
 function bindTop(){$('#gear').onclick=settings}
 const kpi=(k,l,v,d,s)=>`<button class="card kpi" data-k="${k}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div><div class="s">${s}</div></button>`;
-function overview(L,C,t,c){const has=c.n>0;const top=[...L].sort((a,b)=>b.v-a.v).slice(0,5),pages=P.byPage(L),ser=P.series(L,S.s,S.e,S.metric);
+function overview(L,C,t,c,accts){const has=c.n>0;const top=[...L].sort((a,b)=>b.v-a.v).slice(0,5),pages=P.byPage(L),ser=P.series(L,S.s,S.e,S.metric);
   return `<div class="hero"><h1>${greet()}</h1><button class="big" data-k="v">${P.fmt(t.v)}</button><div class="sub">views · ${t.n} posts</div><div class="delta">${dl(t.v,c.v,has)} <span class="mut">vs ${cmpLabel()}</span></div></div>
-  ${header()}
+  ${header(accts)}
   <div class="grid">${kpi('e','Engagement',P.fmt(t.e),dl(t.e,c.e,has),'reactions, comments, shares, saves')}${kpi('lc','Link clicks',nf(t.lc),dl(t.lc,c.lc,has),'Facebook')}${kpi('epk','Eng. per 1K views',t.epk.toFixed(1),dl(t.epk,c.epk,has),'how hard content works')}${kpi('fo','IG follows',nf(t.fo),dl(t.fo,c.fo,has),'from posts')}</div>
   <div class="cols"><div class="card chartbox"><h2>${M[S.metric][0]} over time<small>by ${ser.step} · tap the line</small></h2><div class="range left" style="margin:0 0 12px">${['v','e','lc','n'].map(m=>`<button class="chip sm ${S.metric===m?'on':''}" data-m="${m}">${M[m][0]}</button>`).join('')}</div><div style="position:relative">${chartSVG(ser,640,190)}<div class="tip"></div></div><div class="legend">${S.plat!=='ig'?`<span><i style="background:var(--fb)"></i>Facebook ${P.fmt(ser.pts.reduce((a,p)=>a+p.fb,0))}</span>`:''}${S.plat!=='fb'?`<span><i style="background:var(--ig)"></i>Instagram ${P.fmt(ser.pts.reduce((a,p)=>a+p.ig,0))}</span>`:''}</div></div>
    <div class="card"><h2>Platform balance<small>Instagram share</small></h2>${balance(t)}<p class="mut sm">Median post: Instagram ${P.fmt(P.median(L.filter(r=>r.plat==='ig').map(r=>r.v)))} views, Facebook ${P.fmt(P.median(L.filter(r=>r.plat==='fb').map(r=>r.v)))}.</p></div></div>
