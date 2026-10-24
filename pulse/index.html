@@ -110,6 +110,8 @@ tr.tap{cursor:pointer}tr.tap:hover td{background:rgba(255,255,255,.04)}
 .tog input{display:none}.tog i{width:46px;height:28px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;transition:.25s;flex:none}.tog i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.25s}.tog input:checked+i{background:color-mix(in srgb,var(--glow) 70%,transparent)}.tog input:checked+i::after{left:21px}
 .dock button.on{color:var(--txt)}.dock button.on:not(.main){background:rgba(255,255,255,.08)}
 @media(max-width:520px){.dock{gap:4px;padding:6px}.dock button{flex-direction:column;gap:3px;padding:8px 14px;font-size:11px}}
+.unlock{display:flex;gap:10px;justify-content:center;margin:26px auto 8px;max-width:420px}.unlock input{flex:1;min-width:0;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:999px;padding:13px 20px;font-size:16px;color:var(--txt)}
+.shake{animation:shk .4s}@keyframes shk{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 /* ---------- TV ---------- */
 #tv{position:fixed;inset:0;z-index:20;display:none;overflow:hidden;cursor:none}#tv.show{display:block}
 body.tvon{overflow:hidden}
