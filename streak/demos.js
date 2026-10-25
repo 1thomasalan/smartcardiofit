@@ -83,7 +83,7 @@ function skeleton(id,p){
   const head=add(neck,p.hd??p.t,L.neck);
   const sh=add(neck,p.t+180,3);
   const off=a=>front?dir(p.t-90).map(v=>v*a):[0,0];
-  const o6=off(6),o4=off(4);
+  const o6=off(7),o4=off(4.6);
   const shL=[sh[0]+o6[0],sh[1]+o6[1]],shR=[sh[0]-o6[0],sh[1]-o6[1]];
   const hpL=[hip[0]+o4[0],hip[1]+o4[1]],hpR=[hip[0]-o4[0],hip[1]-o4[1]];
   let eL=add(shL,p.lu,L.ua),hL=add(eL,p.ll,L.fa),eR=add(shR,p.ru,L.ua),hR=add(eR,p.rl,L.fa);
@@ -117,27 +117,70 @@ function placed(id,t){
 const C={body:'#f4f4f7',near:'#ff7a35',far:'#9a4e2c',floor:'#34343f',prop:'#3a3a48'};
 function propSVG(pr){
   const [type,x,extra]=pr;
-  if(type==='wall')return `<rect x="${x}" y="8" width="5" height="${FLOOR-8}" rx="1.5" fill="${C.prop}"/>`;
-  if(type==='box')return `<rect x="${x}" y="${FLOOR-extra}" width="26" height="${extra}" rx="3" fill="${C.prop}"/>`;
-  if(type==='chair'){const seat=extra==='low'?FLOOR-26:FLOOR-28;return `<g fill="none" stroke="${C.prop}" stroke-width="3.5" stroke-linecap="round"><line x1="${x-12}" y1="${seat}" x2="${x+10}" y2="${seat}"/><line x1="${x-12}" y1="${seat}" x2="${x-12}" y2="${seat-26}"/><line x1="${x-12}" y1="${seat}" x2="${x-12}" y2="${FLOOR}"/><line x1="${x+10}" y1="${seat}" x2="${x+10}" y2="${FLOOR}"/></g>`}
+  if(type==='wall')return `<rect x="${x}" y="4" width="7" height="${FLOOR-4}" rx="1.5" fill="url(#dmPr)"/><rect x="${x}" y="4" width="1.4" height="${FLOOR-4}" fill="#5c5c70"/>`;
+  if(type==='box')return `<rect x="${x}" y="${FLOOR-extra}" width="26" height="${extra}" rx="3" fill="url(#dmPr)"/><rect x="${x}" y="${FLOOR-extra}" width="26" height="3.5" rx="1.5" fill="#5c5c70"/>`;
+  if(type==='chair'){const seat=extra==='low'?FLOOR-26:FLOOR-28;return `<g fill="none" stroke="#565669" stroke-width="3.2" stroke-linecap="round"><line x1="${x-12}" y1="${seat}" x2="${x+10}" y2="${seat}"/><line x1="${x-12}" y1="${seat}" x2="${x-12}" y2="${seat-26}"/><line x1="${x-12}" y1="${seat}" x2="${x-12}" y2="${FLOOR}"/><line x1="${x+10}" y1="${seat}" x2="${x+10}" y2="${FLOOR}"/></g>`}
   return '';
+}
+// ---- Mannequin renderer: layered, shaded capsules + spheres (light from upper-left) ----
+const PAL={near:['#ffc896','#ff7a35','#b9441a'],far:['#d48a60','#9c4f28','#5e2a12'],body:['#ffffff','#d9d9e3','#8e8ea0']};
+const LX=-.55,LY=-.83; // light direction
+const f1=v=>v.toFixed(1);
+function capPath(a,b,r1,r2){
+  const dx=b[0]-a[0],dy=b[1]-a[1],d=Math.hypot(dx,dy)||.001,nx=-dy/d,ny=dx/d;
+  return `M${f1(a[0]+nx*r1)} ${f1(a[1]+ny*r1)}L${f1(b[0]+nx*r2)} ${f1(b[1]+ny*r2)}A${f1(r2)} ${f1(r2)} 0 0 0 ${f1(b[0]-nx*r2)} ${f1(b[1]-ny*r2)}L${f1(a[0]-nx*r1)} ${f1(a[1]-ny*r1)}A${f1(r1)} ${f1(r1)} 0 0 0 ${f1(a[0]+nx*r1)} ${f1(a[1]+ny*r1)}Z`;
+}
+function capsule(a,b,r1,r2,pal){
+  const sh=(p,k)=>[p[0]+LX*k,p[1]+LY*k];
+  const o1=Math.min(r1,r2)*.28;
+  return `<path d="${capPath(a,b,r1,r2)}" fill="${pal[2]}"/>`+
+   `<path d="${capPath(sh(a,o1),sh(b,o1),r1*.72,r2*.72)}" fill="${pal[1]}"/>`+
+   `<path d="${capPath(sh(a,o1*2.1),sh(b,o1*2.1),r1*.22,r2*.22)}" fill="${pal[0]}" opacity=".75"/>`;
+}
+function sphere(c,r,grad){return `<circle cx="${f1(c[0])}" cy="${f1(c[1])}" r="${f1(r)}" fill="url(#${grad})"/>`}
+function limbSet(s,side,pal,g){
+  const sfx=side;const hp=s['hp'+sfx],k=s['k'+sfx],an=s['a'+sfx],to=s['t'+sfx];
+  return capsule(hp,k,4.3,3.3,pal)+sphere(k,3.2,g)+capsule(k,an,3.2,2.3,pal)+capsule(an,to,2.3,1.7,pal);
+}
+function armSet(s,side,pal,g){
+  const shp=s['sh'+side],e=s['e'+side],h=s['h'+side];
+  return sphere(shp,3.6,g)+capsule(shp,e,3.2,2.6,pal)+sphere(e,2.5,g)+capsule(e,h,2.5,1.9,pal)+sphere(h,2.4,g);
 }
 function figSVG(id,t){
   const ex=D[id],s=placed(id,t),front=ex.v==='front';
-  const ln=(a,b,c,w=4.6)=>`<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
-  const pl=(pts,c)=>`<polyline points="${pts.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')}" fill="none" stroke="${c}" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>`;
-  const far=front?C.near:C.far;
-  let g='';
-  g+=pl([s.hpL,s.kL,s.aL,s.tL],far)+pl([s.shL,s.eL,s.hL],far);
-  g+=ln(s.hip,s.neck,C.body,5.2);
-  if(front)g+=ln(s.shL,s.shR,C.body,4.4)+ln(s.hpL,s.hpR,C.body,4.4);
-  g+=`<circle cx="${s.head[0].toFixed(1)}" cy="${s.head[1].toFixed(1)}" r="${L.head}" fill="${C.body}"/>`;
-  g+=pl([s.hpR,s.kR,s.aR,s.tR],C.near)+pl([s.shR,s.eR,s.hR],C.near);
+  // soft floor shadow under whatever is near the floor
+  const pts=[s.hip,s.neck,s.head,s.hL,s.hR,s.kL,s.kR,s.aL,s.aR,s.tL,s.tR,s.eL,s.eR];
+  const low=pts.filter(q=>q[1]>FLOOR-14);const xs=(low.length?low:pts).map(q=>q[0]);
+  const minx=Math.min(...xs),maxx=Math.max(...xs);
+  let g=`<ellipse cx="${f1((minx+maxx)/2)}" cy="${FLOOR+1.2}" rx="${f1((maxx-minx)/2+7)}" ry="3" fill="url(#dmSh)"/>`;
+  const farP=front?PAL.near:PAL.far,farG=front?'dmJn':'dmJf';
+  g+=limbSet(s,'L',farP,farG)+armSet(s,'L',farP,farG);
+  // torso + pelvis + neck + head
+  const nk=[(s.neck[0]*.4+s.head[0]*.6),(s.neck[1]*.4+s.head[1]*.6)];
+  g+=capsule(s.neck,nk,2.6,2.6,PAL.body);
+  if(front){
+    g+=capsule(s.hpL,s.hpR,4.6,4.6,PAL.body);
+    g+=capsule(s.hip,s.neck,5.8,7.6,PAL.body);
+    g+=capsule(s.shL,s.shR,4.2,4.2,PAL.body);
+  }else{
+    g+=sphere(s.hip,5.6,'dmB');
+    g+=capsule(s.hip,s.neck,5.6,6.4,PAL.body);
+  }
+  g+=sphere(s.head,L.head,'dmB');
+  g+=limbSet(s,'R',PAL.near,'dmJn')+armSet(s,'R',PAL.near,'dmJn');
   return g;
 }
+const DEFS=`<defs>
+<radialGradient id="dmJn" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#ffd2a8"/><stop offset=".45" stop-color="#ff7a35"/><stop offset="1" stop-color="#9c3812"/></radialGradient>
+<radialGradient id="dmJf" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#e0a07a"/><stop offset=".45" stop-color="#9c4f28"/><stop offset="1" stop-color="#4e220e"/></radialGradient>
+<radialGradient id="dmB" cx=".36" cy=".3" r=".78"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#d9d9e3"/><stop offset="1" stop-color="#7c7c8e"/></radialGradient>
+<radialGradient id="dmSh"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+<linearGradient id="dmFl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2c38"/><stop offset="1" stop-color="#17171f" stop-opacity="0"/></linearGradient>
+<linearGradient id="dmPr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4a5c"/><stop offset="1" stop-color="#2c2c38"/></linearGradient>
+</defs>`;
 function staticSVG(id){
   const ex=D[id];if(!ex)return '';
-  return `<line x1="4" y1="${FLOOR+1.5}" x2="96" y2="${FLOOR+1.5}" stroke="${C.floor}" stroke-width="2" stroke-linecap="round"/>`+(ex.props||[]).map(propSVG).join('');
+  return DEFS+`<rect x="0" y="${FLOOR}" width="100" height="${100-FLOOR}" fill="url(#dmFl)"/><line x1="0" y1="${FLOOR}" x2="100" y2="${FLOOR}" stroke="#3a3a48" stroke-width=".8"/>`+(ex.props||[]).map(propSVG).join('');
 }
 // Public: markup for a demo, and a loop that animates every .demo on the page
 function demoHTML(id,cls='',still){
