@@ -110,7 +110,7 @@ P.hourJST=r=>new Date(r.t+9*3600e3).getUTCHours();
 // ---- website (GA4 "Reports snapshot" CSV export) ----
 const ymd=s=>s&&s.length===8?`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`:'';
 P.cleanTitle=t=>String(t||'').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]\uFE0F?/gu,'').replace(/\s+/g,' ').trim();
-P.isGA4=text=>/Nth day|Page title and screen class|Session source \/ medium/.test(text.slice(0,400000))&&/# Start date: \d{8}/.test(text);
+P.isGA4=text=>/Nth day|Page title and screen class|Page path and screen class|Session source \/ medium|Session primary channel group/.test(text.slice(0,400000))&&/# Start date: \d{8}/.test(text);
 P.parseGA4=function(text,opt){opt=opt||{};const maxPages=opt.maxPages||500,maxSrc=opt.maxSrc||200,maxCity=opt.maxCity||100;
   if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
   const lines=text.split(/\r?\n/);let start='',end='',prop='';const secs=[];let cur=null;
@@ -119,6 +119,15 @@ P.parseGA4=function(text,opt){opt=opt||{};const maxPages=opt.maxPages||500,maxSr
     if(!l.trim()){cur=null;continue}
     if(!cur){cur=[];secs.push(cur)}cur.push(l)}
   if(!start||!end)throw new Error('No GA4 date range found in this file');
+  // daily reports (a Date column): Traffic acquisition by channel, or Pages and screens by page path
+  for(const s of secs){const h=P.parseCSV(s[0]+'\n')[0].map(x=>x.trim());if(h[1]!=='Date')continue;
+    const rows=P.parseCSV(s.join('\n')+'\n').slice(1).filter(r=>r.length>=h.length&&r[0]!=='');const n=x=>+x||0,col=k=>h.indexOf(k);
+    if(/^Session primary channel group/.test(h[0])){const c=[col('Sessions'),col('Engaged sessions'),col('Average engagement time per session'),col('Event count'),col('Key events')];
+      const out=rows.map(r=>[ymd(r[1]),r[0],n(r[c[0]]),n(r[c[1]]),+n(r[c[2]]).toFixed(2),n(r[c[3]]),n(r[c[4]])]).filter(r=>r[0]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:b[2]-a[2]);
+      return {v:3,kind:'ch',start,end,prop,rows:out,totals:{sessions:out.reduce((a,r)=>a+r[2],0)}}}
+    if(h[0]==='Page path and screen class'){const c=[col('Views'),col('Active users'),col('Average engagement time per active user'),col('Key events')];const paths=[],pi=new Map();let views=0;
+      const out=rows.map(r=>{let k=pi.get(r[0]);if(k==null){k=paths.length;paths.push(r[0]);pi.set(r[0],k)}views+=n(r[c[0]]);return [P.daysBetween(start,ymd(r[1]))-1,k,n(r[c[0]]),n(r[c[1]]),+n(r[c[2]]).toFixed(1),n(r[c[3]])]}).filter(r=>r[0]>=0);
+      return {v:3,kind:'pg',start,end,prop,paths,rows:out,totals:{views}}}}
   const W={v:2,start,end,prop,totals:null,pages:[],pageCount:0,pageViews:0,first:[],sessions:[],sessionTotal:0,daily:[],keyEvents:0,cities:[]};
   for(const s of secs){const rows=P.parseCSV(s.join('\n')+'\n');const h=rows[0].map(x=>x.trim()),body=rows.slice(1).filter(r=>r.length>=h.length&&r[0]!=='');
     const n=x=>+x||0;
@@ -140,15 +149,18 @@ P.srcGroup=s=>{s=String(s||'').toLowerCase().trim();
   if(/organic|^(google|bing|yahoo|duckduckgo|baidu|yandex|naver|ecosia|yahoo\.co\.jp)\b/.test(s))return 'search';
   return 'other'};
 P.SRC=[['search','Search','#9fe3c4'],['direct','Direct','#f3d9a4'],['facebook','Facebook','#8fb4ff'],['instagram','Instagram','#f3a6b8'],['other','Other sites','#c4a7e7'],['unlabeled','Unlabeled (192.0.2.1)','rgba(255,255,255,.28)']];
-P.NOISE_PAGES=['fb'];
-P.mergeWeb=(list,w)=>{const k=w.start+'|'+w.end;return [...list.filter(x=>x.start+'|'+x.end!==k),w].sort((a,b)=>a.start<b.start?-1:a.start>b.start?1:a.end<b.end?-1:1)};
+P.NOISE_PAGES=['fb','/more/fb','/robots.txt'];
+P.CH=[['search','Search','#9fe3c4'],['direct','Direct','#f3d9a4'],['social','Social media','#8fb4ff'],['referral','Other sites','#c4a7e7'],['ai','AI assistants','#f3a6b8'],['other','Unassigned & other','rgba(255,255,255,.28)']];
+P.chGroup=c=>{c=String(c||'');if(/Search/.test(c))return 'search';if(c==='Direct')return 'direct';if(/Social/.test(c))return 'social';if(c==='Referral')return 'referral';if(/AI Assistant/.test(c))return 'ai';return 'other'};
+const SNAP2CH={search:'search',direct:'direct',facebook:'social',instagram:'social',other:'referral',unlabeled:'referral'};
+P.mergeWeb=(list,w)=>{const id=x=>(x.kind||'snap')+'|'+x.start+'|'+x.end,k=id(w);return [...list.filter(x=>id(x)!==k),w].sort((a,b)=>a.start<b.start?-1:a.start>b.start?1:a.end<b.end?-1:1)};
 // choose non-overlapping snapshots that best cover [s,e]
 P.webPick=function(snaps,s,e){const ins=x=>{const a=x.start>s?x.start:s,b=x.end<e?x.end:e;return a>b?0:P.daysBetween(a,b)};
   const el=snaps.map(x=>({x,d:P.daysBetween(x.start,x.end),i:ins(x)})).filter(o=>o.i/o.d>=0.85).sort((a,b)=>a.x.end<b.x.end?-1:1);
   const best=[];for(let j=0;j<el.length;j++){let p=-1;for(let k=j-1;k>=0;k--)if(el[k].x.end<el[j].x.start){p=k;break}
     const take=el[j].i+(p>=0?best[p].v:0),skip=j?best[j-1].v:0;best.push(take>=skip?{v:take,set:[...(p>=0?best[p].set:[]),el[j].x]}:best[j-1])}
   const r=best.length?best[best.length-1]:{v:0,set:[]};return {set:r.set,covered:r.v,days:P.daysBetween(s,e)}};
-P.webRange=function(snaps,s,e){if(!snaps||!snaps.length)return null;const pk=P.webPick(snaps,s,e);
+P.snapRange=function(snaps,s,e){if(!snaps||!snaps.length)return null;const pk=P.webPick(snaps,s,e);
   const dm=new Map();for(const x of snaps)for(const d of x.daily||[])if(d[0]>=s&&d[0]<=e)dm.set(d[0],d);
   const daily=[...dm.values()].sort((a,b)=>a[0]<b[0]?-1:1);
   if(!pk.set.length)return daily.length?{set:[],coverage:0,daily,days:pk.days}:null;
@@ -157,8 +169,28 @@ P.webRange=function(snaps,s,e){if(!snaps||!snaps.length)return null;const pk=P.w
     for(const p of x.pages){const o=pg.get(p[0])||[p[0],0,0];o[1]+=p[1];o[2]+=p[2];pg.set(p[0],o)}
     for(const k in (x.groups||{}))g[k]=(g[k]||0)+x.groups[k];for(const [k,v] of x.sessions||[])src.set(k,(src.get(k)||0)+v)}
   t.eng=t.users?t.engW/t.users:0;t.social=(g.facebook||0)+(g.instagram||0);
-  return {set:pk.set,exact:pk.set.length===1,coverage:pk.covered/pk.days,covered:pk.covered,days:pk.days,start:pk.set[0].start,end:pk.set[pk.set.length-1].end,
+  return {src:'snap',srcList:P.SRC,set:pk.set,exact:pk.set.length===1,coverage:pk.covered/pk.days,covered:pk.covered,days:pk.days,start:pk.set[0].start,end:pk.set[pk.set.length-1].end,
     t,pages:[...pg.values()].sort((a,b)=>b[1]-a[1]),groups:g,sources:[...src.entries()].sort((a,b)=>b[1]-a[1]),daily}};
+// daily GA4 data (channel and page reports with a Date column), merged by date; later uploads win
+const DCACHE=new WeakMap();
+P.webDaily=function(all){if(DCACHE.has(all))return DCACHE.get(all);const ch=new Map(),pg=new Map();
+  for(const x of all){if(x.kind==='ch'){const by=new Map();for(const r of x.rows){(by.get(r[0])||by.set(r[0],[]).get(r[0])).push(r)}for(const [d,a] of by)ch.set(d,a)}
+    else if(x.kind==='pg'){const by=new Map();for(const r of x.rows){const d=P.addDays(x.start,r[0]);(by.get(d)||by.set(d,[]).get(d)).push([x.paths[r[1]],r[2],r[3],r[4],r[5]])}for(const [d,a] of by)pg.set(d,a)}}
+  const ks=[...ch.keys()].sort();const o={ch,pg,min:ks[0]||'',max:ks[ks.length-1]||''};DCACHE.set(all,o);return o};
+P.webRange=function(all,s,e){if(!all||!all.length)return null;const snaps=all.filter(x=>!x.kind),D=P.webDaily(all);
+  const chDays=[];for(let k=s;k<=e;k=P.addDays(k,1))if(D.ch.has(k))chDays.push(k);
+  if(!chDays.length||snaps.some(x=>x.start===s&&x.end===e))return P.snapRange(snaps,s,e);
+  const base=P.snapRange(snaps,s,e)||{daily:[]};const dm=new Map(base.daily.map(d=>[d[0],d]));
+  const out=snaps.filter(x=>x.end<D.min||x.start>D.max);const pk=out.length?P.webPick(out,s,e):{set:[],covered:0};
+  const t={users:0,newUsers:0,engW:0,events:0,sessions:0,engaged:0,keyEvents:0,pageViews:0},g={},pg=new Map();let pgDays=0;
+  for(const d of chDays){const u=dm.get(d);if(u){t.users+=u[1]+u[2];t.newUsers+=u[1]}
+    for(const r of D.ch.get(d)){const k=P.chGroup(r[1]);g[k]=(g[k]||0)+r[2];t.sessions+=r[2];t.engaged+=r[3];t.engW+=r[4]*r[2];t.events+=r[5];t.keyEvents+=r[6]}}
+  for(let k=s;k<=e;k=P.addDays(k,1)){const a=D.pg.get(k);if(!a)continue;pgDays++;for(const r of a){const o=pg.get(r[0])||[r[0],0,0,0];o[1]+=r[1];o[2]+=r[2];o[3]+=r[3]*r[2];pg.set(r[0],o);t.pageViews+=r[1]}}
+  for(const x of pk.set){t.users+=x.totals.users;t.newUsers+=x.totals.newUsers;t.events+=x.totals.events;t.sessions+=x.sessionTotal||0;t.keyEvents+=x.keyEvents||0;t.engW+=x.totals.eng*(x.sessionTotal||0);
+    for(const k in (x.groups||{})){const c=SNAP2CH[k]||'other';g[c]=(g[c]||0)+x.groups[k]}}
+  t.eng=t.sessions?t.engW/t.sessions:0;t.social=g.social||0;const days=P.daysBetween(s,e),covered=chDays.length+pk.covered;
+  return {src:'daily',srcList:P.CH,set:[{daily:1},...pk.set],exact:covered>=days,coverage:covered/days,covered,days,pgDays,start:chDays[0],end:pk.set.length?pk.set[pk.set.length-1].end:chDays[chDays.length-1],
+    t,pages:[...pg.values()].map(o=>[o[0],o[1],o[2],o[2]?+(o[3]/o[2]).toFixed(1):0]).sort((a,b)=>b[1]-a[1]),groups:g,sources:[],daily:base.daily}};
 // social account -> website page match, for "who follows through"
 P.PROGRAMS=[['Tsunami Scuba',/tsunami scuba/i,/scuba/i],['Taiyo Golf',/golf/i,/golf/i],['Libraries',/librar/i,/librar/i],['Aquatics',/aquatic/i,/aquatic|pools?\b/i],['Semper Fit',/semper fit/i,/fitness|semper fit/i],['Tours+',/tours\+/i,/tour/i],['School Liaison',/school liaison/i,/school liaison/i],['Marine & Family',/marine & family/i,/family|relocation|single marine|transition readiness/i]];
 P.webInsights=function(posts,wr,s,e){const out={};if(!wr)return out;
@@ -166,7 +198,7 @@ P.webInsights=function(posts,wr,s,e){const out={};if(!wr)return out;
   const days=wr.daily.filter(d=>d[1]+d[2]>0&&sv[d[0]]!=null).map(d=>({d:d[0],w:d[1]+d[2],s:sv[d[0]]}));
   if(days.length>=21){const sorted=[...days].sort((a,b)=>b.s-a.s),k=Math.max(1,Math.round(days.length*.2)),top=sorted.slice(0,k),rest=sorted.slice(k);
     const av=a=>a.reduce((x,o)=>x+o.w,0)/a.length;const a=av(top),b=av(rest);out.lift={pct:(a/b-1)*100,big:a,other:b,n:days.length}}
-  if(wr.set&&wr.set.length){const t=wr.t;out.sends={social:t.social,fb:wr.groups.facebook||0,ig:wr.groups.instagram||0,share:t.sessions?t.social/t.sessions:0};
+  if(wr.t){const t=wr.t;out.sends={social:t.social,fb:wr.src==='snap'?wr.groups.facebook||0:null,ig:wr.src==='snap'?wr.groups.instagram||0:null,share:t.sessions?t.social/t.sessions:0};
     const rows=[];for(const [label,ar,pr] of P.PROGRAMS){const v=posts.filter(r=>r.d>=s&&r.d<=e&&r.plat==='fb'&&ar.test(r.page)).reduce((a,r)=>a+r.v,0);
       const pv=wr.pages.filter(p=>pr.test(p[0])&&!P.NOISE_PAGES.includes(p[0])).reduce((a,p)=>a+p[1],0);if(v>=5000&&pv>0)rows.push({label,v,pv,per:pv/v*1000})}
     out.follow=rows.sort((a,b)=>b.per-a.per)}
