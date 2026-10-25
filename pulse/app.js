@@ -180,7 +180,7 @@ function buildReport(){const {L,C,t,c}=ctx('all');const sm=P.summary(t,c,L,S.s,S
  const chart=`<div class="wc"><span class="pill" style="min-width:40%">Views by ${ser.step}</span><svg viewBox="-4 -4 ${W+8} ${H+22}" style="width:100%"><path d="${ln('fb')}" fill="none" stroke="var(--cfb)" stroke-width="2.2"/><path d="${ln('ig')}" fill="none" stroke="var(--cig)" stroke-width="2.2"/>${pts.length?`<text x="0" y="${H+14}" font-size="7" fill="currentColor" opacity=".6">${P.fmtDate(pts[0].k)}</text><text x="${W}" y="${H+14}" font-size="7" fill="currentColor" opacity=".6" text-anchor="end">${P.fmtDate(pts[pts.length-1].k)}</text>`:''}<text x="0" y="4" font-size="7" fill="currentColor" opacity=".6">${P.fmt(mx)}</text></svg><div style="font-size:7pt;display:flex;gap:5mm;justify-content:center"><span style="color:var(--cfb);font-weight:700">● Facebook ${P.fmt(t.fb.v)}</span><span style="color:var(--cig);font-weight:700">● Instagram ${P.fmt(t.ig.v)}</span></div></div>`;
  const eff=`<div class="wc eff"><span class="pill">Platform Efficiency</span><div style="font-size:8pt;font-weight:700">Instagram share of the total</div>${[['Posts',t.ig.n,t.n],['Views',t.ig.v,t.v],['Engagement',t.ig.e,t.e]].map(([l,a,b])=>`<div class="row"><span>${l}</span><b>IG ${b?Math.round(a/b*100):0}%</b></div><div class="bar"><span style="width:${b?a/b*100:0}%"></span></div>`).join('')}</div>`;
  const summ=`<div class="wc"><h4>Executive Summary</h4><p class="lab">What happened</p><ul contenteditable>${sm.out.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="lab">What we'll do next</p><ul contenteditable>${(sm.next.length?sm.next:['Add a next action']).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
- const tops=`<div class="wc"><span class="pill" style="min-width:55%">Top Performing Posts</span><div class="tp">${top.map(r=>`<div class="it"><div class="ph" title="Tap to add the post's image">${esc(P.label(r))}</div><div class="vp">${P.fmt(r.v)}</div><div class="wy"><b>${esc(acctName(r.plat,r.page))}</b><span contenteditable>${esc(why(r))}</span></div></div>`).join('')}</div></div>`;
+ const tops=`<div class="wc"><span class="pill" style="min-width:55%">Top Performing Posts</span><div class="tp">${top.map(r=>`<div class="it"><div class="ph" data-th="${esc(r.id)}" title="Tap to replace the image"><span class="cap">${esc(P.label(r))}</span></div><div class="vp">${P.fmt(r.v)}</div><div class="wy"><b>${esc(acctName(r.plat,r.page))}</b><span contenteditable>${esc(why(r))}</span></div></div>`).join('')}</div></div>`;
  const pair=(a,b,cls)=>a&&b?`<div class="${cls}">${a}${b}</div>`:(a||b?`<div class="r1">${a||b}</div>`:'');
  const fbN=new Set(L.filter(r=>r.plat==='fb').map(r=>r.page)).size,igN=new Set(L.filter(r=>r.plat==='ig').map(r=>r.page)).size;
  $('#pages').innerHTML=`<div class="a4 st-${CFG.rStyle}"><div class="hd"><b>${esc(CFG.rHead)}</b><span>${rl}</span></div><div class="ttl">${esc(CFG.rTitle)}</div><div class="st">${esc(CFG.rOrg)} · ${fbN} Facebook Pages · ${igN} Instagram accounts · ${t.n} posts</div>
@@ -192,7 +192,8 @@ function buildReport(){const {L,C,t,c}=ctx('all');const sm=P.summary(t,c,L,S.s,S
  <div class="wc"><span class="pill" style="min-width:30%">Account Scorecard</span><table><tr><th style="text-align:left">Account</th><th>Posts</th><th>Views</th><th>Median</th><th>Engagement</th><th>Eng/1K</th><th>Link clicks</th></tr>${pages.slice(0,15).map(g=>`<tr><td>${g.plat==='ig'?'IG @'+esc(g.page):'FB '+esc(P.short(g.page))}</td><td>${g.n}</td><td>${nf(g.v)}</td><td>${P.fmt(g.med)}</td><td>${nf(g.e)}</td><td>${g.epk.toFixed(1)}</td><td>${g.lc||'–'}</td></tr>`).join('')}</table></div>
  <div class="wc" style="margin-top:3mm"><span class="pill" style="min-width:30%">Top 10 Posts</span><table><tr><th style="text-align:left">Post</th><th>Account</th><th>Date</th><th>Views</th><th>Eng.</th><th>Clicks</th></tr>${[...L].sort((a,b)=>b.v-a.v).slice(0,10).map(r=>`<tr><td>${esc(P.label(r))}</td><td>${esc(acctName(r.plat,r.page))}</td><td>${P.fmtDate(r.d)}</td><td>${nf(r.v)}</td><td>${P.eng(r)}</td><td>${r.lc||'–'}</td></tr>`).join('')}</table></div>
  <div class="ft">Source: Meta Business Suite post exports · team use</div></div>`:''}`;
- $$('.tp .ph').forEach(ph=>ph.onclick=()=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{ph.style.backgroundImage=`url(${rd.result})`;ph.textContent=''};rd.readAsDataURL(f)};i.click()});
+ $$('.tp .ph').forEach(ph=>ph.onclick=()=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{ph.style.backgroundImage=`url(${rd.result})`;ph.classList.add('img')};rd.readAsDataURL(f)};i.click()});
+ $$('.tp .ph[data-th]').forEach(async ph=>{const u=await thumbFor(ph.dataset.th);if(u&&!ph.classList.contains('img')){ph.style.backgroundImage=`url(${u})`;ph.classList.add('img')}});
  $('#rStyleBar').innerHTML=[['navy','Navy'],['light','Clean'],['dusk','Dusk']].map(([k,l])=>`<button data-rsb="${k}" class="${CFG.rStyle===k?'on':''}">${l}</button>`).join('');
  $$('[data-rsb]').forEach(b=>b.onclick=()=>{CFG.rStyle=b.dataset.rsb;saveCfg();$$('.a4').forEach(a=>a.className='a4 st-'+CFG.rStyle);$$('[data-rsb]').forEach(x=>x.classList.toggle('on',x===b))});
  $('#report').classList.add('show');fit()}
@@ -204,6 +205,19 @@ $('#rBack').onclick=()=>$('#report').classList.remove('show');$('#rPrint').oncli
 $$('#dock [data-v]').forEach(b=>b.onclick=()=>{S.view=b.dataset.v;render();scrollTo({top:0,behavior:'smooth'})});
 $('#bReport').onclick=buildReport;
 // ---- synced data from Hark ----
+// ---- post thumbnails (encrypted, one file per post; published by the MCCS Social Media project) ----
+// meta.thumbs = {v:1, dir:'t/', kdf:{salt,iterations}, nsalt, ids?} ; file name = sha256(nsalt+postId) hex[0:24] + '.bin' ; file = iv(12) || AES-GCM(ciphertext of JPEG)
+const TH={key:null,ksig:'',mem:new Map()};
+function thMeta(){if(SYNC.meta&&SYNC.meta.thumbs)return SYNC.meta.thumbs;try{return JSON.parse(localStorage.pulseThumbs||'null')}catch(e){return null}}
+async function thKey(m){const pass=localStorage.pulsePass;if(!pass||!m)return null;const sig=m.kdf.salt+m.kdf.iterations;if(TH.key&&TH.ksig===sig)return TH.key;
+  const b=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);
+  TH.key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b(m.kdf.salt),iterations:m.kdf.iterations,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);TH.ksig=sig;return TH.key}
+async function thumbFor(id){if(TH.mem.has(id))return TH.mem.get(id);const cached=await DB.get('th:'+id);if(cached){const u=URL.createObjectURL(cached);TH.mem.set(id,u);return u}
+  const m=thMeta();if(!m)return null;try{const key=await thKey(m);if(!key)return null;
+    const h=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(m.nsalt+id)));const name=[...h].map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,24);
+    const r=await fetch((m.dir||'t/')+name+'.bin');if(!r.ok)return null;const buf=new Uint8Array(await r.arrayBuffer());
+    const jpg=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));const blob=new Blob([jpg],{type:'image/jpeg'});
+    DB.set('th:'+id,blob);const u=URL.createObjectURL(blob);TH.mem.set(id,u);return u}catch(e){return null}}
 function dropExcluded(a){let x=[];try{x=JSON.parse(localStorage.pulseExclude||'[]')}catch(e){}return x.length?a.filter(r=>!x.includes(r.page)):a}
 const SYNC={meta:null};
 async function decryptRemote(meta,pass){const b=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));const enc=new TextEncoder();
@@ -213,7 +227,7 @@ async function decryptRemote(meta,pass){const b=x=>Uint8Array.from(atob(x),c=>c.
   let pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b(meta.iv)},key,ct);
   if(meta.gzip)pt=await new Response(new Blob([pt]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   return JSON.parse(new TextDecoder().decode(pt))}
-async function applyRemote(meta,pass){const arr=await decryptRemote(meta,pass);if(meta.exclude)localStorage.pulseExclude=JSON.stringify(meta.exclude);S.posts=dropExcluded(P.merge(S.posts,arr).posts);await DB.set('posts',S.posts);localStorage.pulsePass=pass;localStorage.pulseSynced=meta.updated;localStorage.pulseThrough=meta.through;S.locked=false}
+async function applyRemote(meta,pass){const arr=await decryptRemote(meta,pass);if(meta.exclude)localStorage.pulseExclude=JSON.stringify(meta.exclude);S.posts=dropExcluded(P.merge(S.posts,arr).posts);await DB.set('posts',S.posts);localStorage.pulsePass=pass;localStorage.pulseSynced=meta.updated;localStorage.pulseThrough=meta.through;if(meta.thumbs)localStorage.pulseThumbs=JSON.stringify(meta.thumbs);S.locked=false}
 async function sync(){let meta;try{const r=await fetch('data.enc.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;meta=await r.json()}catch(e){return}
   SYNC.meta=meta;const pass=localStorage.pulsePass;
   if(pass){if(localStorage.pulseSynced===meta.updated&&S.posts.length)return;try{await applyRemote(meta,pass);render();toast(`Latest data loaded · through ${P.fmtDate(meta.through,{year:'numeric'})}`)}catch(e){delete localStorage.pulsePass;S.locked=!S.posts.length;render()}}
