@@ -107,5 +107,72 @@ P.heat=function(list){const g=Array.from({length:7},()=>Array.from({length:8},()
   for(const r of list){const d=new Date(r.t+9*3600e3);const wd=(d.getUTCDay()+6)%7,hb=Math.floor(d.getUTCHours()/3);g[wd][hb].push(r.v);}
   return g.map(row=>row.map(a=>({n:a.length,med:med(a)})));};
 P.hourJST=r=>new Date(r.t+9*3600e3).getUTCHours();
+// ---- website (GA4 "Reports snapshot" CSV export) ----
+const ymd=s=>s&&s.length===8?`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`:'';
+P.cleanTitle=t=>String(t||'').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]\uFE0F?/gu,'').replace(/\s+/g,' ').trim();
+P.isGA4=text=>/Nth day|Page title and screen class|Session source \/ medium/.test(text.slice(0,400000))&&/# Start date: \d{8}/.test(text);
+P.parseGA4=function(text,opt){opt=opt||{};const maxPages=opt.maxPages||500,maxSrc=opt.maxSrc||200,maxCity=opt.maxCity||100;
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  const lines=text.split(/\r?\n/);let start='',end='',prop='';const secs=[];let cur=null;
+  for(const l of lines){if(l.startsWith('#')){const m=l.match(/# Start date: (\d{8})/),n=l.match(/# End date: (\d{8})/),p=l.match(/# Property: (.*)/);
+      if(m&&!start)start=ymd(m[1]);if(n&&!end)end=ymd(n[1]);if(p)prop=p[1].trim();cur=null;continue}
+    if(!l.trim()){cur=null;continue}
+    if(!cur){cur=[];secs.push(cur)}cur.push(l)}
+  if(!start||!end)throw new Error('No GA4 date range found in this file');
+  const W={v:2,start,end,prop,totals:null,pages:[],pageCount:0,pageViews:0,first:[],sessions:[],sessionTotal:0,daily:[],keyEvents:0,cities:[]};
+  for(const s of secs){const rows=P.parseCSV(s.join('\n')+'\n');const h=rows[0].map(x=>x.trim()),body=rows.slice(1).filter(r=>r.length>=h.length&&r[0]!=='');
+    const n=x=>+x||0;
+    if(h[0]==='Active users'&&h[1]==='New users'){const r=body[0]||[];W.totals={users:n(r[0]),newUsers:n(r[1]),eng:n(r[2]),events:n(r[3])}}
+    else if(h[0]==='Page title and screen class'){const m=new Map();for(const r of body){const t=P.cleanTitle(r[0])||'(untitled)';const o=m.get(t)||[t,0,0,0,0];o[1]+=n(r[1]);o[2]+=n(r[2]);o[3]+=n(r[3]);o[4]+=n(r[4])*n(r[1]);m.set(t,o)}
+      const all=[...m.values()].map(o=>[o[0],o[1],o[2],o[3],o[1]?+(o[4]/o[1]).toFixed(4):0]).sort((a,b)=>b[1]-a[1]);W.pageCount=all.length;W.pageViews=all.reduce((a,o)=>a+o[1],0);W.pages=all.slice(0,maxPages)}
+    else if(h[0]==='First user source / medium')W.first=body.map(r=>[r[0],n(r[1])]).slice(0,maxSrc);
+    else if(h[0]==='Session source / medium'){W.sessionTotal=body.reduce((a,r)=>a+n(r[1]),0);const g={};for(const r of body){const k=P.srcGroup(r[0]);g[k]=(g[k]||0)+n(r[1])}W.groups=g;W.sessions=body.map(r=>[r[0],n(r[1])]).slice(0,maxSrc)}
+    else if(h[0]==='Nth day'){W.daily=body.map(r=>[P.addDays(start,+r[0]),n(r[1]),n(r[2])]).filter(r=>r[0]<=end);while(W.daily.length&&W.daily[W.daily.length-1][0]===end&&!W.daily[W.daily.length-1][1]&&!W.daily[W.daily.length-1][2])W.daily.pop()}
+    else if(h[0]==='Platform'&&h[1]==='Key events')W.keyEvents=body.reduce((a,r)=>a+n(r[1]),0);
+    else if(h[0]==='City')W.cities=body.map(r=>[r[0],n(r[1])]).slice(0,maxCity);}
+  if(!W.totals)throw new Error('GA4 file has no summary totals');
+  return W};
+P.srcGroup=s=>{s=String(s||'').toLowerCase().trim();
+  if(s.startsWith('192.0.2.1'))return 'unlabeled';
+  if(/(^|\.)facebook\.com|^fb[ _/]|^fb$|facebook/.test(s))return 'facebook';
+  if(/instagram|^ig[ _/]|^ig$|^ig_/.test(s))return 'instagram';
+  if(s.startsWith('(direct)'))return 'direct';
+  if(/organic|^(google|bing|yahoo|duckduckgo|baidu|yandex|naver|ecosia|yahoo\.co\.jp)\b/.test(s))return 'search';
+  return 'other'};
+P.SRC=[['search','Search','#9fe3c4'],['direct','Direct','#f3d9a4'],['facebook','Facebook','#8fb4ff'],['instagram','Instagram','#f3a6b8'],['other','Other sites','#c4a7e7'],['unlabeled','Unlabeled (192.0.2.1)','rgba(255,255,255,.28)']];
+P.NOISE_PAGES=['fb'];
+P.mergeWeb=(list,w)=>{const k=w.start+'|'+w.end;return [...list.filter(x=>x.start+'|'+x.end!==k),w].sort((a,b)=>a.start<b.start?-1:a.start>b.start?1:a.end<b.end?-1:1)};
+// choose non-overlapping snapshots that best cover [s,e]
+P.webPick=function(snaps,s,e){const ins=x=>{const a=x.start>s?x.start:s,b=x.end<e?x.end:e;return a>b?0:P.daysBetween(a,b)};
+  const el=snaps.map(x=>({x,d:P.daysBetween(x.start,x.end),i:ins(x)})).filter(o=>o.i/o.d>=0.85).sort((a,b)=>a.x.end<b.x.end?-1:1);
+  const best=[];for(let j=0;j<el.length;j++){let p=-1;for(let k=j-1;k>=0;k--)if(el[k].x.end<el[j].x.start){p=k;break}
+    const take=el[j].i+(p>=0?best[p].v:0),skip=j?best[j-1].v:0;best.push(take>=skip?{v:take,set:[...(p>=0?best[p].set:[]),el[j].x]}:best[j-1])}
+  const r=best.length?best[best.length-1]:{v:0,set:[]};return {set:r.set,covered:r.v,days:P.daysBetween(s,e)}};
+P.webRange=function(snaps,s,e){if(!snaps||!snaps.length)return null;const pk=P.webPick(snaps,s,e);
+  const dm=new Map();for(const x of snaps)for(const d of x.daily||[])if(d[0]>=s&&d[0]<=e)dm.set(d[0],d);
+  const daily=[...dm.values()].sort((a,b)=>a[0]<b[0]?-1:1);
+  if(!pk.set.length)return daily.length?{set:[],coverage:0,daily,days:pk.days}:null;
+  const t={users:0,newUsers:0,engW:0,events:0,sessions:0,keyEvents:0,pageViews:0};const pg=new Map(),g={},src=new Map();
+  for(const x of pk.set){t.users+=x.totals.users;t.newUsers+=x.totals.newUsers;t.engW+=x.totals.eng*x.totals.users;t.events+=x.totals.events;t.sessions+=x.sessionTotal||0;t.keyEvents+=x.keyEvents||0;t.pageViews+=x.pageViews||0;
+    for(const p of x.pages){const o=pg.get(p[0])||[p[0],0,0];o[1]+=p[1];o[2]+=p[2];pg.set(p[0],o)}
+    for(const k in (x.groups||{}))g[k]=(g[k]||0)+x.groups[k];for(const [k,v] of x.sessions||[])src.set(k,(src.get(k)||0)+v)}
+  t.eng=t.users?t.engW/t.users:0;t.social=(g.facebook||0)+(g.instagram||0);
+  return {set:pk.set,exact:pk.set.length===1,coverage:pk.covered/pk.days,covered:pk.covered,days:pk.days,start:pk.set[0].start,end:pk.set[pk.set.length-1].end,
+    t,pages:[...pg.values()].sort((a,b)=>b[1]-a[1]),groups:g,sources:[...src.entries()].sort((a,b)=>b[1]-a[1]),daily}};
+// social account -> website page match, for "who follows through"
+P.PROGRAMS=[['Tsunami Scuba',/tsunami scuba/i,/scuba/i],['Taiyo Golf',/golf/i,/golf/i],['Libraries',/librar/i,/librar/i],['Aquatics',/aquatic/i,/aquatic|pools?\b/i],['Semper Fit',/semper fit/i,/fitness|semper fit/i],['Tours+',/tours\+/i,/tour/i],['School Liaison',/school liaison/i,/school liaison/i],['Marine & Family',/marine & family/i,/family|relocation|single marine|transition readiness/i]];
+P.webInsights=function(posts,wr,s,e){const out={};if(!wr)return out;
+  const sv={};for(const r of posts)if(r.d>=s&&r.d<=e)sv[r.d]=(sv[r.d]||0)+r.v;
+  const days=wr.daily.filter(d=>d[1]+d[2]>0&&sv[d[0]]!=null).map(d=>({d:d[0],w:d[1]+d[2],s:sv[d[0]]}));
+  if(days.length>=21){const sorted=[...days].sort((a,b)=>b.s-a.s),k=Math.max(1,Math.round(days.length*.2)),top=sorted.slice(0,k),rest=sorted.slice(k);
+    const av=a=>a.reduce((x,o)=>x+o.w,0)/a.length;const a=av(top),b=av(rest);out.lift={pct:(a/b-1)*100,big:a,other:b,n:days.length}}
+  if(wr.set&&wr.set.length){const t=wr.t;out.sends={social:t.social,fb:wr.groups.facebook||0,ig:wr.groups.instagram||0,share:t.sessions?t.social/t.sessions:0};
+    const rows=[];for(const [label,ar,pr] of P.PROGRAMS){const v=posts.filter(r=>r.d>=s&&r.d<=e&&r.plat==='fb'&&ar.test(r.page)).reduce((a,r)=>a+r.v,0);
+      const pv=wr.pages.filter(p=>pr.test(p[0])&&!P.NOISE_PAGES.includes(p[0])).reduce((a,p)=>a+p[1],0);if(v>=5000&&pv>0)rows.push({label,v,pv,per:pv/v*1000})}
+    out.follow=rows.sort((a,b)=>b.per-a.per)}
+  if(days.length>=14){const W=Array.from({length:7},()=>({s:0,w:0,n:0}));for(const o of days){const wd=(new Date(o.d+'T00:00:00Z').getUTCDay()+6)%7;W[wd].s+=o.s;W[wd].w+=o.w;W[wd].n++}
+    const avg=W.map(x=>({s:x.n?x.s/x.n:0,w:x.n?x.w/x.n:0}));const pS=avg.reduce((m,x,i)=>x.s>avg[m].s?i:m,0),pW=avg.reduce((m,x,i)=>x.w>avg[m].w?i:m,0);
+    const wk=avg.slice(0,5).map((x,i)=>[x.w,i]).sort((a,b)=>a[0]-b[0]);out.timing={avg,peakSocial:pS,peakWeb:pW,lowWeekday:wk[0][1]}}
+  return out};
 G.Pulse=P;
 })(typeof window!=='undefined'?window:globalThis);
