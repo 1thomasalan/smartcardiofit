@@ -1,9 +1,10 @@
 // Pulse UI
 const P=Pulse,$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const DEF={theme:'dusk',compare:'prior',rStyle:'navy',rTitle:'Social Media Report',rHead:'DIGITAL MARKETING',rOrg:'MCCS Okinawa',rSec:{summary:1,chart:1,eff:1,top:1,watch:1,team:1},watch:['Meta replaces Facebook Reach with Viewers on Oct 31, 2026, so we report Views.','Confirm the Instagram account is linked to the Meta business portfolio.','Post metrics are lifetime to date; the newest posts are still growing.']};
+const DEF={theme:'dusk',compare:'prior',rStyle:'navy',rTitle:'Digital Marketing Report',rHead:'MCCS OKINAWA',rOrg:'MCCS Okinawa',rSec:{summary:1,chart:1,eff:1,top:1,web:1,watch:1,team:1},watch:['Meta replaces Facebook Reach with Viewers on Oct 31, 2026, so we report Views.','Confirm the Instagram account is linked to the Meta business portfolio.','Post metrics are lifetime to date; the newest posts are still growing.']};
 let CFG;try{CFG=Object.assign({},DEF,JSON.parse(localStorage.pulseCfg||'{}'));CFG.rSec=Object.assign({},DEF.rSec,CFG.rSec||{});}catch(e){CFG={...DEF}}
+if(CFG.rTitle==='Social Media Report')CFG.rTitle=DEF.rTitle;if(CFG.rHead==='DIGITAL MARKETING')CFG.rHead=DEF.rHead;
 const saveCfg=()=>localStorage.pulseCfg=JSON.stringify(CFG);
-const S={posts:[],preset:localStorage.pulsePreset||'30',s:null,e:null,plat:'all',view:'overview',metric:'v',q:'',acct:'all',sort:'v',limit:40};
+const S={posts:[],preset:localStorage.pulsePreset||'30',s:null,e:null,plat:'all',view:'overview',metric:'v',q:'',acct:'all',sort:'v',limit:40,web:[],mode:localStorage.pulseMode||'social',wq:'',wlimit:15};
 const M={v:['Views','views'],e:['Engagement','engagements'],lc:['Link clicks','clicks'],n:['Posts','posts'],fo:['IG follows','follows'],sh:['Shares','shares'],cm:['Comments','comments'],sv:['Saves','saves'],rx:['Reactions & likes','reactions']};
 // ---- storage ----
 const DB={open(){return new Promise((ok,no)=>{const r=indexedDB.open('pulse',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})},
@@ -50,10 +51,10 @@ function bindChart(box,ser,m){const svg=box.querySelector('svg.chart');if(!svg)r
     const tx=x/r.width;tip.style.left=Math.min(Math.max(tx*100,12),88)+'%';};
   svg.addEventListener('pointermove',mv);svg.addEventListener('touchmove',mv,{passive:true});svg.addEventListener('pointerleave',()=>{tip.style.opacity=0;svg.querySelector('.cur').setAttribute('opacity',0)})}
 // ---- shared header ----
-function header(accts){const end=dataEnd();const stale=S.e>end?`Data through ${P.fmtDate(end,{year:'numeric'})} · Meta lags ~2 days`:`vs ${P.rangeLabel(S.cs,S.ce)}`;
+function header(accts,web){const end=dataEnd();const wEnd=S.web.reduce((m,x)=>x.end>m?x.end:m,'');const stale=web?(wEnd?`Website data through ${P.fmtDate(wEnd,{year:'numeric'})}`:'No website data yet'):S.e>end?`Data through ${P.fmtDate(end,{year:'numeric'})} · Meta lags ~2 days`:`vs ${P.rangeLabel(S.cs,S.ce)}`;
   return `<div class="range presets">${PRESETS.map(([k,l])=>`<button data-p="${k}" class="${S.preset===k?'on':''}">${l}</button>`).join('')}</div>
   <div class="rlabel">${P.rangeLabel(S.s,S.e)}<small>${stale}</small></div>
-  <div class="range plats">${[['all','All'],['fb','Facebook'],['ig','Instagram']].map(([k,l])=>`<button data-f="${k}" class="chip ${S.plat===k?'on':''}">${l}</button>`).join('')}${accts?`<label class="chip acctpick ${S.acct!=='all'?'on':''}"><select id="hAcct" aria-label="Account"><option value="all">All accounts</option>${accts.map(g=>`<option value="${g.plat}|${esc(g.page)}" ${S.acct===g.plat+'|'+g.page?'selected':''}>${g.plat.toUpperCase()} · ${esc(acctName(g.plat,g.page))}</option>`).join('')}</select></label>`:''}</div>`}
+  ${web?'':`<div class="range plats">`}${web?'':[['all','All'],['fb','Facebook'],['ig','Instagram']].map(([k,l])=>`<button data-f="${k}" class="chip ${S.plat===k?'on':''}">${l}</button>`).join('')}${accts?`<label class="chip acctpick ${S.acct!=='all'?'on':''}"><select id="hAcct" aria-label="Account"><option value="all">All accounts</option>${accts.map(g=>`<option value="${g.plat}|${esc(g.page)}" ${S.acct===g.plat+'|'+g.page?'selected':''}>${g.plat.toUpperCase()} · ${esc(acctName(g.plat,g.page))}</option>`).join('')}</select></label>`:''}${web?'':'</div>'}`}
 function topbar(){return `<div class="top"><span>MCCS Pulse</span><button class="icon" id="gear" aria-label="Settings">${ICON.gear}</button></div>`}
 // ---- render ----
 function render(){const app=$('#app');
@@ -63,7 +64,9 @@ function render(){const app=$('#app');
   let {L,C,t,c}=ctx();let accts=null;
   {accts=P.byPage(L);if(S.acct!=='all'&&!accts.some(g=>g.plat+'|'+g.page===S.acct))S.acct='all';
     if(S.acct!=='all'){const m=r=>r.plat+'|'+r.page===S.acct;L=L.filter(m);C=C.filter(m);t=P.totals(L);c=P.totals(C)}}
-  app.innerHTML=topbar()+(S.view==='explore'?explore(L,C,t,c,accts):overview(L,C,t,c,accts));
+  const WEBV=S.view==='explore'&&S.mode==='web';app.innerHTML=topbar()+(S.view==='explore'?(WEBV?exploreWeb():explore(L,C,t,c,accts)):overview(L,C,t,c,accts));
+  $$('[data-mode]').forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode;localStorage.pulseMode=S.mode;render()});{const tw=$('#toWeb');if(tw)tw.onclick=()=>{S.view='explore';S.mode='web';localStorage.pulseMode='web';render();scrollTo(0,0)}}
+  if(WEBV){const wq=$('#wq');if(wq)wq.oninput=()=>{S.wq=wq.value;S.wlimit=15;renderWebPages()};renderWebPages()}
   {const ha=$('#hAcct');if(ha)ha.onchange=e=>{S.acct=e.target.value;S.limit=40;render()}}
   bindTop();
   {const pr=$('.range.presets'),on=pr&&pr.querySelector('.on');if(on&&pr.scrollWidth>pr.clientWidth)pr.scrollLeft=on.offsetLeft-(pr.clientWidth-on.offsetWidth)/2}
@@ -74,7 +77,7 @@ function render(){const app=$('#app');
   $$('[data-post]').forEach(b=>b.onclick=e=>{if(e.target.closest('a'))return;postSheet(b.dataset.post)});
   $$('[data-acct]').forEach(b=>b.onclick=()=>accountSheet(b.dataset.acct));
   const cb=$('.chartbox');if(cb)bindChart(cb,P.series(L,S.s,S.e,S.metric),S.metric);
-  if(S.view==='explore'){const q=$('#q');q.oninput=()=>{S.q=q.value;S.limit=40;renderList(L)};$('#acctSel').onchange=e=>{S.acct=e.target.value;S.limit=40;render()};$('#sortSel').onchange=e=>{S.sort=e.target.value;renderList(L)};renderList(L);
+  if(S.view==='explore'&&!WEBV){const q=$('#q');q.oninput=()=>{S.q=q.value;S.limit=40;renderList(L)};$('#acctSel').onchange=e=>{S.acct=e.target.value;S.limit=40;render()};$('#sortSel').onchange=e=>{S.sort=e.target.value;renderList(L)};renderList(L);
     $$('.hm td[data-h]').forEach(td=>td.onclick=()=>{const [w,h]=td.dataset.h.split(',').map(Number);const list=L.filter(r=>{const d=new Date(r.t+9*3600e3);return (d.getUTCDay()+6)%7===w&&Math.floor(d.getUTCHours()/3)===h});listSheet(`${WD[w]} ${hb(h)}`,list)})}
 }
 function bindTop(){$('#gear').onclick=settings}
@@ -82,7 +85,7 @@ const kpi=(k,l,v,d,s)=>`<button class="card kpi" data-k="${k}"><div class="l">${
 function overview(L,C,t,c,accts){const has=c.n>0;const top=[...L].sort((a,b)=>b.v-a.v).slice(0,5),pages=P.byPage(L),ser=P.series(L,S.s,S.e,S.metric);
   return `<div class="hero"><h1>${greet()}</h1><button class="big" data-k="v">${P.fmt(t.v)}</button><div class="sub">views · ${t.n} posts</div><div class="delta">${dl(t.v,c.v,has)} <span class="mut">vs ${cmpLabel()}</span></div></div>
   ${header(accts)}
-  <div class="grid">${kpi('e','Engagement',P.fmt(t.e),dl(t.e,c.e,has),'reactions, comments, shares, saves')}${kpi('lc','Link clicks',nf(t.lc),dl(t.lc,c.lc,has),'Facebook')}${kpi('epk','Eng. per 1K views',t.epk.toFixed(1),dl(t.epk,c.epk,has),'how hard content works')}${kpi('fo','IG follows',nf(t.fo),dl(t.fo,c.fo,has),'from posts')}</div>
+  <div class="grid">${kpi('e','Engagement',P.fmt(t.e),dl(t.e,c.e,has),'reactions, comments, shares, saves')}${kpi('lc','Link clicks',nf(t.lc),dl(t.lc,c.lc,has),'Facebook')}${kpi('epk','Eng. per 1K views',t.epk.toFixed(1),dl(t.epk,c.epk,has),'how hard content works')}${kpi('fo','IG follows',nf(t.fo),dl(t.fo,c.fo,has),'from posts')}</div>${webTodayCard()}
   <div class="cols"><div class="card chartbox"><h2>${M[S.metric][0]} over time<small>by ${ser.step} · tap the line</small></h2><div class="range left" style="margin:0 0 12px">${['v','e','lc','n'].map(m=>`<button class="chip sm ${S.metric===m?'on':''}" data-m="${m}">${M[m][0]}</button>`).join('')}</div><div style="position:relative">${chartSVG(ser,640,190)}<div class="tip"></div></div><div class="legend">${S.plat!=='ig'?`<span><i style="background:var(--fb)"></i>Facebook ${P.fmt(ser.pts.reduce((a,p)=>a+p.fb,0))}</span>`:''}${S.plat!=='fb'?`<span><i style="background:var(--ig)"></i>Instagram ${P.fmt(ser.pts.reduce((a,p)=>a+p.ig,0))}</span>`:''}</div></div>
    <div class="card"><h2>Platform balance<small>Instagram share</small></h2>${balance(t)}<p class="mut sm">Median post: Instagram ${P.fmt(P.median(L.filter(r=>r.plat==='ig').map(r=>r.v)))} views, Facebook ${P.fmt(P.median(L.filter(r=>r.plat==='fb').map(r=>r.v)))}.</p></div></div>
   <div class="cols"><div class="card"><h2>Top posts<small>tap for detail</small></h2>${top.map((r,i)=>postRow(r,i+1)).join('')||'<p class="mut">No posts in this range.</p>'}</div>
@@ -95,7 +98,7 @@ function explore(L,C,t,c,accts){const has=c.n>0;const days=P.daysBetween(S.s,S.e
   const hmMax=Math.max(1,...heat.flat().filter(x=>x.n>=2).map(x=>x.med));
   let best=null;heat.forEach((row,w)=>row.forEach((x,h)=>{if(x.n>=3&&(!best||x.med>best.med))best={w,h,...x}}));
   const mini=(k,l,v,d)=>`<button class="card kpi mini" data-k="${k}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div></button>`;
-  return `<div class="hero small"><h1>Explore</h1><div class="sub">every metric, every account, every post</div></div>${header(accts)}
+  return `<div class="hero small"><h1>Explore</h1><div class="sub">every metric, every account, every post</div></div>${S.web.length?webSwitch():''}${header(accts)}
   <div class="grid g4">${mini('v','Views',P.fmt(t.v),dl(t.v,c.v,has))}${mini('rx','Reactions & likes',P.fmt(t.rx),dl(t.rx,c.rx,has))}${mini('cm','Comments',P.fmt(t.cm),dl(t.cm,c.cm,has))}${mini('sh','Shares',P.fmt(t.sh),dl(t.sh,c.sh,has))}
   ${mini('sv','Saves (IG)',P.fmt(t.sv),dl(t.sv,c.sv,has))}${mini('n','Posts',nf(t.n),dl(t.n,c.n,has))}${mini('avg','Avg views / post',P.fmt(t.n?t.v/t.n:0),dl(t.n?t.v/t.n:0,c.n?c.v/c.n:0,has))}${mini('ppd','Posts per day',(t.n/days).toFixed(1),dl(t.n/days,c.n/days,has))}</div>
   <div class="cols"><div class="card"><h2>Best time to post<small>median views · JST</small></h2>${best?`<p class="mut sm" style="margin-top:-4px">Sweet spot: <b style="color:var(--glow)">${WD[best.w]} ${hb(best.h)}</b>, ${P.fmt(best.med)} median views across ${best.n} posts.</p>`:''}
@@ -134,9 +137,9 @@ function listSheet(title,list){openSheet(`<h3>${esc(title)}</h3><p class="mut sm
 function bindDrop(){const d=$('#drop');if(!d)return;$('#pick').onclick=()=>$('#file').click();d.ondragover=e=>{e.preventDefault();d.classList.add('over')};d.ondragleave=()=>d.classList.remove('over');d.ondrop=e=>{e.preventDefault();d.classList.remove('over');importFiles(e.dataTransfer.files)}}
 document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)importFiles(e.dataTransfer.files)});
 $('#file').onchange=e=>{importFiles(e.target.files);e.target.value=''};
-async function importFiles(files){files=[...files];const msgs=[];for(const f of files){try{const m=P.mapRows(P.parseCSV(await f.text()));const r=P.merge(S.posts,m.rows);S.posts=dropExcluded(r.posts);msgs.push(`${m.plat==='fb'?'Facebook':'Instagram'}: ${r.add} new, ${r.upd} updated`)}catch(err){msgs.push(`${f.name}: ${err.message}`)}}
+async function importFiles(files){files=[...files];const msgs=[];for(const f of files){try{const txt=await f.text();if(P.isGA4(txt)){const w=P.parseGA4(txt);S.web=P.mergeWeb(S.web,w);await DB.set('web',S.web);msgs.push(`Website: ${P.rangeLabel(w.start,w.end)} added`);continue}const m=P.mapRows(P.parseCSV(txt));const r=P.merge(S.posts,m.rows);S.posts=dropExcluded(r.posts);msgs.push(`${m.plat==='fb'?'Facebook':'Instagram'}: ${r.add} new, ${r.upd} updated`)}catch(err){msgs.push(`${f.name}: ${err.message}`)}}
   await DB.set('posts',S.posts);closeSheet();render();toast(msgs.join(' · '))}
-function importSheet(){openSheet(`<button class="back" id="toSet">‹ Settings</button><h3>Import exports</h3><div class="drop" id="drop">Drop Facebook and Instagram CSVs here<br><button class="btn" id="pick" style="margin-top:12px">Choose files</button></div><div class="sec">How to export</div><p class="mut" style="font-size:14px;line-height:1.6;margin:0">Meta Business Suite › Insights › Content › Export data. Facebook tab, all Pages, Content level Post, Data view Lifetime, Filter Creation date. Repeat on the Instagram tab. Re-importing updates metrics; nothing is duplicated.</p>`);bindDrop();$('#toSet').onclick=settings}
+function importSheet(){openSheet(`<button class="back" id="toSet">‹ Settings</button><h3>Import exports</h3><div class="drop" id="drop">Drop Facebook, Instagram, or GA4 website CSVs here<br><button class="btn" id="pick" style="margin-top:12px">Choose files</button></div><div class="sec">How to export</div><p class="mut" style="font-size:14px;line-height:1.6;margin:0">Meta Business Suite › Insights › Content › Export data. Facebook tab, all Pages, Content level Post, Data view Lifetime, Filter Creation date. Repeat on the Instagram tab. Re-importing updates metrics; nothing is duplicated.</p><p class="mut" style="font-size:14px;line-height:1.6">Website: Google Analytics › Reports snapshot › pick the date range › Share › Download CSV. Weekly (Monday, last week) works best.</p>`);bindDrop();$('#toSet').onclick=settings}
 function rangeSheet(){const end=dataEnd()||P.todayKey();openSheet(`<h3>Choose a range</h3><div class="range left">${PRESETS.filter(p=>p[0]!=='custom').map(([k,l])=>`<button data-sp="${k}" class="${S.preset===k?'on':''}">${l}</button>`).join('')}</div>
  <div class="sec">Custom</div><div class="opt"><span>From</span><input type="date" id="ds" value="${S.s||P.addDays(end,-29)}"></div><div class="opt"><span>To</span><input type="date" id="de" value="${S.e||end}"></div><button class="btn wide" id="apply">Apply</button>`);
  $$('[data-sp]').forEach(b=>b.onclick=()=>{S.preset=b.dataset.sp;localStorage.pulsePreset=S.preset;closeSheet();render()});
@@ -149,7 +152,7 @@ function settings(){const T={dusk:'#6d5a7a',dawn:'#f2a7a0',ocean:'#2b7a9e',fores
  <div class="sec">Compare against</div>${seg('compare',[['prior','Previous period'],['yoy','Same period last year']],CFG.compare)}
  <div class="sec">PDF report style</div><div class="styles">${RS.map(([k,l,bg,fg,ac])=>`<button class="stile ${CFG.rStyle===k?'on':''}" data-rs="${k}"><span class="pv" style="background:${bg}"><i style="background:${k==='light'?'#f3f4f8':'rgba(255,255,255,.9)'};border-color:${ac}"></i><i style="background:${k==='light'?'#f3f4f8':'rgba(255,255,255,.9)'};border-color:${ac}"></i><em style="background:${k==='light'?'#f3f4f8':'rgba(255,255,255,.9)'};border-color:${ac}"></em></span>${l}</button>`).join('')}</div>
  <div class="sec">PDF report text</div><label class="fld">Title<input id="rTitle" value="${esc(CFG.rTitle)}"></label><label class="fld">Header<input id="rHead" value="${esc(CFG.rHead)}"></label><label class="fld">Organization<input id="rOrg" value="${esc(CFG.rOrg)}"></label>
- <div class="sec">PDF report sections</div>${[['summary','Executive summary'],['chart','Views chart'],['eff','Platform efficiency'],['top','Top 3 posts'],['watch','Watch list'],['team','Page 2: account detail']].map(([k,l])=>`<label class="opt tog"><span>${l}</span><input type="checkbox" data-sec="${k}" ${CFG.rSec[k]?'checked':''}><i></i></label>`).join('')}
+ <div class="sec">PDF report sections</div>${[['summary','Executive summary'],['chart','Views chart'],['eff','Platform efficiency'],['top','Top 3 posts'],['web','Website at a glance'],['watch','Watch list'],['team','Page 2: account detail']].map(([k,l])=>`<label class="opt tog"><span>${l}</span><input type="checkbox" data-sec="${k}" ${CFG.rSec[k]?'checked':''}><i></i></label>`).join('')}
  <div class="sec">Watch list (default lines)</div>${CFG.watch.map((w,i)=>`<label class="fld"><textarea data-w="${i}" rows="2">${esc(w)}</textarea></label>`).join('')}
  <div class="sec">Your data</div><div class="opt"><span>${nf(S.posts.length)} posts · through ${dataEnd()?P.fmtDate(dataEnd(),{year:'numeric'}):'—'}</span></div>
  <div class="opt"><span>Import Meta CSV exports</span><button class="chip" id="imp">${ICON.imp.replace('<svg','<svg class="ci"')}Import</button></div>
@@ -181,21 +184,24 @@ function buildReport(){const {L,C,t,c}=ctx('all');const sm=P.summary(t,c,L,S.s,S
  const eff=`<div class="wc eff"><span class="pill">Platform Efficiency</span><div style="font-size:8pt;font-weight:700">Instagram share of the total</div>${[['Posts',t.ig.n,t.n],['Views',t.ig.v,t.v],['Engagement',t.ig.e,t.e]].map(([l,a,b])=>`<div class="row"><span>${l}</span><b>IG ${b?Math.round(a/b*100):0}%</b></div><div class="bar"><span style="width:${b?a/b*100:0}%"></span></div>`).join('')}</div>`;
  const summ=`<div class="wc"><h4>Executive Summary</h4><p class="lab">What happened</p><ul contenteditable>${sm.out.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="lab">What we'll do next</p><ul contenteditable>${(sm.next.length?sm.next:['Add a next action']).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
  const tops=`<div class="wc"><span class="pill" style="min-width:55%">Top Performing Posts</span><div class="tp">${top.map(r=>`<div class="it"><div class="ph" data-th="${esc(r.id)}" title="Tap to replace the image"><span class="cap">${esc(P.label(r))}</span></div><div class="vp">${P.fmt(r.v)}</div><div class="wy"><b>${esc(acctName(r.plat,r.page))}</b><span contenteditable>${esc(why(r))}</span></div></div>`).join('')}</div></div>`;
+ const WX=wctx(),wr=WX.wr,wHas=webHas(wr)&&R.web;const wp=wHas?wr.pages.filter(p=>!P.NOISE_PAGES.includes(p[0])):[];
+ const insL=WX.ins.lift&&WX.ins.lift.pct>0?`Strong social days brought ${WX.ins.lift.pct.toFixed(0)}% more website visitors.`:WX.ins.sends?`Facebook and Instagram sent ${P.fmt(WX.ins.sends.social)} visits, ${(WX.ins.sends.share*100).toFixed(1)}% of all website visits.`:'';
+ const wband=wHas?`<div class="wc wband"><span class="pill" style="min-width:40%">Website at a Glance</span><div class="w5"><div><b>${P.fmt(wr.t.users)}</b><small>visitors</small></div><div><b>${P.fmt(wr.t.sessions)}</b><small>visits</small></div><div><b>${secs(wr.t.eng)}</b><small>avg time on site</small></div><div><b>${P.fmt(wr.t.social)}</b><small>visits from social</small></div><div class="wins" contenteditable>${insL?`<b>Insight:</b> ${esc(insL)}`:`<b>Top page:</b> ${esc(wTitle((wp[0]||['—'])[0]))}`}</div></div>${wr.exact?'':`<div class="wnote">Website figures cover ${wr.covered} of ${wr.days} days in this range.</div>`}</div>`:'';
  const pair=(a,b,cls)=>a&&b?`<div class="${cls}">${a}${b}</div>`:(a||b?`<div class="r1">${a||b}</div>`:'');
  const fbN=new Set(L.filter(r=>r.plat==='fb').map(r=>r.page)).size,igN=new Set(L.filter(r=>r.plat==='ig').map(r=>r.page)).size;
- $('#pages').innerHTML=`<div class="a4 st-${CFG.rStyle}"><div class="hd"><b>${esc(CFG.rHead)}</b><span>${rl}</span></div><div class="ttl">${esc(CFG.rTitle)}</div><div class="st">${esc(CFG.rOrg)} · ${fbN} Facebook Pages · ${igN} Instagram accounts · ${t.n} posts</div>
+ $('#pages').innerHTML=`<div class="a4 st-${CFG.rStyle}${wHas?' hasweb':''}"><div class="hd"><b>${esc(CFG.rHead)}</b><span>${rl}</span></div><div class="ttl">${esc(CFG.rTitle)}</div><div class="st">${esc(CFG.rOrg)} · ${fbN} Facebook Pages · ${igN} Instagram accounts · ${t.n} posts${wHas?' · website':''}</div>
  <div class="k4">${K.map(([l,v,s,[d,col]])=>`<div class="wc"><span class="pill" style="min-width:80%">${l}</span><div class="bv">${v}</div><div class="bs">${s}</div><div class="bd" style="color:${col}">${d}</div><div class="bds">vs ${P.rangeLabel(S.cs,S.ce)}</div></div>`).join('')}</div>
- ${pair(R.chart?chart:'',R.eff?eff:'','r2')}${pair(R.summary?summ:'',R.top?tops:'','r3')}
+ ${pair(R.chart?chart:'',R.eff?eff:'','r2')}${pair(R.summary?summ:'',R.top?tops:'','r3')}${wband}
  ${R.watch?`<div class="wc wl"><h4 style="font-size:11pt">Watch List</h4><div class="g3" contenteditable>${CFG.watch.filter(Boolean).map(w=>`<div>${esc(w)}</div>`).join('')}</div></div>`:''}
- <div class="ft">Source: Meta Business Suite post exports · ${rl} · generated ${P.fmtDate(P.todayKey(),{year:'numeric'})}</div></div>
- ${R.team?`<div class="a4 st-${CFG.rStyle}"><div class="hd"><b>${esc(CFG.rHead)}</b><span>${rl}</span></div><div class="ttl" style="font-size:28pt">Account Detail</div><div class="st">Team page</div>
- <div class="wc"><span class="pill" style="min-width:30%">Account Scorecard</span><table><tr><th style="text-align:left">Account</th><th>Posts</th><th>Views</th><th>Median</th><th>Engagement</th><th>Eng/1K</th><th>Link clicks</th></tr>${pages.slice(0,15).map(g=>`<tr><td>${g.plat==='ig'?'IG @'+esc(g.page):'FB '+esc(P.short(g.page))}</td><td>${g.n}</td><td>${nf(g.v)}</td><td>${P.fmt(g.med)}</td><td>${nf(g.e)}</td><td>${g.epk.toFixed(1)}</td><td>${g.lc||'–'}</td></tr>`).join('')}</table></div>
- <div class="wc" style="margin-top:3mm"><span class="pill" style="min-width:30%">Top 10 Posts</span><table><tr><th style="text-align:left">Post</th><th>Account</th><th>Date</th><th>Views</th><th>Eng.</th><th>Clicks</th></tr>${[...L].sort((a,b)=>b.v-a.v).slice(0,10).map(r=>`<tr><td>${esc(P.label(r))}</td><td>${esc(acctName(r.plat,r.page))}</td><td>${P.fmtDate(r.d)}</td><td>${nf(r.v)}</td><td>${P.eng(r)}</td><td>${r.lc||'–'}</td></tr>`).join('')}</table></div>
+ <div class="ft">Source: Meta Business Suite post exports${wHas?' · Google Analytics 4':''} · ${rl} · generated ${P.fmtDate(P.todayKey(),{year:'numeric'})}</div></div>
+ ${R.team?`<div class="a4 st-${CFG.rStyle}${wHas?' hasweb':''}"><div class="hd"><b>${esc(CFG.rHead)}</b><span>${rl}</span></div><div class="ttl" style="font-size:28pt">Account Detail</div><div class="st">Team page</div>
+ <div class="wc"><span class="pill" style="min-width:30%">Account Scorecard</span><table><tr><th style="text-align:left">Account</th><th>Posts</th><th>Views</th><th>Median</th><th>Engagement</th><th>Eng/1K</th><th>Link clicks</th></tr>${pages.slice(0,wHas?12:15).map(g=>`<tr><td>${g.plat==='ig'?'IG @'+esc(g.page):'FB '+esc(P.short(g.page))}</td><td>${g.n}</td><td>${nf(g.v)}</td><td>${P.fmt(g.med)}</td><td>${nf(g.e)}</td><td>${g.epk.toFixed(1)}</td><td>${g.lc||'–'}</td></tr>`).join('')}</table></div>
+ <div class="wc" style="margin-top:3mm"><span class="pill" style="min-width:30%">Top ${wHas?8:10} Posts</span><table><tr><th style="text-align:left">Post</th><th>Account</th><th>Date</th><th>Views</th><th>Eng.</th><th>Clicks</th></tr>${[...L].sort((a,b)=>b.v-a.v).slice(0,wHas?8:10).map(r=>`<tr><td>${esc(P.label(r))}</td><td>${esc(acctName(r.plat,r.page))}</td><td>${P.fmtDate(r.d)}</td><td>${nf(r.v)}</td><td>${P.eng(r)}</td><td>${r.lc||'–'}</td></tr>`).join('')}</table></div>${wHas?`<div class="r2" style="margin-top:3mm"><div class="wc"><span class="pill" style="min-width:40%">Top Website Pages</span><table><tr><th style="text-align:left">Page</th><th>Views</th><th>Users</th></tr>${wp.slice(0,6).map(p=>`<tr><td>${esc(wTitle(p[0]))}</td><td>${nf(p[1])}</td><td>${nf(p[2])}</td></tr>`).join('')}</table></div><div class="wc"><span class="pill" style="min-width:50%">Where Visits Come From</span><table><tr><th style="text-align:left">Source</th><th>Visits</th><th>Share</th></tr>${P.SRC.filter(([k])=>wr.groups[k]).map(([k,l])=>`<tr><td>${l}</td><td>${nf(wr.groups[k])}</td><td>${(wr.groups[k]/wr.t.sessions*100).toFixed(0)}%</td></tr>`).join('')}</table></div></div>`:''}
  <div class="ft">Source: Meta Business Suite post exports · team use</div></div>`:''}`;
  $$('.tp .ph').forEach(ph=>ph.onclick=()=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{ph.style.backgroundImage=`url(${rd.result})`;ph.classList.add('img')};rd.readAsDataURL(f)};i.click()});
  $$('.tp .ph[data-th]').forEach(async ph=>{const u=await thumbFor(ph.dataset.th);if(u&&!ph.classList.contains('img')){ph.style.backgroundImage=`url(${u})`;ph.classList.add('img')}});
  $('#rStyleBar').innerHTML=[['navy','Navy'],['light','Clean'],['dusk','Dusk']].map(([k,l])=>`<button data-rsb="${k}" class="${CFG.rStyle===k?'on':''}">${l}</button>`).join('');
- $$('[data-rsb]').forEach(b=>b.onclick=()=>{CFG.rStyle=b.dataset.rsb;saveCfg();$$('.a4').forEach(a=>a.className='a4 st-'+CFG.rStyle);$$('[data-rsb]').forEach(x=>x.classList.toggle('on',x===b))});
+ $$('[data-rsb]').forEach(b=>b.onclick=()=>{CFG.rStyle=b.dataset.rsb;saveCfg();$$('.a4').forEach(a=>a.className='a4 st-'+CFG.rStyle+(a.classList.contains('hasweb')?' hasweb':''));$$('[data-rsb]').forEach(x=>x.classList.toggle('on',x===b))});
  $('#report').classList.add('show');fit()}
 function fit(){const w=Math.min(window.innerWidth-20,794);$$('.a4').forEach(a=>{const s=w/794;a.style.transform=s<1?`scale(${s})`:'';a.style.marginBottom=s<1?`${-(1-s)*1123+16}px`:'16px'})}
 window.addEventListener('resize',()=>{if($('#report').classList.contains('show'))fit()});
@@ -204,6 +210,55 @@ $('#rBack').onclick=()=>$('#report').classList.remove('show');$('#rPrint').oncli
 // ---- dock ----
 $$('#dock [data-v]').forEach(b=>b.onclick=()=>{S.view=b.dataset.v;render();scrollTo({top:0,behavior:'smooth'})});
 $('#bReport').onclick=buildReport;
+// ---- website (GA4) ----
+const WEBC='#9fe3c4';
+function wctx(){setRange();const wr=P.webRange(S.web,S.s,S.e),wc=P.webRange(S.web,S.cs,S.ce);const ins=P.webInsights(S.posts,wr,S.s,S.e);return {wr,wc,ins}}
+const webHas=wr=>wr&&wr.set&&wr.set.length;
+const dailySum=wr=>wr?wr.daily.reduce((a,d)=>a+d[1]+d[2],0):0;
+const wdl=(a,b,ok)=>ok?dl(a,b,true):'<span class="mut">&nbsp;</span>';
+const wcmp=(wr,wc)=>webHas(wr)&&webHas(wc)&&wr.coverage>=.8&&wc.coverage>=.8;
+const wTitle=t=>t==='MCCS Okinawa'?'MCCS Okinawa (home)':t.replace(/^MCCS\s+/,'');
+const secs=v=>v>=60?`${Math.floor(v/60)}m ${Math.round(v%60)}s`:`${Math.round(v)}s`;
+function buckets(daily,s,e,fn){const n=P.daysBetween(s,e);const step=n>92?7:1;const out=[];
+  for(let k=s,i=0;k<=e;k=P.addDays(k,step),i++){const ke=P.addDays(k,step-1);out.push({k,v:fn(k,ke<e?ke:e)})}return {pts:out,step:step===7?'week':'day'}}
+function lineSVG(series,w,h){const n=series[0].pts.length;if(n<2)return '<p class="mut sm">Not enough days to chart yet.</p>';
+  const path=(pts,mx)=>pts.map((p,i)=>`${i?'L':'M'}${(i/(n-1)*w).toFixed(1)},${(h-(p.v/mx)*(h-14)-2).toFixed(1)}`).join('');
+  return `<svg class="wline" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:auto">${series.map((s,j)=>{const mx=Math.max(1,...s.pts.map(p=>p.v));const d=path(s.pts,mx);
+    return (s.fill?`<path d="${d}L${w},${h}L0,${h}Z" fill="${s.c}" opacity=".14"/>`:'')+`<path d="${d}" fill="none" stroke="${s.c}" stroke-width="2.2" vector-effect="non-scaling-stroke"/>`}).join('')}
+    </svg><div class="wax"><span>${P.fmtDate(series[0].pts[0].k)}</span><span>${P.fmtDate(series[0].pts[n-1].k)}</span></div>`}
+function webVisitSeries(wr){const dm=new Map(wr.daily.map(d=>[d[0],d[1]+d[2]]));return buckets(wr.daily,S.s,S.e,(a,b)=>{let t=0;for(let k=a;k<=b;k=P.addDays(k,1))t+=dm.get(k)||0;return t})}
+function srcStack(g){const tot=P.SRC.reduce((a,[k])=>a+(g[k]||0),0)||1;
+  return `<div class="wstack">${P.SRC.map(([k,,c])=>g[k]?`<i style="flex:${g[k]};background:${c}"></i>`:'').join('')}</div>
+  <div class="wleg">${P.SRC.filter(([k])=>g[k]).map(([k,l,c])=>`<span><i style="background:${c}"></i>${l}<b>${P.fmt(g[k])}</b><em>${Math.round(g[k]/tot*100)}%</em></span>`).join('')}</div>`}
+function insightCards(ins){const c=[];
+  if(ins.lift&&isFinite(ins.lift.pct))c.push(['Big post days',ins.lift.pct>=0?`+${ins.lift.pct.toFixed(0)}% website visitors on strong social days`:`Strong social days didn't lift the website (${ins.lift.pct.toFixed(0)}%)`,`The top 20% of social days averaged ${nf(ins.lift.big)} visitors a day, vs ${nf(ins.lift.other)} on other days. An association, not proof.`]);
+  if(ins.sends&&ins.sends.social)c.push(['Social sends',`${P.fmt(ins.sends.social)} visits came from Facebook and Instagram`,`${(ins.sends.share*100).toFixed(1)}% of all visits. Facebook ${P.fmt(ins.sends.fb)}, Instagram ${P.fmt(ins.sends.ig)}.`]);
+  if(ins.follow&&ins.follow.length>=2){const f=ins.follow,mx=f[0].per;c.push(['Who follows through',`${f[0].label} fans click through most${f[f.length-1].per<f[0].per/3?`, ${f[f.length-1].label} fans the least`:''}`,`<div class="wcmp">${f.slice(0,8).map(r=>`<span>${esc(r.label)}</span><div class="wbar"><i style="width:${Math.max(3,r.per/mx*100)}%"></i></div><b>${Math.round(r.per)}</b>`).join('')}</div>Website page views per 1,000 social views.`,1]);}
+  if(ins.timing){const t=ins.timing;c.push(['Timing',t.peakSocial===t.peakWeb?`Social and the website both peak on ${WD[t.peakWeb]}`:`Social peaks ${WD[t.peakSocial]}, the website peaks ${WD[t.peakWeb]}`,`Average website visitors by day: ${t.avg.map((x,i)=>`${WD[i]} ${P.fmt(x.w)}`).join(' · ')}.${t.peakSocial!==t.peakWeb?` Post website-driving content on ${WD[t.peakWeb]}.`:''}`]);}
+  return c.map(([t,h,s,raw])=>`<div class="card ins"><div class="it">${t}</div><div class="ih">${esc(h)}</div><div class="is">${raw?s:esc(s)}</div></div>`).join('')}
+function webSwitch(){return `<div class="wswitch"><button data-mode="social" class="${S.mode!=='web'?'on':''}">Social</button><button data-mode="web" class="${S.mode==='web'?'on':''}">Web</button></div>`}
+function exploreWeb(){const {wr,wc,ins}=wctx();const head=`<div class="hero small"><h1>Explore</h1><div class="sub">your website, by the numbers</div></div>${webSwitch()}${header(null,true)}`;
+  if(!S.web.length)return head+`<div class="card" style="margin-top:20px"><h2>No website data yet</h2><p class="mut">Upload a GA4 Reports snapshot CSV in Settings › Import, or wait for Monday's sync.</p></div>`;
+  if(!wr||(!webHas(wr)&&!wr.daily.length))return head+`<div class="card" style="margin-top:20px"><h2>No website data for this range</h2><p class="mut">Website data covers ${S.web.map(x=>P.rangeLabel(x.start,x.end)).join(', ')}.</p></div>`;
+  const has=webHas(wr),ok=wcmp(wr,wc),t=has?wr.t:null,ct=ok?wc.t:{};
+  const mini=(l,v,d,s)=>`<div class="card kpi mini nt"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div>${s?`<div class="s">${s}</div>`:''}</div>`;
+  const ser=webVisitSeries(wr),soc=buckets(wr.daily,S.s,S.e,(a,b)=>S.posts.reduce((x,r)=>x+(r.d>=a&&r.d<=b?r.v:0),0));
+  const pages=has?wr.pages.filter(p=>!P.NOISE_PAGES.includes(p[0])):[];
+  return head+`${has&&!wr.exact?`<p class="mut sm" style="text-align:center;margin:-4px 0 0">Website detail covers ${wr.covered} of ${wr.days} days (${wr.set.length} uploads)</p>`:''}
+  <div class="grid g4">${has?mini('Visitors',P.fmt(t.users),wdl(t.users,ct.users,ok),`${P.fmt(t.newUsers)} new`)+mini('Visits',P.fmt(t.sessions),wdl(t.sessions,ct.sessions,ok),'sessions')+mini('Time on site',secs(t.eng),wdl(t.eng,ct.eng,ok),'avg per visitor')+mini('From social',P.fmt(t.social),wdl(t.social,ct.social,ok),'Facebook + Instagram visits')
+    :mini('Daily visitors',P.fmt(dailySum(wr)),'','sum of daily visitors')}</div>
+  <div class="cols"><div class="card nt"><h2>Visitors over time<small>by ${ser.step}</small></h2>${lineSVG([{pts:ser.pts,c:WEBC,fill:1}],640,170)}</div>
+   <div class="card nt"><h2>Where visits come from<small>sessions</small></h2>${has?srcStack(wr.groups)+`<p class="mut sm">192.0.2.1 is a placeholder address, not a real site, so it's kept apart. Worth a look with the web team.</p>`:'<p class="mut">Arrives with an upload covering this range.</p>'}</div></div>
+  ${has?`<div class="card nt" style="margin-top:14px"><h2>Pages<small>${nf(pages.length)} shown · search</small></h2><div class="filters"><input id="wq" type="search" placeholder="Search pages" value="${esc(S.wq||'')}"></div><div id="wplist"></div><p class="mut sm">The “fb” page (${P.fmt((wr.pages.find(p=>p[0]==='fb')||[0,0])[1])} views) looks like a tracking artifact and is left out.</p></div>`:''}
+  <div class="sec" style="margin-top:28px">Social × Web</div>
+  <div class="cols"><div class="card nt"><h2>Social vs website<small>by ${ser.step}</small></h2>${lineSVG([{pts:soc.pts,c:'var(--fb)'},{pts:ser.pts,c:WEBC}],640,150)}<div class="legend"><span><i style="background:var(--fb)"></i>Social views</span><span><i style="background:${WEBC}"></i>Website visitors</span></div></div>
+   <div class="insg">${insightCards(ins)||'<p class="mut">Insights appear once a few weeks of website data line up with your posts.</p>'}</div></div>`}
+function renderWebPages(){const box=$('#wplist');if(!box)return;const {wr}=wctx();const q=(S.wq||'').toLowerCase();const list=wr.pages.filter(p=>!P.NOISE_PAGES.includes(p[0])&&(!q||p[0].toLowerCase().includes(q)));const mx=Math.max(1,...list.slice(0,1).map(p=>p[1]));
+  box.innerHTML=list.slice(0,S.wlimit||15).map((p,i)=>`<div class="wprow"><span class="rank">${i+1}</span><span class="wt">${esc(wTitle(p[0]))}<i style="width:${p[1]/mx*100}%"></i></span><span class="mut">${P.fmt(p[2])} users</span><b>${P.fmt(p[1])}</b></div>`).join('')||'<p class="mut">No pages match.</p>';
+  if(list.length>(S.wlimit||15))box.insertAdjacentHTML('beforeend',`<button class="more" id="wmore">Show more (${list.length-(S.wlimit||15)} left)</button>`);const m=$('#wmore');if(m)m.onclick=()=>{S.wlimit=(S.wlimit||15)+30;renderWebPages()}}
+function webTodayCard(){const {wr,ins}=wctx();if(!webHas(wr))return '';const t=wr.t;
+  return `<button class="card wtoday" id="toWeb"><h2>Social → Website<small>${wr.exact?'this period':`${wr.covered} of ${wr.days} days`}</small></h2><div class="wbr"><div class="wic">↗</div><div><div class="wbn">${P.fmt(t.social)} visits</div><div class="mut sm">came to the website from Facebook &amp; Instagram, ${(t.sessions?t.social/t.sessions*100:0).toFixed(1)}% of all visits</div></div></div>
+  <div class="wrow"><span>Website visitors</span><b>${P.fmt(t.users)}</b></div>${ins.lift&&ins.lift.pct>0?`<div class="wrow"><span>Strong social days</span><b>+${ins.lift.pct.toFixed(0)}% visitors</b></div>`:''}</button>`}
 // ---- synced data from Hark ----
 // ---- post thumbnails (encrypted, one file per post; published by the MCCS Social Media project) ----
 // meta.thumbs = {v:1, dir:'t/', kdf:{salt,iterations}, nsalt, ids?} ; file name = sha256(nsalt+postId) hex[0:24] + '.bin' ; file = iv(12) || AES-GCM(ciphertext of JPEG)
@@ -227,7 +282,7 @@ async function decryptRemote(meta,pass){const b=x=>Uint8Array.from(atob(x),c=>c.
   let pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b(meta.iv)},key,ct);
   if(meta.gzip)pt=await new Response(new Blob([pt]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   return JSON.parse(new TextDecoder().decode(pt))}
-async function applyRemote(meta,pass){const arr=await decryptRemote(meta,pass);if(meta.exclude)localStorage.pulseExclude=JSON.stringify(meta.exclude);S.posts=dropExcluded(P.merge(S.posts,arr).posts);await DB.set('posts',S.posts);localStorage.pulsePass=pass;localStorage.pulseSynced=meta.updated;localStorage.pulseThrough=meta.through;if(meta.thumbs)localStorage.pulseThumbs=JSON.stringify(meta.thumbs);S.locked=false}
+async function applyRemote(meta,pass){const arr=await decryptRemote(meta,pass);if(meta.web&&meta.web.parts){try{const wl=await decryptRemote(Object.assign({},meta,{iv:meta.web.iv,parts:meta.web.parts,gzip:true}),pass);for(const w of wl)S.web=P.mergeWeb(S.web,w);await DB.set('web',S.web)}catch(e){console.warn('web data',e)}}if(meta.exclude)localStorage.pulseExclude=JSON.stringify(meta.exclude);S.posts=dropExcluded(P.merge(S.posts,arr).posts);await DB.set('posts',S.posts);localStorage.pulsePass=pass;localStorage.pulseSynced=meta.updated;localStorage.pulseThrough=meta.through;if(meta.thumbs)localStorage.pulseThumbs=JSON.stringify(meta.thumbs);S.locked=false}
 async function sync(){let meta;try{const r=await fetch('data.enc.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;meta=await r.json()}catch(e){return}
   SYNC.meta=meta;const pass=localStorage.pulsePass;
   if(pass){if(localStorage.pulseSynced===meta.updated&&S.posts.length)return;try{await applyRemote(meta,pass);render();toast(`Latest data loaded · through ${P.fmtDate(meta.through,{year:'numeric'})}`)}catch(e){delete localStorage.pulsePass;S.locked=!S.posts.length;render()}}
@@ -239,4 +294,4 @@ function bindLock(){const f=$('#unlock');if(!f)return;f.onsubmit=async e=>{e.pre
   try{await applyRemote(SYNC.meta,p);render();toast(`Unlocked · data through ${P.fmtDate(SYNC.meta.through,{year:'numeric'})}`)}catch(err){$('#lockErr').textContent="That passcode didn't work. Try again.";f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake')}};
   const sk=$('#skipLock');if(sk)sk.onclick=()=>{S.locked=false;render()}}
 // ---- boot ----
-(async()=>{document.body.dataset.theme=CFG.theme;S.posts=(await DB.get('posts'))||[];render();sync();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})})();
+(async()=>{document.body.dataset.theme=CFG.theme;S.posts=(await DB.get('posts'))||[];S.web=(await DB.get('web'))||[];render();sync();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})})();
