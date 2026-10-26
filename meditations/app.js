@@ -188,7 +188,7 @@ function openLesson(d){if(!unlocked(d)&&!isDone(d)){toast('Unlocks after the day
  $('lBody').innerHTML=`<div class="lgrid"><div class="lcol1">
   <div class="lhead"><div class="eyebrow">${esc(l.theme)} · Day ${d} of ${N}</div><h1>${esc(l.title)}</h1></div>
   <div class="passage"><blockquote id="pTxt">${esc(l.passage)}</blockquote><div class="cite">Meditations ${l.ref} · tr. George Long, 1862</div></div>
-  <div class="tools"><button class="chip" data-say="passage" data-label="Listen to passage">${ICON.play}<span>Listen to passage</span></button><button class="chip" data-say="all" data-label="Listen to lesson">${ICON.play}<span>Listen to lesson</span></button></div>
+  <div class="tools"><button class="chip" data-say="all" data-label="Listen to lesson">${ICON.play}<span>Listen to lesson</span></button></div>
   <div class="plain"><span class="eyebrow">In plain words</span>${esc(l.plain)}</div>
   <div class="card vizcard">${Visual.render(l.visual)}<p>${esc(l.visual.caption||'')}</p></div>
  </div><div class="lcol2">
