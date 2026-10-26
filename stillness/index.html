@@ -44,10 +44,10 @@ body.sitting .hide{opacity:0;pointer-events:none}
 .stats{display:flex;justify-content:space-around;text-align:center;margin:6px 0 10px}.stats b{display:block;font-family:Georgia,serif;font-weight:400;font-size:30px}.stats span{font-size:12px;color:var(--mut);letter-spacing:1px;text-transform:uppercase}
 .close{position:absolute;top:16px;right:20px;font-size:22px;color:var(--mut)}
 input[type=range]{width:100%;accent-color:#f3d9a4}
-.end{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:30px;z-index:4}
+.end{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:30px;z-index:20;gap:18px;background:radial-gradient(circle at 50% 40%,rgba(40,48,70,.96),rgba(10,14,24,.98) 70%);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 .end.show{display:flex;animation:fade 2s}
 @keyframes fade{from{opacity:0}to{opacity:1}}
-.end h2{font-weight:400;font-size:30px;margin:0}.end p{color:var(--mut);font-family:system-ui,sans-serif;font-size:14px;letter-spacing:1px}
+.end h2{font-weight:400;font-size:30px;margin:0}.end p{color:var(--mut);font-family:system-ui,sans-serif;font-size:14px;letter-spacing:1px;line-height:1.6;max-width:300px;margin:0 0 18px}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.3s;z-index:4}.scrim.show{opacity:1;pointer-events:auto}
 
 :root{--sky:radial-gradient(120% 80% at 50% 110%,#c98f6b 0%,#6d5a7a 28%,#2b3352 55%,#0e1420 85%)}
@@ -165,7 +165,7 @@ const QUOTES=[
 ["One today is worth two tomorrows.","Benjamin Franklin"]
 ];
 const KEY='stillness-v1';
-const D={min:10,sound:'bowl',start:true,interval:0,log:{},vol:.8,theme:'dusk',orb:'glow',showTime:true,keepQuote:false,prep:0,breath:'natural',ambient:'off',ambVol:.5,strikes:3,vib:true};
+const D={min:10,sound:'bowl',start:true,interval:0,log:{},vol:.8,theme:'dusk',orb:'glow',showTime:true,keepQuote:false,prep:0,breath:'natural',ambient:'off',ambVol:.5,strikes:3,vib:true,voice:false};
 let S=Object.assign({},D,JSON.parse(localStorage.getItem(KEY)||'{}'));const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
 const $=id=>document.getElementById(id);
 const ds=d=>{const z=new Date(d);z.setMinutes(z.getMinutes()-z.getTimezoneOffset());return z.toISOString().slice(0,10)};
@@ -235,6 +235,11 @@ function strike(type=S.sound,gain=S.vol){
   o.connect(g);g.connect(out);o.start(t);o.stop(t+dec+.1)});
  if(type==='gong'){const n=a.createBufferSource(),b=a.createBuffer(1,a.sampleRate*.4,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);n.buffer=b;const bp=a.createBiquadFilter();bp.type='bandpass';bp.frequency.value=180;const g=a.createGain();g.gain.value=.25;n.connect(bp);bp.connect(g);g.connect(out);n.start(t)}
 }
+// ---- voice guide (ElevenLabs, Adam Stone, British) ----
+const VCLIPS={in:'audio/v-in.mp3',out:'audio/v-out.mp3',hold:'audio/v-hold.mp3',settle:'audio/v-settle.mp3'};const VB={};let vLoad=null;
+function loadVoice(){const a=ctx();return vLoad=vLoad||Promise.all(Object.entries(VCLIPS).map(([k,u])=>fetch(u).then(r=>r.arrayBuffer()).then(b=>new Promise((res,rej)=>a.decodeAudioData(b,res,rej))).then(buf=>{VB[k]=buf}).catch(()=>{})))}
+function say(k){const b=VB[k];if(!b)return;const a=ctx(),src=a.createBufferSource(),g=a.createGain();g.gain.value=Math.min(1,.35+S.vol*.75);src.buffer=b;src.connect(g);g.connect(a.destination);src.start()}
+const VKEY={'breathe in':'in','breathe out':'out','hold':'hold'};
 function finalBell(){const gap=S.sound==='chime'?2200:4200;strike();if(S.strikes>1){setTimeout(()=>strike(S.sound,S.vol*.75),gap);setTimeout(()=>strike(S.sound,S.vol*.55),gap*2)}}
 
 // ---- ambient soundscapes ----
@@ -262,28 +267,28 @@ function breathState(el){const p=BREATH[S.breath];const cyc=p.reduce((a,x)=>a+x[
 // ---- timer ----
 let T=null,wake=null;const C=301.6;
 async function begin(){
- ctx();try{wake=await navigator.wakeLock.request('screen')}catch(_){}
+ ctx();if(S.voice)loadVoice();try{wake=await navigator.wakeLock.request('screen')}catch(_){}
  document.body.classList.add('sitting');const total=S.min*60;
  T={total,paused:false,remain:total,lastInt:0,prep:S.prep,prepEnd:Date.now()+S.prep*1000,started:false};
  setGo('pause');T.iv=setInterval(loop,200);
  if(!S.prep)startSit();else{$('hint').textContent='get comfortable';}
  loop();
 }
-function startSit(){T.started=true;if(silentEl){const pr=silentEl.play();if(pr&&pr.catch)pr.catch(()=>{})}T.end=Date.now()+T.total*1000;if(S.start)strike(S.sound,S.vol*.6);startAmbient()}
+function startSit(){T.started=true;T.ph='';if(S.voice&&S.breath==='natural')setTimeout(()=>{if(T&&T.started&&!T.paused)say('settle')},S.start?2500:300);if(silentEl){const pr=silentEl.play();if(pr&&pr.catch)pr.catch(()=>{})}T.end=Date.now()+T.total*1000;if(S.start)strike(S.sound,S.vol*.6);startAmbient()}
 function loop(){
  if(T.paused)return;
  if(!T.started){const r=(T.prepEnd-Date.now())/1000;$('time').textContent=Math.max(1,Math.ceil(r));$('hint').textContent='get comfortable';if(r<=0)startSit();return}
  T.remain=(T.end-Date.now())/1000;const el=T.total-T.remain;
  $('arc').style.strokeDashoffset=C*(1-Math.min(1,el/T.total));showTime(T.remain);
  if(S.breath==='natural')$('hint').textContent=el<8?'settle in':(Math.floor(el/5)%2?'breathe out':'breathe in');
- else{const [n,l,c]=breathState(el);document.body.style.setProperty('--s',l);$('hint').textContent=n+(c?' · '+c:'')}
+ else{const [n,l,c]=breathState(el);document.body.style.setProperty('--s',l);if(S.voice&&n!==T.ph){T.ph=n;if(VKEY[n]&&T.remain>3)say(VKEY[n])}$('hint').textContent=n+(c?' · '+c:'')}
  if(S.interval&&el>0){const k=Math.floor(el/(S.interval*60));if(k>T.lastInt&&T.remain>5){T.lastInt=k;strike(S.sound,S.vol*.4)}}
  if(amb&&T.remain<8&&!T.fading){T.fading=true;stopAmbient(Math.max(1,T.remain))}
  if(T.remain<=0)complete();
 }
 function pauseResume(){
  if(!T)return begin();
- if(T.paused){if(T.started)T.end=Date.now()+T.remain*1000;else T.prepEnd=Date.now()+1000;T.paused=false;setGo('pause');document.body.classList.add('sitting');if(T.started&&S.ambient!=='off'&&!amb)startAmbient()}
+ if(T.paused){if(T.started)T.end=Date.now()+T.remain*1000;else T.prepEnd=Date.now()+1000;T.paused=false;T.ph='';setGo('pause');document.body.classList.add('sitting');if(T.started&&S.ambient!=='off'&&!amb)startAmbient()}
  else{T.paused=true;setGo('play');$('hint').textContent='paused · hold to end';document.body.classList.remove('sitting');stopAmbient(1.5)}
 }
 function stop(record){
@@ -310,7 +315,7 @@ function openCustom(){openSheet(`<h3>Custom length</h3><div class="opt"><span>Mi
  $('cr').oninput=e=>{S.min=+e.target.value;$('cv').textContent=S.min;showTime(S.min*60)};$('cr').onchange=()=>{save();drawPicker()}}
 const seg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-k="${k}" data-v="${v}" class="${String(S[k])===String(v)?'on':''}">${l}</button>`).join('')}</div>`;
 function wireSegs(){document.querySelectorAll('.sheet .seg button').forEach(b=>b.onclick=()=>{const k=b.dataset.k;let v=b.dataset.v;v=v==='true'?true:v==='false'?false:isNaN(v)?v:+v;S[k]=v;save();b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
- if(k==='sound'){strike(v)}
+ if(k==='sound'){strike(v)}if(k==='voice'&&v){loadVoice().then(()=>say(S.breath==='natural'?'settle':'in'))}
  if(k==='ambient')previewAmbient(v);
  applyLook()})}
 function settings(){
@@ -324,6 +329,7 @@ function settings(){
  <div class="sec">Session</div>
  <div class="opt"><span>Settle-in time</span>${seg('prep',[[0,'Off'],[10,'10s'],[30,'30s']])}</div>
  <div class="opt"><span>Breathing guide</span>${seg('breath',[['natural','Natural'],['calm','4·6'],['box','Box'],['relax','4·7·8']])}</div>
+ <div class="opt"><span>Voice guide</span>${seg('voice',[[true,'On'],[false,'Off']])}</div>
  <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['rain','Rain'],['ocean','Ocean'],['brown','Hush'],['om','Om']])}</div>
  <div class="opt" style="border:0"><span>Background volume</span></div><input type="range" min="0.05" max="1" step="0.05" value="${S.ambVol}" id="avol">
  <div class="sec">Bells</div>
