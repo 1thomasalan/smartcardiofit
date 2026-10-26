@@ -25,6 +25,11 @@ body.sitting .sky{filter:brightness(.55) saturate(.8)}
 .orb::before{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 45%,rgba(255,236,200,.28),rgba(243,217,164,.08) 60%,transparent 72%);box-shadow:0 0 80px rgba(243,217,164,.18);animation:breathe 10s ease-in-out infinite}
 body:not(.sitting) .orb::before{animation-duration:14s}
 @keyframes breathe{0%,100%{transform:scale(.82);opacity:.7}50%{transform:scale(1.08);opacity:1}}
+.orb::after{content:"";position:absolute;inset:6%;border-radius:50%;pointer-events:none;box-shadow:0 0 34px 6px color-mix(in srgb,var(--glow,#f3d9a4) 55%,transparent),inset 0 0 26px color-mix(in srgb,var(--glow,#f3d9a4) 22%,transparent);opacity:.25;animation:glow 10s ease-in-out infinite}
+@keyframes glow{0%,100%{opacity:.18}50%{opacity:.75}}
+body:not(.sitting) .orb::after{animation-duration:14s}
+body.guided.sitting .orb::after{animation:none;opacity:calc(.15 + (var(--s,.9) - .8) * 2.2);transition:opacity .3s linear}
+body[data-orb=minimal] .orb::after{display:none}
 .orb svg{position:absolute;inset:-14px;width:calc(100% + 28px);height:calc(100% + 28px);transform:rotate(-90deg)}
 .time{position:relative;font-family:system-ui,sans-serif;font-weight:200;font-size:clamp(48px,14vw,68px);letter-spacing:1px;font-variant-numeric:tabular-nums}
 .hint{position:relative;font-family:system-ui,sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--mut);margin-top:6px;min-height:16px}
@@ -166,7 +171,7 @@ const QUOTES=[
 ];
 const KEY='stillness-v1';
 const D={min:10,sound:'bowl',start:true,interval:0,log:{},vol:.8,theme:'dusk',orb:'glow',showTime:true,keepQuote:false,prep:0,breath:'natural',ambient:'off',ambVol:.5,strikes:3,vib:true,voice:false};
-let S=Object.assign({},D,JSON.parse(localStorage.getItem(KEY)||'{}'));const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+let S=Object.assign({},D,JSON.parse(localStorage.getItem(KEY)||'{}'));const save=()=>localStorage.setItem(KEY,JSON.stringify(S));if(S.ambient==='brown')S.ambient='stream';
 const $=id=>document.getElementById(id);
 const ds=d=>{const z=new Date(d);z.setMinutes(z.getMinutes()-z.getTimezoneOffset());return z.toISOString().slice(0,10)};
 const today=()=>ds(new Date());
@@ -240,20 +245,23 @@ function strike(type=S.sound,gain=S.vol){
 // ---- voice guide (ElevenLabs, Faye, British female) ----
 const VCLIPS={in:'audio/v-in.mp3',out:'audio/v-out.mp3',hold:'audio/v-hold.mp3',settle:'audio/v-settle.mp3'};const VB={};let vLoad=null;
 function loadVoice(){const a=ctx();return vLoad=vLoad||Promise.all(Object.entries(VCLIPS).map(([k,u])=>fetch(u).then(r=>r.arrayBuffer()).then(b=>new Promise((res,rej)=>a.decodeAudioData(b,res,rej))).then(buf=>{VB[k]=buf}).catch(()=>{})))}
-function say(k){const b=VB[k];if(!b)return;const a=ctx(),src=a.createBufferSource(),g=a.createGain();g.gain.value=Math.min(1,.35+S.vol*.75);src.buffer=b;src.connect(g);g.connect(a.destination);src.start()}
+function say(k){const b=VB[k];if(!b)return;const a=ctx(),src=a.createBufferSource(),g=a.createGain();g.gain.value=Math.min(1,.35+S.vol*.75);src.buffer=b;src.connect(g);g.connect(a.destination);src.start();duck(b.duration)}
 const VKEY={'breathe in':'in','breathe out':'out','hold':'hold'};
 function finalBell(){const gap=S.sound==='chime'?2200:4200;strike();if(S.strikes>1){setTimeout(()=>strike(S.sound,S.vol*.75),gap);setTimeout(()=>strike(S.sound,S.vol*.55),gap*2)}}
 
 // ---- ambient soundscapes ----
-let amb=null;
+let amb=null,duckG=null;
+const duckBase=()=>S.voice&&S.breath!=='natural'?.7:1;
+function bus(){const a=ctx();if(!duckG){duckG=a.createGain();duckG.connect(a.destination)}return duckG}
+function duck(len){if(!duckG)return;const a=ctx(),t=a.currentTime,g=duckG.gain,b=duckBase();g.cancelScheduledValues(t);g.setValueAtTime(g.value,t);g.linearRampToValueAtTime(b*.35,t+.25);g.setValueAtTime(b*.35,t+.25+len);g.linearRampToValueAtTime(b,t+len+1.6)}
 function noiseBuf(a,kind){const len=a.sampleRate*4,b=a.createBuffer(2,len,a.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);let last=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;if(kind==='brown'){last=(last+.02*w)/1.02;d[i]=last*3.5}else d[i]=w}}return b}
 // recorded sounds (ElevenLabs), stored as byte chunks audio/<name>-N.bin
-const SPARTS={om:4,bowl:2,gong:2,chime:2,forest:5,rain:5,ocean:5};const SB={},SL={};
+const SPARTS={om:4,gong:2,chime:2,forest:5,stream:5,rain:5,ocean:5};const SB={},SL={};
 function loadSnd(n){if(!SPARTS[n])return Promise.resolve(null);const a=ctx();return SL[n]=SL[n]||Promise.all([...Array(SPARTS[n]).keys()].map(i=>fetch('audio/'+n+'-'+i+'.bin').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}))).then(ps=>{const u=new Uint8Array(ps.reduce((k,p)=>k+p.byteLength,0));let o=0;ps.forEach(p=>{u.set(new Uint8Array(p),o);o+=p.byteLength});return u.buffer}).then(b=>new Promise((res,rej)=>a.decodeAudioData(b,res,rej))).then(b=>SB[n]=b).catch(()=>{SL[n]=null;return null})}
 function loadOm(){return loadSnd('om')}
 function startAmbient(kind=S.ambient,preview=false){
  stopAmbient(0);if(kind==='off')return;
- const a=ctx(),t=a.currentTime,master=a.createGain();master.gain.setValueAtTime(0,t);master.gain.linearRampToValueAtTime(S.ambVol*.6,t+(preview?.5:4));master.connect(a.destination);
+ const a=ctx(),t=a.currentTime,master=a.createGain();master.gain.setValueAtTime(0,t);master.gain.linearRampToValueAtTime(S.ambVol*.6,t+(preview?.5:4));master.connect(bus());duckG.gain.cancelScheduledValues(t);duckG.gain.setValueAtTime(duckBase(),t);
  const nodes=[];const src=b=>{const s=a.createBufferSource();s.buffer=b;s.loop=true;s.start();nodes.push(s);return s};
  const lfo=(f,depth,target)=>{const o=a.createOscillator(),g=a.createGain();o.frequency.value=f;g.gain.value=depth;o.connect(g);g.connect(target);o.start();nodes.push(o)};
  if(kind==='brown'){const s=src(noiseBuf(a,'brown'));const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;s.connect(lp);lp.connect(master)}
@@ -264,7 +272,7 @@ function startAmbient(kind=S.ambient,preview=false){
  if(kind==='rain'||kind==='forest'){const s=src(noiseBuf(a,'white'));const hp=a.createBiquadFilter();hp.type='highpass';hp.frequency.value=500;const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4500;const g=a.createGain();g.gain.value=.35;s.connect(hp);hp.connect(lp);lp.connect(g);g.connect(master);
    const s2=src(noiseBuf(a,'brown'));const g2=a.createGain();g2.gain.value=.5;s2.connect(g2);g2.connect(master)}
  if(kind==='ocean'){const s=src(noiseBuf(a,'brown'));const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=650;const g=a.createGain();g.gain.value=.55;lfo(.075,.45,g.gain);lfo(.075,400,lp.frequency);s.connect(lp);lp.connect(g);g.connect(master)}
-  if(kind==='om'){[[136.1,.22],[204.15,.09],[272.2,.07],[136.6,.15]].forEach(([f,v])=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(master);o.start();nodes.push(o)});const tg=a.createGain();master.disconnect();master.connect(tg);tg.connect(a.destination);tg.gain.value=.8;lfo(.1,.2,tg.gain)}
+  if(kind==='om'){[[136.1,.22],[204.15,.09],[272.2,.07],[136.6,.15]].forEach(([f,v])=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(master);o.start();nodes.push(o)});const tg=a.createGain();master.disconnect();master.connect(tg);tg.connect(bus());tg.gain.value=.8;lfo(.1,.2,tg.gain)}
  }
  amb={master,nodes};
 }
@@ -341,7 +349,7 @@ function settings(){
  <div class="opt"><span>Settle-in time</span>${seg('prep',[[0,'Off'],[10,'10s'],[30,'30s']])}</div>
  <div class="opt"><span>Breathing guide</span>${seg('breath',[['natural','Natural'],['calm','4·6'],['box','Box'],['relax','4·7·8']])}</div>
  <div class="opt"><span>Voice guide</span>${seg('voice',[[true,'On'],[false,'Off']])}</div>
- <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['forest','Forest'],['rain','Rain'],['ocean','Ocean'],['brown','Hush'],['om','Om']])}</div>
+ <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['forest','Forest'],['rain','Rain'],['ocean','Ocean'],['stream','Stream'],['om','Om']])}</div>
  <div class="opt" style="border:0"><span>Background volume</span></div><input type="range" min="0.05" max="1" step="0.05" value="${S.ambVol}" id="avol">
  <div class="sec">Bells</div>
  <div class="opt"><span>Ending sound</span>${seg('sound',[['bowl','Bowl'],['gong','Gong'],['chime','Chime']])}</div>
@@ -371,7 +379,7 @@ if(EMBED){const b=document.createElement('button');b.textContent='‹ Streak';b.
 
 if($('soundBtn'))$('soundBtn').onclick=()=>{openSheet(`<h3>Sound</h3>
  <div class="opt"><span>Ending sound</span>${seg('sound',[['bowl','Bowl'],['gong','Gong'],['chime','Chime']])}</div>
- <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['forest','Forest'],['rain','Rain'],['ocean','Ocean'],['brown','Hush'],['om','Om']])}</div>`);wireSegs()};
+ <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['forest','Forest'],['rain','Rain'],['ocean','Ocean'],['stream','Stream'],['om','Om']])}</div>`);wireSegs()};
 $('statsBtn').onclick=()=>{const v=Object.values(S.log);const mins=Math.round(v.reduce((a,l)=>a+l.s,0)/60);
  let dots='';for(let i=27;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const l=S.log[ds(d)];dots+=`<span title="${ds(d)}" style="width:14px;height:14px;border-radius:50%;display:inline-block;margin:3px;background:${l?'color-mix(in srgb,var(--glow) '+Math.round(Math.min(1,.35+l.s/1800)*100)+'%,transparent)':'rgba(255,255,255,.08)'}"></span>`}
  openSheet(`<h3>Your journey</h3><div class="stats"><div><b>${streak()}</b><span>day streak</span></div><div><b>${v.reduce((a,l)=>a+l.n,0)}</b><span>sessions</span></div><div><b>${mins}</b><span>minutes</span></div></div><div style="text-align:center;margin-top:10px">${dots}</div><p style="text-align:center;color:var(--mut);font-size:12px;letter-spacing:1px;margin-top:10px">LAST 4 WEEKS</p>`)};
