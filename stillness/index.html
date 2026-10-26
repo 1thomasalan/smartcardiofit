@@ -217,12 +217,14 @@ function silentUrl(){const n=8000,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=
  w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,16000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
  return URL.createObjectURL(new Blob([b],{type:'audio/wav'}))}
 function ctx(){ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state!=='running'){try{ac.resume()}catch(_){}}return ac}
-function unlockAudio(){const a=ctx();try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0)}catch(_){}
+function unlockAudio(){const a=ctx();if(!SB[S.sound])loadSnd(S.sound);try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0)}catch(_){}
  if(!silentEl){silentEl=new Audio(silentUrl());silentEl.loop=true;silentEl.setAttribute('playsinline','');silentEl.volume=0.01}
  const pr=silentEl.play();if(pr&&pr.catch)pr.catch(()=>{});if(!T)setTimeout(()=>{if(!T&&silentEl)silentEl.pause()},1500)}
 ['pointerdown','touchend','click'].forEach(ev=>document.addEventListener(ev,unlockAudio,{capture:true,passive:true}));
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ac)ctx()});
 function strike(type=S.sound,gain=S.vol){
+ if(SB[type]){const a=ctx(),src=a.createBufferSource(),g=a.createGain();g.gain.value=gain*1.1;src.buffer=SB[type];src.connect(g);g.connect(a.destination);src.start();return}
+ loadSnd(type);
  const a=ctx(),t=a.currentTime,out=a.createGain();out.gain.value=gain;
  const dl=a.createDelay();dl.delayTime.value=.13;const fb=a.createGain();fb.gain.value=.28;const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2400;
  out.connect(a.destination);out.connect(dl);dl.connect(lp);lp.connect(fb);fb.connect(dl);lp.connect(a.destination);
@@ -235,7 +237,7 @@ function strike(type=S.sound,gain=S.vol){
   o.connect(g);g.connect(out);o.start(t);o.stop(t+dec+.1)});
  if(type==='gong'){const n=a.createBufferSource(),b=a.createBuffer(1,a.sampleRate*.4,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);n.buffer=b;const bp=a.createBiquadFilter();bp.type='bandpass';bp.frequency.value=180;const g=a.createGain();g.gain.value=.25;n.connect(bp);bp.connect(g);g.connect(out);n.start(t)}
 }
-// ---- voice guide (ElevenLabs, Adam Stone, British) ----
+// ---- voice guide (ElevenLabs, Faye, British female) ----
 const VCLIPS={in:'audio/v-in.mp3',out:'audio/v-out.mp3',hold:'audio/v-hold.mp3',settle:'audio/v-settle.mp3'};const VB={};let vLoad=null;
 function loadVoice(){const a=ctx();return vLoad=vLoad||Promise.all(Object.entries(VCLIPS).map(([k,u])=>fetch(u).then(r=>r.arrayBuffer()).then(b=>new Promise((res,rej)=>a.decodeAudioData(b,res,rej))).then(buf=>{VB[k]=buf}).catch(()=>{})))}
 function say(k){const b=VB[k];if(!b)return;const a=ctx(),src=a.createBufferSource(),g=a.createGain();g.gain.value=Math.min(1,.35+S.vol*.75);src.buffer=b;src.connect(g);g.connect(a.destination);src.start()}
@@ -245,21 +247,25 @@ function finalBell(){const gap=S.sound==='chime'?2200:4200;strike();if(S.strikes
 // ---- ambient soundscapes ----
 let amb=null;
 function noiseBuf(a,kind){const len=a.sampleRate*4,b=a.createBuffer(2,len,a.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);let last=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;if(kind==='brown'){last=(last+.02*w)/1.02;d[i]=last*3.5}else d[i]=w}}return b}
-let OMBUF=null,omLoad=null;
-function loadOm(){const a=ctx();return omLoad=omLoad||Promise.all([0,1,2,3].map(i=>fetch('audio/om-'+i+'.bin').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}))).then(ps=>{const u=new Uint8Array(ps.reduce((n,p)=>n+p.byteLength,0));let o=0;ps.forEach(p=>{u.set(new Uint8Array(p),o);o+=p.byteLength});return u.buffer}).then(b=>new Promise((res,rej)=>a.decodeAudioData(b,res,rej))).then(b=>OMBUF=b).catch(()=>{omLoad=null;return null})}
+// recorded sounds (ElevenLabs), stored as byte chunks audio/<name>-N.bin
+const SPARTS={om:4,bowl:2,gong:2,chime:2,forest:5,rain:5,ocean:5};const SB={},SL={};
+function loadSnd(n){if(!SPARTS[n])return Promise.resolve(null);const a=ctx();return SL[n]=SL[n]||Promise.all([...Array(SPARTS[n]).keys()].map(i=>fetch('audio/'+n+'-'+i+'.bin').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}))).then(ps=>{const u=new Uint8Array(ps.reduce((k,p)=>k+p.byteLength,0));let o=0;ps.forEach(p=>{u.set(new Uint8Array(p),o);o+=p.byteLength});return u.buffer}).then(b=>new Promise((res,rej)=>a.decodeAudioData(b,res,rej))).then(b=>SB[n]=b).catch(()=>{SL[n]=null;return null})}
+function loadOm(){return loadSnd('om')}
 function startAmbient(kind=S.ambient,preview=false){
  stopAmbient(0);if(kind==='off')return;
  const a=ctx(),t=a.currentTime,master=a.createGain();master.gain.setValueAtTime(0,t);master.gain.linearRampToValueAtTime(S.ambVol*.6,t+(preview?.5:4));master.connect(a.destination);
  const nodes=[];const src=b=>{const s=a.createBufferSource();s.buffer=b;s.loop=true;s.start();nodes.push(s);return s};
  const lfo=(f,depth,target)=>{const o=a.createOscillator(),g=a.createGain();o.frequency.value=f;g.gain.value=depth;o.connect(g);g.connect(target);o.start();nodes.push(o)};
- if(kind==='rain'){const s=src(noiseBuf(a,'white'));const hp=a.createBiquadFilter();hp.type='highpass';hp.frequency.value=500;const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4500;const g=a.createGain();g.gain.value=.35;s.connect(hp);hp.connect(lp);lp.connect(g);g.connect(master);
+ if(kind==='brown'){const s=src(noiseBuf(a,'brown'));const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;s.connect(lp);lp.connect(master)}
+ if(SPARTS[kind]){const og=a.createGain();og.gain.value=kind==='om'?1.1:1.25;og.connect(master);
+   const play=buf=>{if(!amb||amb.master!==master)return;const s=a.createBufferSource();s.buffer=buf;s.loop=true;s.connect(og);s.start();amb.nodes.push(s)};
+   if(SB[kind])setTimeout(()=>play(SB[kind]),0);else loadSnd(kind).then(b=>{if(b)play(b);else if(amb&&amb.master===master)synth(kind)})}
+ function synth(kind){
+ if(kind==='rain'||kind==='forest'){const s=src(noiseBuf(a,'white'));const hp=a.createBiquadFilter();hp.type='highpass';hp.frequency.value=500;const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4500;const g=a.createGain();g.gain.value=.35;s.connect(hp);hp.connect(lp);lp.connect(g);g.connect(master);
    const s2=src(noiseBuf(a,'brown'));const g2=a.createGain();g2.gain.value=.5;s2.connect(g2);g2.connect(master)}
  if(kind==='ocean'){const s=src(noiseBuf(a,'brown'));const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=650;const g=a.createGain();g.gain.value=.55;lfo(.075,.45,g.gain);lfo(.075,400,lp.frequency);s.connect(lp);lp.connect(g);g.connect(master)}
- if(kind==='brown'){const s=src(noiseBuf(a,'brown'));const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;s.connect(lp);lp.connect(master)}
- if(kind==='om'){const og=a.createGain();og.gain.value=1.1;og.connect(master);
-   const play=buf=>{if(!amb||amb.master!==master)return;const s=a.createBufferSource();s.buffer=buf;s.loop=true;s.connect(og);s.start();amb.nodes.push(s)};
-   if(OMBUF)setTimeout(()=>play(OMBUF),0);else loadOm().then(b=>{if(b)play(b);else if(amb&&amb.master===master){omSynth()}})}
- function omSynth(){[[136.1,.22],[204.15,.09],[272.2,.07],[136.6,.15]].forEach(([f,v])=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(master);o.start();nodes.push(o)});const tg=a.createGain();master.disconnect();master.connect(tg);tg.connect(a.destination);tg.gain.value=.8;lfo(.1,.2,tg.gain)}
+  if(kind==='om'){[[136.1,.22],[204.15,.09],[272.2,.07],[136.6,.15]].forEach(([f,v])=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(master);o.start();nodes.push(o)});const tg=a.createGain();master.disconnect();master.connect(tg);tg.connect(a.destination);tg.gain.value=.8;lfo(.1,.2,tg.gain)}
+ }
  amb={master,nodes};
 }
 function stopAmbient(fade=3){if(!amb)return;const a=ctx(),{master,nodes}=amb;amb=null;const t=a.currentTime;master.gain.cancelScheduledValues(t);master.gain.setValueAtTime(master.gain.value,t);master.gain.linearRampToValueAtTime(0,t+fade+.05);setTimeout(()=>nodes.forEach(n=>{try{n.stop()}catch(_){}}),(fade+.2)*1000)}
@@ -272,7 +278,7 @@ function breathState(el){const p=BREATH[S.breath];const cyc=p.reduce((a,x)=>a+x[
 // ---- timer ----
 let T=null,wake=null;const C=301.6;
 async function begin(){
- ctx();if(S.voice)loadVoice();if(S.ambient==='om')loadOm();try{wake=await navigator.wakeLock.request('screen')}catch(_){}
+ ctx();if(S.voice)loadVoice();loadSnd(S.sound);if(SPARTS[S.ambient])loadSnd(S.ambient);try{wake=await navigator.wakeLock.request('screen')}catch(_){}
  document.body.classList.add('sitting');const total=S.min*60;
  T={total,paused:false,remain:total,lastInt:0,prep:S.prep,prepEnd:Date.now()+S.prep*1000,started:false};
  setGo('pause');T.iv=setInterval(loop,200);
@@ -335,7 +341,7 @@ function settings(){
  <div class="opt"><span>Settle-in time</span>${seg('prep',[[0,'Off'],[10,'10s'],[30,'30s']])}</div>
  <div class="opt"><span>Breathing guide</span>${seg('breath',[['natural','Natural'],['calm','4·6'],['box','Box'],['relax','4·7·8']])}</div>
  <div class="opt"><span>Voice guide</span>${seg('voice',[[true,'On'],[false,'Off']])}</div>
- <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['rain','Rain'],['ocean','Ocean'],['brown','Hush'],['om','Om']])}</div>
+ <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['forest','Forest'],['rain','Rain'],['ocean','Ocean'],['brown','Hush'],['om','Om']])}</div>
  <div class="opt" style="border:0"><span>Background volume</span></div><input type="range" min="0.05" max="1" step="0.05" value="${S.ambVol}" id="avol">
  <div class="sec">Bells</div>
  <div class="opt"><span>Ending sound</span>${seg('sound',[['bowl','Bowl'],['gong','Gong'],['chime','Chime']])}</div>
@@ -365,7 +371,7 @@ if(EMBED){const b=document.createElement('button');b.textContent='‹ Streak';b.
 
 if($('soundBtn'))$('soundBtn').onclick=()=>{openSheet(`<h3>Sound</h3>
  <div class="opt"><span>Ending sound</span>${seg('sound',[['bowl','Bowl'],['gong','Gong'],['chime','Chime']])}</div>
- <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['rain','Rain'],['ocean','Ocean'],['brown','Hush'],['om','Om']])}</div>`);wireSegs()};
+ <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['forest','Forest'],['rain','Rain'],['ocean','Ocean'],['brown','Hush'],['om','Om']])}</div>`);wireSegs()};
 $('statsBtn').onclick=()=>{const v=Object.values(S.log);const mins=Math.round(v.reduce((a,l)=>a+l.s,0)/60);
  let dots='';for(let i=27;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const l=S.log[ds(d)];dots+=`<span title="${ds(d)}" style="width:14px;height:14px;border-radius:50%;display:inline-block;margin:3px;background:${l?'color-mix(in srgb,var(--glow) '+Math.round(Math.min(1,.35+l.s/1800)*100)+'%,transparent)':'rgba(255,255,255,.08)'}"></span>`}
  openSheet(`<h3>Your journey</h3><div class="stats"><div><b>${streak()}</b><span>day streak</span></div><div><b>${v.reduce((a,l)=>a+l.n,0)}</b><span>sessions</span></div><div><b>${mins}</b><span>minutes</span></div></div><div style="text-align:center;margin-top:10px">${dots}</div><p style="text-align:center;color:var(--mut);font-size:12px;letter-spacing:1px;margin-top:10px">LAST 4 WEEKS</p>`)};
