@@ -32,7 +32,7 @@ function sentence(L,i){const w=L.w[i];const toks=[];
  let en=L.se?L.se[i]:L.pe.replace('___',w[3]||w[2].toLowerCase());en=en.charAt(0).toUpperCase()+en.slice(1);
  return {toks,kana:toks.map(t=>t.k).join(' ')+'。',say:toks.map(t=>t.k).join('')+'。',ro,en}}
 function patternTok(L){return L.p.map(t=>t==='_'?{blank:1}:{k:t[0],r:t[1],p:PART.has(t[0]),h:(L.hl||[]).includes(t[0])})}
-function jpHTML(toks){return toks.map(t=>t.blank?'<span class="blank">＿＿</span>':`<span class="${t.p?'p':''} ${t.h?'h':''} ${t.fill?'fill':''}">${esc(t.k)}</span>`).join(' ')+'。'}
+function jpHTML(toks){const L=toks.length-1;return toks.map((t,i)=>{const e=i===L?'<span class="end">。</span>':'';return '<span class="w">'+(t.blank?'<span class="blank">＿＿</span>':`<span class="${t.p?'p':''} ${t.h?'h':''} ${t.fill?'fill':''}">${esc(t.k)}</span>`)+e+'</span>'}).join(' ')}
 function patternRo(L){let r=L.p.map(t=>t==='_'?'___':t[1]).join(' ');return r.charAt(0).toUpperCase()+r.slice(1)+(/\?$/.test(L.pe)?'?':'.')}
 function patternSay(L){return L.p.map(t=>t==='_'?'、':t[0]).join('')+'。'}
 
