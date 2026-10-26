@@ -94,7 +94,7 @@ body.keepquote.sitting #quote{opacity:.85!important}
   </div>
   <div class="picker hide" id="picker"></div>
   <button class="go" id="go" aria-label="Begin"><svg viewBox="0 0 24 24" id="goIcon"><path d="M8 5v14l11-7z"/></svg></button>
-  <div class="row2 hide"><button id="soundBtn">Bowl</button><button id="statsBtn">Journey</button><button id="wkBtn">🔥 Workout</button></div>
+  <div class="row2 hide"><button id="statsBtn">Journey</button></div>
 </div>
 
 <div class="end" id="end"><h2>Be well, Alan.</h2><p id="endmsg"></p><button class="go" id="endOk" style="width:64px;height:64px;font-family:system-ui;font-size:13px;letter-spacing:1px">OK</button></div>
@@ -207,7 +207,7 @@ function drawPicker(){$('picker').innerHTML=MINS.map(m=>`<button class="${S.min=
 const fmt=s=>{s=Math.max(0,Math.ceil(s));const m=Math.floor(s/60);return m+':'+String(s%60).padStart(2,'0')};
 function showTime(s){$('time').textContent=fmt(s)}
 drawPicker();showTime(S.min*60);
-const SNAME={bowl:'Bowl',gong:'Gong',chime:'Chime'};$('soundBtn').textContent=SNAME[S.sound];
+const SNAME={bowl:'Bowl',gong:'Gong',chime:'Chime'};$('soundBtn')&&($('soundBtn').textContent=SNAME[S.sound]);
 
 // ---- bells ----
 let ac,silentEl;
@@ -310,7 +310,7 @@ function openCustom(){openSheet(`<h3>Custom length</h3><div class="opt"><span>Mi
  $('cr').oninput=e=>{S.min=+e.target.value;$('cv').textContent=S.min;showTime(S.min*60)};$('cr').onchange=()=>{save();drawPicker()}}
 const seg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-k="${k}" data-v="${v}" class="${String(S[k])===String(v)?'on':''}">${l}</button>`).join('')}</div>`;
 function wireSegs(){document.querySelectorAll('.sheet .seg button').forEach(b=>b.onclick=()=>{const k=b.dataset.k;let v=b.dataset.v;v=v==='true'?true:v==='false'?false:isNaN(v)?v:+v;S[k]=v;save();b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
- if(k==='sound'){$('soundBtn').textContent=SNAME[v];strike(v)}
+ if(k==='sound'){strike(v)}
  if(k==='ambient')previewAmbient(v);
  applyLook()})}
 function settings(){
@@ -341,18 +341,18 @@ function settings(){
  document.querySelectorAll('.sw').forEach(b=>b.onclick=()=>{S.theme=b.dataset.theme;save();applyLook();document.querySelectorAll('.sw').forEach(x=>x.classList.toggle('on',x===b))});
  $('vol').onchange=e=>{S.vol=+e.target.value;save();strike()};
  $('avol').onchange=e=>{S.ambVol=+e.target.value;save();if(S.ambient!=='off')previewAmbient(S.ambient)};
- $('resetLook').onclick=()=>{const keep={min:S.min,log:S.log};S=Object.assign({},D,keep);save();applyLook();$('soundBtn').textContent=SNAME[S.sound];settings()};
+ $('resetLook').onclick=()=>{const keep={min:S.min,log:S.log};S=Object.assign({},D,keep);save();applyLook();$('soundBtn')&&($('soundBtn').textContent=SNAME[S.sound]);settings()};
 }
 $('menuBtn').onclick=settings;
 const EMBED=new URLSearchParams(location.search).has('embed');
-$('wkBtn').onclick=()=>{if(EMBED)parent.postMessage('stillness-close','*');else location.href='../streak/'};
+if($('wkBtn'))$('wkBtn').onclick=()=>{if(EMBED)parent.postMessage('stillness-close','*');else location.href='../streak/'};
 if(EMBED){const b=document.createElement('button');b.textContent='‹ Streak';b.style.cssText='font:inherit;letter-spacing:2px;color:inherit';b.onclick=()=>{if(T)stop(true);parent.postMessage('stillness-close','*')};$('date').replaceWith(b)}
 // fullscreen like a native app: installed apps open fullscreen via the manifest; in a browser tab, go fullscreen on first touch
 (function(){const inApp=matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches||window.self!==window.top;
  if(inApp)return;const f=()=>{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)d.requestFullscreen({navigationUI:'hide'}).catch(()=>{})};
  document.addEventListener('pointerdown',f,{once:true})})();
 
-$('soundBtn').onclick=()=>{openSheet(`<h3>Sound</h3>
+if($('soundBtn'))$('soundBtn').onclick=()=>{openSheet(`<h3>Sound</h3>
  <div class="opt"><span>Ending sound</span>${seg('sound',[['bowl','Bowl'],['gong','Gong'],['chime','Chime']])}</div>
  <div class="opt"><span>Background</span>${seg('ambient',[['off','Silence'],['rain','Rain'],['ocean','Ocean'],['brown','Hush'],['om','Om']])}</div>`);wireSegs()};
 $('statsBtn').onclick=()=>{const v=Object.values(S.log);const mins=Math.round(v.reduce((a,l)=>a+l.s,0)/60);
