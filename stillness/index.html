@@ -245,6 +245,8 @@ function finalBell(){const gap=S.sound==='chime'?2200:4200;strike();if(S.strikes
 // ---- ambient soundscapes ----
 let amb=null;
 function noiseBuf(a,kind){const len=a.sampleRate*4,b=a.createBuffer(2,len,a.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);let last=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;if(kind==='brown'){last=(last+.02*w)/1.02;d[i]=last*3.5}else d[i]=w}}return b}
+let OMBUF=null,omLoad=null;
+function loadOm(){const a=ctx();return omLoad=omLoad||Promise.all([0,1,2,3].map(i=>fetch('audio/om-'+i+'.bin').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}))).then(ps=>{const u=new Uint8Array(ps.reduce((n,p)=>n+p.byteLength,0));let o=0;ps.forEach(p=>{u.set(new Uint8Array(p),o);o+=p.byteLength});return u.buffer}).then(b=>new Promise((res,rej)=>a.decodeAudioData(b,res,rej))).then(b=>OMBUF=b).catch(()=>{omLoad=null;return null})}
 function startAmbient(kind=S.ambient,preview=false){
  stopAmbient(0);if(kind==='off')return;
  const a=ctx(),t=a.currentTime,master=a.createGain();master.gain.setValueAtTime(0,t);master.gain.linearRampToValueAtTime(S.ambVol*.6,t+(preview?.5:4));master.connect(a.destination);
@@ -254,7 +256,10 @@ function startAmbient(kind=S.ambient,preview=false){
    const s2=src(noiseBuf(a,'brown'));const g2=a.createGain();g2.gain.value=.5;s2.connect(g2);g2.connect(master)}
  if(kind==='ocean'){const s=src(noiseBuf(a,'brown'));const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=650;const g=a.createGain();g.gain.value=.55;lfo(.075,.45,g.gain);lfo(.075,400,lp.frequency);s.connect(lp);lp.connect(g);g.connect(master)}
  if(kind==='brown'){const s=src(noiseBuf(a,'brown'));const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;s.connect(lp);lp.connect(master)}
- if(kind==='om'){[[136.1,.22],[204.15,.09],[272.2,.07],[136.6,.15]].forEach(([f,v])=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(master);o.start();nodes.push(o)});const tg=a.createGain();master.disconnect();master.connect(tg);tg.connect(a.destination);tg.gain.value=.8;lfo(.1,.2,tg.gain)}
+ if(kind==='om'){const og=a.createGain();og.gain.value=1.1;og.connect(master);
+   const play=buf=>{if(!amb||amb.master!==master)return;const s=a.createBufferSource();s.buffer=buf;s.loop=true;s.connect(og);s.start();amb.nodes.push(s)};
+   if(OMBUF)setTimeout(()=>play(OMBUF),0);else loadOm().then(b=>{if(b)play(b);else if(amb&&amb.master===master){omSynth()}})}
+ function omSynth(){[[136.1,.22],[204.15,.09],[272.2,.07],[136.6,.15]].forEach(([f,v])=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(master);o.start();nodes.push(o)});const tg=a.createGain();master.disconnect();master.connect(tg);tg.connect(a.destination);tg.gain.value=.8;lfo(.1,.2,tg.gain)}
  amb={master,nodes};
 }
 function stopAmbient(fade=3){if(!amb)return;const a=ctx(),{master,nodes}=amb;amb=null;const t=a.currentTime;master.gain.cancelScheduledValues(t);master.gain.setValueAtTime(master.gain.value,t);master.gain.linearRampToValueAtTime(0,t+fade+.05);setTimeout(()=>nodes.forEach(n=>{try{n.stop()}catch(_){}}),(fade+.2)*1000)}
@@ -267,7 +272,7 @@ function breathState(el){const p=BREATH[S.breath];const cyc=p.reduce((a,x)=>a+x[
 // ---- timer ----
 let T=null,wake=null;const C=301.6;
 async function begin(){
- ctx();if(S.voice)loadVoice();try{wake=await navigator.wakeLock.request('screen')}catch(_){}
+ ctx();if(S.voice)loadVoice();if(S.ambient==='om')loadOm();try{wake=await navigator.wakeLock.request('screen')}catch(_){}
  document.body.classList.add('sitting');const total=S.min*60;
  T={total,paused:false,remain:total,lastInt:0,prep:S.prep,prepEnd:Date.now()+S.prep*1000,started:false};
  setGo('pause');T.iv=setInterval(loop,200);
