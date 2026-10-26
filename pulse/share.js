@@ -114,7 +114,8 @@ function download(blob,name){const a=document.createElement('a');a.href=URL.crea
 async function deliver(blob,name,type){const f=new File([blob],name,{type});
  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name.replace(/\.\w+$/,'')});return 'shared'}}catch(e){if(e&&e.name==='AbortError')return 'cancel'}
  download(blob,name);return 'saved'}
-let pptxP=null;const loadPptx=()=>pptxP||(pptxP=new Promise((ok,no)=>{if(window.PptxGenJS)return ok();const s=document.createElement('script');s.src='pptx.js';s.onload=()=>ok();s.onerror=()=>{pptxP=null;no(new Error('PowerPoint maker did not load. Check your connection.'))};document.head.appendChild(s)}));
+const PPTX_PARTS=6;let pptxP=null;const loadPptx=()=>pptxP||(pptxP=(async()=>{if(window.PptxGenJS)return;try{const txt=(await Promise.all([...Array(PPTX_PARTS).keys()].map(i=>fetch('pptx.'+i+'.txt').then(r=>{if(!r.ok)throw 0;return r.text()})))).join('');
+ await new Promise((ok,no)=>{const s=document.createElement('script');s.src=URL.createObjectURL(new Blob([txt],{type:'text/javascript'}));s.onload=ok;s.onerror=no;document.head.appendChild(s)});if(!window.PptxGenJS)throw 0}catch(e){pptxP=null;throw new Error('PowerPoint maker did not load. Check your connection.')}})());
 async function pptx(m,cv){await loadPptx();const p=new PptxGenJS();p.layout='LAYOUT_WIDE';p.author='MCCS Pulse';p.company=(typeof CFG!=='undefined'&&CFG.rOrg)||'MCCS Okinawa';p.title=m.title;
  const s=p.addSlide();s.background={color:'0E1420'};s.addImage({data:cv.toDataURL('image/png'),x:0,y:0,w:13.333,h:7.5});
  s.addNotes([m.title,m.range,m.big?`${m.big.v} ${m.big.l}`:'',...(m.stats||[]).map(t=>`${t.l}: ${t.v}${t.d?' ('+t.d.txt+(m.cmp?' vs '+m.cmp:'')+')':''}`),m.note?(m.note.hi||'')+(m.note.rest||''):'','Source: MCCS Pulse'].filter(Boolean).join('\n'));
