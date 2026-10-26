@@ -1,6 +1,6 @@
 /* Dokugo v2 — 読後, "after reading". Plain JS PWA, data on the device. */
 'use strict';
-const VERSION = '2.0.0';
+const VERSION = '2.0.1';
 const KEY = 'dokugo-v2';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -368,19 +368,30 @@ function stopVoice() { if (rec) { try { rec.onend = null; rec.stop(); } catch (e
 function voiceInto(btn, ta, onDone) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { btn.classList.add('hidden'); return; }
-  btn.onclick = () => {
-    if (rec) { stopVoice(); btn.classList.remove('live'); onDone && onDone(); return; }
+  let downAt = 0;
+  const start = () => {
     rec = new SR(); rec.lang = navigator.language || 'en-US'; rec.continuous = true; rec.interimResults = true;
     const base = ta.value ? ta.value.trim() + ' ' : '';
     rec.onresult = e => { let s = ''; for (let i = 0; i < e.results.length; i++) s += e.results[i][0].transcript; ta.value = base + s.trim(); ta.dispatchEvent(new Event('input')); };
     rec.onend = () => { rec = null; btn.classList.remove('live'); onDone && onDone(); };
     rec.onerror = () => toast('Mic unavailable. Type it instead.');
-    rec.start(); btn.classList.add('live');
+    try { rec.start(); btn.classList.add('live'); navigator.vibrate && navigator.vibrate(15); } catch (e) {}
   };
+  const stop = () => { stopVoice(); btn.classList.remove('live'); onDone && onDone(); };
+  // tap to toggle, or hold to talk and let go when done
+  btn.onpointerdown = e => { e.preventDefault(); downAt = Date.now(); if (rec) { stop(); downAt = 0; } else start(); };
+  btn.onpointerup = () => { if (downAt && Date.now() - downAt > 450 && rec) stop(); };
+  btn.oncontextmenu = e => e.preventDefault();
+}
+const THEMES_KW = { mindset: 'mind think thought attitude perspective choose opinion perceive judgment', death: 'death die dying mortal grave life short time years', health: 'body health eat food strength exercise heart sleep', habits: 'habit system routine daily practice small repeat', work: 'work job career labor business craft', family: 'father mother son daughter wife husband family child children', nature: 'woods nature tree river sea mountain earth sky', peace: 'peace calm still quiet tranquil rest silence', purpose: 'purpose meaning deliberately essential virtue good duty', courage: 'courage fear brave afraid bold' };
+function suggestTags(text) {
+  const w = new Set(toks(text).map(stem)); const out = [];
+  for (const [tag, kws] of Object.entries(THEMES_KW)) { const n = kws.split(' ').filter(k => w.has(stem(k))).length; if (n) out.push([tag, n]); }
+  return out.sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]);
 }
 function capThought() {
   openSheet(`${steps(3)}<h3>What clicked?</h3><div class="sub">Say or type a few words about the line that stayed with you. I'll find it on the page.</div>
-  <button class="mic" id="mic" aria-label="Speak">${I.mic}</button><p class="note center" id="mnote">Tap to talk, tap again when you're done</p>
+  <button class="mic" id="mic" aria-label="Speak">${I.mic}</button><p class="note center" id="mnote">Hold to talk, or tap to start and stop</p>
   <div class="field"><textarea id="thought" placeholder="The part about not waiting for the perfect moment…">${esc(CAP.thought || '')}</textarea></div>
   <button class="btn full" id="find">Find the passage</button>
   <p class="center"><button class="chip" id="skip" style="margin-top:14px">I'll pick the lines myself</button></p>`, el => {
@@ -408,14 +419,15 @@ function capReview(text) {
   });
 }
 function capReflect() {
-  const tags = allTags().slice(0, 12);
+  const sug = suggestTags(CAP.text + ' ' + (CAP.thought || ''));
+  const tags = [...new Set([...sug, ...allTags()])].slice(0, 12);
   CAP.tags = CAP.tags || [];
   openSheet(`${steps(4)}<h3>What did it mean to you?</h3><div class="sub">Your thought, in your words. Future you will thank you.</div>
   <div class="card" style="padding:14px 16px;margin-bottom:6px"><p class="quote" style="font-size:16px">“${esc(CAP.text.length > 260 ? CAP.text.slice(0, 260) + '…' : CAP.text)}”</p></div>
   <button class="mic" id="mic2" aria-label="Speak">${I.mic}</button>
   <div class="field"><label>Reflection</label><textarea id="rf">${esc(CAP.reflection ?? CAP.thought ?? '')}</textarea></div>
   <div class="field"><label>Tags</label><input id="tg" placeholder="mindset, health, onetobetter" value="${esc(CAP.tags.join(', '))}">
-  ${tags.length ? `<div class="chips" style="margin-top:10px">${tags.map(t => `<button class="chip" data-t="${esc(t)}">#${esc(t)}</button>`).join('')}</div>` : ''}</div>
+  ${tags.length ? `<div class="chips" style="margin-top:10px">${tags.map(t => `<button class="chip" data-t="${esc(t)}">${sug.includes(t) ? '✦ ' : ''}#${esc(t)}</button>`).join('')}</div>${sug.length ? '<p class="note" style="margin:8px 0 0">✦ suggested from the passage</p>' : ''}` : ''}</div>
   <button class="btn full" id="savep">Keep this passage</button>`, el => {
     voiceInto($('#mic2', el), $('#rf', el));
     $$('[data-t]', el).forEach(b => b.onclick = () => { const i = $('#tg', el); const cur = i.value.split(',').map(s => s.trim()).filter(Boolean); if (!cur.includes(b.dataset.t)) cur.push(b.dataset.t); i.value = cur.join(', '); b.classList.add('on'); });
