@@ -210,7 +210,18 @@ drawPicker();showTime(S.min*60);
 const SNAME={bowl:'Bowl',gong:'Gong',chime:'Chime'};$('soundBtn').textContent=SNAME[S.sound];
 
 // ---- bells ----
-let ac;function ctx(){ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();return ac}
+let ac,silentEl;
+// iOS: play through the ring/silent switch and keep the audio session alive
+try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(_){}
+function silentUrl(){const n=8000,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
+ w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,16000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+ return URL.createObjectURL(new Blob([b],{type:'audio/wav'}))}
+function ctx(){ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state!=='running'){try{ac.resume()}catch(_){}}return ac}
+function unlockAudio(){const a=ctx();try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0)}catch(_){}
+ if(!silentEl){silentEl=new Audio(silentUrl());silentEl.loop=true;silentEl.setAttribute('playsinline','');silentEl.volume=0.01}
+ const pr=silentEl.play();if(pr&&pr.catch)pr.catch(()=>{});if(!T)setTimeout(()=>{if(!T&&silentEl)silentEl.pause()},1500)}
+['pointerdown','touchend','click'].forEach(ev=>document.addEventListener(ev,unlockAudio,{capture:true,passive:true}));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ac)ctx()});
 function strike(type=S.sound,gain=S.vol){
  const a=ctx(),t=a.currentTime,out=a.createGain();out.gain.value=gain;
  const dl=a.createDelay();dl.delayTime.value=.13;const fb=a.createGain();fb.gain.value=.28;const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2400;
@@ -258,7 +269,7 @@ async function begin(){
  if(!S.prep)startSit();else{$('hint').textContent='get comfortable';}
  loop();
 }
-function startSit(){T.started=true;T.end=Date.now()+T.total*1000;if(S.start)strike(S.sound,S.vol*.6);startAmbient()}
+function startSit(){T.started=true;if(silentEl){const pr=silentEl.play();if(pr&&pr.catch)pr.catch(()=>{})}T.end=Date.now()+T.total*1000;if(S.start)strike(S.sound,S.vol*.6);startAmbient()}
 function loop(){
  if(T.paused)return;
  if(!T.started){const r=(T.prepEnd-Date.now())/1000;$('time').textContent=Math.max(1,Math.ceil(r));$('hint').textContent='get comfortable';if(r<=0)startSit();return}
@@ -279,7 +290,7 @@ function stop(record){
  clearInterval(T.iv);try{wake&&wake.release()}catch(_){}wake=null;stopAmbient(2);
  const sat=T.started?Math.round(T.total-Math.max(0,T.remain)):0;
  if(record&&sat>=30){const l=S.log[today()]||{n:0,s:0};l.n++;l.s+=sat;S.log[today()]=l;save()}
- T=null;document.body.classList.remove('sitting');setGo('play');$('arc').style.strokeDashoffset=C;showTime(S.min*60);$('hint').textContent='breathe';return sat;
+ T=null;setTimeout(()=>{if(!T&&silentEl)silentEl.pause()},15000);document.body.classList.remove('sitting');setGo('play');$('arc').style.strokeDashoffset=C;showTime(S.min*60);$('hint').textContent='breathe';return sat;
 }
 function complete(){const total=T.total;stop(true);finalBell();if(S.vib&&navigator.vibrate)navigator.vibrate([400,200,400]);
  $('endmsg').textContent=`${Math.round(total/60)} minute${total>=120?'s':''} of stillness · ${streak()} day${streak()===1?'':'s'} in a row`;$('end').classList.add('show')}
