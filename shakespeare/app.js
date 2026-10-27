@@ -13,15 +13,28 @@ const ymd=(d=new Date())=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.get
 const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ymd(d)};
 const diffDays=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);
 const ROMAN=['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
-const refFmt=l=>l.act?`${l.play} ${ROMAN[l.act]}.${l.scene}`:`${l.play} · Epilogue`;
-const refLong=l=>l.act?`${l.play} · Act ${ROMAN[l.act]}, Scene ${l.scene}`:`${l.play} · Epilogue`;
+const refFmt=l=>l.act?`${l.play} ${ROMAN[l.act]}.${l.scene}`:`${l.play}, Epilogue`;
+const refLong=l=>l.act?`${l.play}, Act ${ROMAN[l.act]}, Scene ${l.scene}`:`${l.play}, Epilogue`;
 const THEMES=[];Ls.forEach(l=>{if(!THEMES.find(t=>t.key===l.themeKey))THEMES.push({key:l.themeKey,name:l.theme})});
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200)};
 const buzz=p=>{if(S.settings.vibrate&&navigator.vibrate)navigator.vibrate(p)};
 
+const PROP={
+ambition:'<path d="M12 2l2 4v9h-4V6z"/><path d="M7 15h10M12 15v4"/><circle cx="12" cy="21" r="1.2"/>',
+jealousy:'<path d="M5 6l14-1-2 13-12 1z"/><path d="M8 9c2 1 5 1 8-.5M7.5 13c3 1 6 .8 8.5-.5" opacity=".7"/>',
+love:'<path d="M12 5c3 0 5 2 5 4.5S14.5 14 12 14 7 12 7 9.5 9 5 12 5zM12 14v7M12 17c2-2 4-2 5-1M12 18c-2-1.5-3.5-1.5-4.5-.5"/>',
+power:'<path d="M4 17l-1-9 5 4 4-7 4 7 5-4-1 9z"/><path d="M5 20h14"/>',
+identity:'<ellipse cx="12" cy="9" rx="5" ry="6"/><path d="M12 15v6M9 21h6"/>',
+wisdom:'<path d="M5 4h14l-3 6 3 6H5l3-6z"/><circle cx="12" cy="10" r="1.6"/><path d="M8 20h8"/>',
+courage:'<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M12 8v8M8.5 11.5h7"/>',
+grief:'<path d="M12 3c1.6 2 1.6 3.6 0 5-1.6-1.4-1.6-3 0-5zM9 10h6v10H9zM6 20h12"/>',
+mercy:'<path d="M12 3v17M7 20h10M5 6h14"/><path d="M5 6l-3 6h6zM19 6l-3 6h6z"/>',
+time:'<path d="M7 3h10M7 21h10M8 3c0 5 8 6 8 9s-8 4-8 9M16 3c0 5-8 6-8 9s8 4 8 9"/>',
+epilogue:'<path d="M4 5c5 2 11 2 16 0v6c0 5-4 8-8 8s-8-3-8-8z"/><path d="M8 10c1-.6 2-.6 3 0M13 10c1-.6 2-.6 3 0M9 14.5c2 1.5 4 1.5 6 0"/>'};
+const prop=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${PROP[k]||PROP.epilogue}</svg>`;
 // ---------- theme ----------
 function applyTheme(){const t=S.settings.theme;let th=t;if(t==='auto'){const h=new Date().getHours();th=(h<6||h>=19)?'night':'dawn'}
- document.body.dataset.theme=th;document.querySelector('meta[name=theme-color]').content=th==='night'?'#15100d':'#f3ead8';
+ document.body.dataset.theme=th;document.querySelector('meta[name=theme-color]').content=th==='night'?'#1c0916':'#2d0f24';
  document.documentElement.style.setProperty('--fs',S.settings.fs)}
 applyTheme();setInterval(applyTheme,60000);
 
@@ -86,19 +99,19 @@ function greet(){const h=new Date().getHours();return h<5?'The quiet hour, Alan'
 const LAUREL=`<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M60 106c-26-14-38-36-36-66M60 106c26-14 38-36 36-66"/>${[0,1,2,3,4].map(i=>{const y=88-i*13,x=34-i*1.8;return`<path d="M${x+4} ${y}c-10-2-14-8-14-14 8 0 13 6 14 14z" fill="currentColor" opacity=".25"/><path d="M${120-x-4} ${y}c10-2 14-8 14-14-8 0-13 6-14 14z" fill="currentColor" opacity=".25"/>`}).join('')}</svg>`;
 
 function vToday(){const cd=currentDay(),st=streak(),due=dueList().length,doneN=Object.keys(S.done).length;let hero;
- if(cd>N){hero=`<div class="card hero"><div class="eyebrow">Path complete</div><h2>You walked all ${N} days.</h2><p class="muted">Keep the teachings alive with daily review. The deck will keep spacing them out.</p><button class="btn gold" data-tab-go="review">Review now</button></div>`}
+ if(cd>N){hero=`<div class="hero prosc"><div class="eyebrow">Path complete</div><h2>You walked all ${N} days.</h2><p class="muted">Keep the teachings alive with daily review. The deck will keep spacing them out.</p><button class="btn gold" data-tab-go="review">Review now</button></div>`}
  else{const l=byDay(cd),open=unlocked(cd);
-  hero=`<div class="card hero"><div class="eyebrow">Day ${cd} of ${N} · ${esc(l.theme)}</div>${Visual.render(l.visual)}<h2>${esc(l.title)}</h2><div class="ref">${refFmt(l)} · ${esc(l.speaker)}</div><blockquote>${fmtP(l.passage)}</blockquote>
-  <div class="row" style="margin-top:16px">${open?`<button class="btn gold" data-open="${cd}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${doneN?'Begin today\u2019s lesson':'Begin Day 1'}</button>`:
+  hero=`<div class="hero prosc"><div class="eyebrow prop">${prop(l.themeKey)}Day ${cd} of ${N}, ${esc(l.theme)}</div><blockquote>${fmtP(l.passage.split('\n').slice(0,3).join('\n'))}</blockquote><div class="ref">${esc(l.speaker)}, in ${esc(refLong(l))}</div><h2>${esc(l.title)}</h2>
+  <div class="row" style="margin-top:16px">${open?`<button class="btn gold" data-open="${cd}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${doneN?'Take the stage':'Begin Day 1'}</button>`:
   `<div><p style="margin:0 0 12px">Today\u2019s lesson is done. Day ${cd} opens tomorrow at dawn.</p><div class="row"><button class="btn ghost sm" data-open="${cd-1}">Revisit Day ${cd-1}</button><button class="btn ghost sm" id="aheadBtn">Study ahead</button></div></div>`}</div></div>`}
  const days=[...Array(14)].map((_,i)=>{const d=addDays(ymd(),i-13);return`<i class="${S.activity[d]?'on':''} ${i===13?'today':''}" title="${d}"></i>`}).join('');
  const thoughtDays=Object.keys(S.done).map(Number);const td=thoughtDays.length?thoughtDays[(new Date().getDate()*7)%thoughtDays.length]:null;
  return`<div class="greet"><div class="eyebrow">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div><h1>${greet()}</h1><p>${esc(DAWN[new Date().getDate()%DAWN.length])}</p></div>
  <div class="homegrid"><div>${hero}</div><div>
-  <div class="grid2"><div class="card stat"><b>${st}</b><span>Day streak</span></div><div class="card stat"><b>${doneN}<small class="muted" style="font-size:16px"> / ${N}</small></b><span>Lessons kept</span></div></div>
-  <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><div><div class="eyebrow">Spaced review</div><div style="font-size:20px;margin-top:4px">${due?`${due} card${due>1?'s':''} ready`:'All caught up'}</div></div><button class="btn ${due?'gold':'ghost'} sm" id="goReview">${due?'Review':'Practice'}</button></div>
-  <div class="dots">${days}</div><div class="small" style="margin-top:8px">Last 14 days · best streak ${bestStreak()}</div></div>
-  ${td?`<div class="card" style="margin-top:14px" data-open="${td}"><div class="eyebrow">To carry today · ${refFmt(byDay(td))}</div><p class="thought" style="margin:8px 0 0">${esc(byDay(td).key)}</p></div>`:''}
+  <div class="grid2"><div class="card stat"><b>${st}</b><span>Days in a row</span></div><div class="card stat"><b>${doneN}<small class="muted" style="font-size:16px"> / ${N}</small></b><span>Lessons kept</span></div></div>
+  <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><div><div style="font-family:var(--serif);font-size:21px">${due?`${due} card${due>1?'s':''} ready`:'All caught up'}</div><div class="small">Spaced review</div></div><button class="btn ${due?'gold':'ghost'} sm" id="goReview">${due?'Review':'Practice'}</button></div>
+  <div class="dots">${days}</div><div class="small" style="margin-top:8px">Last 14 days, best run ${bestStreak()}</div></div>
+  ${td?`<div class="card" style="margin-top:14px" data-open="${td}"><div class="eyebrow">To carry today, from ${esc(refFmt(byDay(td)))}</div><p class="thought" style="margin:8px 0 0">${esc(byDay(td).key)}</p></div>`:''}
  </div></div>`}
 afterRender.today=()=>{const a=$('aheadBtn');if(a)a.onclick=()=>{const cd=currentDay();S.done[cd-1].date='0000-00-00';save();render();openLesson(cd)};const g=$('goReview');if(g)g.onclick=()=>{tab='review';render()};document.querySelectorAll('[data-tab-go]').forEach(b=>b.onclick=()=>{tab=b.dataset.tabGo;render()})};
 const DAWN=['The play\u2019s the thing. One scene, read slowly, carried all day.','All the world\u2019s a stage, and this hour is yours.','Light a candle. Four hundred years of wisdom, one passage at a time.','What\u2019s past is prologue. Today\u2019s lesson is waiting.','Readiness is all. Begin with a few lines.','Words, words, words, and one that matters today.'];
@@ -115,7 +128,7 @@ function journeySVG(){const n=THEMES.length;const W=360,H=230;
 function vPath(){const cd=currentDay();const themes=[];Ls.forEach(l=>{let t=themes.find(x=>x.name===l.theme);if(!t)themes.push(t={name:l.theme,ls:[]});t.ls.push(l)});
  return`<div class="greet"><div class="eyebrow">The journey</div><h1>Ten acts and an epilogue</h1><p>${(()=>{const pl=new Set(Object.keys(S.done).map(d=>byDay(+d).play));return pl.size?`${pl.size} of ${new Set(Ls.map(l=>l.play)).size} plays explored. `:''})()}Each station lights as you study its theme.</p></div>
  <div class="card" style="margin-top:16px">${journeySVG()}</div>
- ${themes.map((t,ti)=>`<div class="theme-block"><h4>${esc(t.name)} <small>${t.ls.filter(l=>isDone(l.day)).length}/${t.ls.length}</small></h4><div class="stones">${t.ls.map(l=>{const st=isDone(l.day)?'done':l.day===cd&&unlocked(l.day)?'cur':unlocked(l.day)?'':'locked';
+ ${themes.map((t,ti)=>`<div class="theme-block"><h4><span class="prop">${prop(t.ls[0].themeKey)}</span>${esc(t.name)} <small>${t.ls.filter(l=>isDone(l.day)).length} of ${t.ls.length}</small></h4><div class="stones">${t.ls.map(l=>{const st=isDone(l.day)?'done':l.day===cd&&unlocked(l.day)?'cur':unlocked(l.day)?'':'locked';
   return`<button class="stone ${st}" ${st==='locked'?'':`data-open="${l.day}"`}><span class="n">DAY ${l.day} · ${esc(refFmt(l))}${st==='done'?' ✓':''}</span><span class="t">${esc(l.title)}</span></button>`}).join('')}</div></div>`).join('')}`}
 
 // ---------- review (spaced repetition) ----------
@@ -187,12 +200,12 @@ const ICON={read:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
  play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'};
 function openLesson(d){if(!unlocked(d)&&!isDone(d)){toast('Unlocks after the day before');return}
  curL=d;const l=byDay(d),j=S.journal[d]||'',ans=S.answers[d]||{},sv=S.saved.includes(d),done=isDone(d);
- $('lBarT').textContent=`Day ${d} · ${refFmt(l)}`;$('lSave').classList.toggle('on',sv);
+ $('lBarT').textContent=refFmt(l);$('lSave').classList.toggle('on',sv);
  const paras=l.context.split(/\n\n+/).map(p=>`<p>${esc(p)}</p>`).join('');
  $('lBody').innerHTML=`<div class="lgrid"><div class="lcol1">
-  <div class="lhead"><div class="eyebrow">${esc(l.theme)} · Day ${d} of ${N}</div><h1>${esc(l.title)}</h1></div>
+  <section class="prosc"><div class="lhead"><div class="eyebrow prop">${prop(l.themeKey)}${esc(l.theme)}, day ${d} of ${N}</div><h1>${esc(l.title)}</h1></div>
   <div class="passage"><div class="speaker">${esc(l.speaker)} speaks</div><blockquote id="pTxt">${fmtP(l.passage)}</blockquote><div class="cite">${esc(refLong(l))}</div></div>
-  <div class="tools"><button class="chip" data-say="all" data-label="Listen to lesson">${ICON.play}<span>Listen to lesson</span></button></div>
+  <div class="tools"><button class="chip" data-say="all" data-label="Listen to lesson">${ICON.play}<span>Listen to lesson</span></button></div></section>
   <div class="plain"><span class="eyebrow">In plain words</span>${esc(l.plain)}</div>
   <div class="card vizcard">${Visual.render(l.visual)}<p>${esc(l.visual.caption||'')}</p></div>
  </div><div class="lcol2">
@@ -203,7 +216,7 @@ function openLesson(d){if(!unlocked(d)&&!isDone(d)){toast('Unlocks after the day
   <div class="block"><h3>${ICON.q}Recall check</h3>${l.quiz.map((q,qi)=>{const a=ans[qi];return`<div class="q lq ${a!=null?'answered':''}"><p>${qi+1}. ${esc(q.q)}</p><div class="opts" data-qi="${qi}">${q.options.map((o,i)=>`<button data-i="${i}" class="${a!=null?(i===q.answer?'right':i===a?'wrong':''):''}">${esc(o)}</button>`).join('')}</div><div class="why">${esc(q.why)}</div></div>`}).join('')}</div>
   <div class="finish">${done?`<p class="small">Completed ${S.done[d].date.startsWith('0000')?'':S.done[d].date}</p><button class="btn ghost" id="lDone">Close</button>`:`<button class="btn gold" id="lDone">Complete Day ${d}</button><p class="small" style="margin-top:10px">Adds this teaching to your review deck</p>`}</div>
  </div></div>`;
- $('lesson').classList.add('show');$('lesson').scrollTop=0;history.pushState({l:d},'');
+ $('lesson').classList.add('show');document.body.classList.add('house-dim');$('lesson').scrollTop=0;history.pushState({l:d},'');
  const jb=$('jBox');jb.oninput=()=>{S.journal[d]=jb.value;save();$('jSaved').textContent='Saved on this phone'};
  document.querySelectorAll('.lq .opts button').forEach(b=>b.onclick=()=>{const box=b.closest('.q');if(box.classList.contains('answered'))return;const qi=+b.parentNode.dataset.qi,q=l.quiz[qi],i=+b.dataset.i;box.classList.add('answered');
   box.querySelectorAll('button').forEach(x=>{if(+x.dataset.i===q.answer)x.classList.add('right');else if(x===b)x.classList.add('wrong')});(S.answers[d]=S.answers[d]||{})[qi]=i;save();buzz(i===q.answer?20:[30,40,30])});
@@ -211,7 +224,7 @@ function openLesson(d){if(!unlocked(d)&&!isDone(d)){toast('Unlocks after the day
   const fin=()=>stopSpeak();const passage=next=>S.settings.narrator?playNarration(d,$('pTxt'),next):sayText(l.passage.replace(/\n/g,' '),$('pTxt'),next);
   if(b.dataset.say==='passage')passage(fin);else passage(lessonTTS);function lessonTTS(){sayText('In plain words. '+l.plain,document.querySelector('.plain'),()=>sayText(l.context.replace(/\n+/g,' '),$('eTxt'),()=>sayText('Remember. '+l.key,document.querySelector('.keycard'),fin)))}});
  $('lDone').onclick=()=>{if(done){closeLesson();return}complete(d)}}
-function closeLesson(){stopSpeak();$('lesson').classList.remove('show');curL=null;render()}
+function closeLesson(){stopSpeak();$('lesson').classList.remove('show');document.body.classList.remove('house-dim');curL=null;render()}
 $('lClose').onclick=()=>history.state&&history.state.l?history.back():closeLesson();
 window.addEventListener('popstate',()=>{if(curL)closeLesson();closeSheet()});
 $('lSave').onclick=()=>{const d=curL;if(!d)return;const i=S.saved.indexOf(d);if(i>=0)S.saved.splice(i,1);else S.saved.push(d);save();$('lSave').classList.toggle('on',i<0);toast(i<0?'Saved to your passages':'Removed');buzz(15)};
@@ -219,9 +232,9 @@ $('lesson').addEventListener('scroll',()=>{const e=$('lesson');$('lProg').style.
 function complete(d){const l=byDay(d);S.done[d]={date:ymd()};if(!S.start)S.start=ymd();S.srs[d]=S.srs[d]||{box:1,due:addDays(ymd(),1),reviews:0,qi:0};markActive();save();stopSpeak();
  if(S.settings.bell)bell();buzz([40,80,40]);
  const ov=$('doneOv');const newC=l.concepts.filter(c=>!Object.keys(S.done).some(x=>+x!==d&&byDay(+x).concepts.includes(c)));
- ov.innerHTML=`<div class="laurel">${LAUREL}</div><div class="eyebrow" style="margin-top:8px">Day ${d} kept</div><h2>${streak()} day streak</h2><p>${esc(l.key)}</p>
+ ov.innerHTML=`<div class="laurel">${LAUREL}</div><div class="eyebrow" style="margin-top:8px">Curtain call, day ${d} kept</div><h2>${streak()} ${streak()===1?'day':'days'} in a row</h2><p>${esc(l.key)}</p>
  <p class="small">${newC.length?`New on your idea map: ${newC.join(', ')}. `:''}${esc(l.theme)} glows on your journey. First review: tomorrow.</p><button class="btn gold" id="ovOk" style="margin-top:18px">Continue</button>`;
- ov.classList.add('show');$('ovOk').onclick=()=>{ov.classList.remove('show');closeLesson()}}
+ ov.classList.add('show');document.body.classList.remove('house-dim');document.body.classList.add('lights-up');$('ovOk').onclick=()=>{ov.classList.remove('show');closeLesson();setTimeout(()=>document.body.classList.remove('lights-up'),400)}}
 
 // ---------- settings sheet ----------
 function openSheet(html){$('sheet').innerHTML=html;$('sheet').classList.add('show');$('scrim').classList.add('show')}
@@ -231,7 +244,7 @@ function seg(key,opts,labels){return`<div class="seg" data-key="${key}">${opts.m
 function sw(key){return`<button class="sw ${S.settings[key]?'on':''}" data-sw="${key}"></button>`}
 $('setBtn').onclick=()=>{loadVoices();
  openSheet(`<h3>Settings</h3>
- <div class="opt"><label>Light</label>${seg('theme',['auto','dawn','night'],['Auto','Parchment','Candlelight'])}</div>
+ <div class="opt"><label>Light</label>${seg('theme',['auto','dawn','night'],['Auto','Matinee','Evening'])}</div>
  <div class="opt"><label>Text size</label>${seg('fs',[.92,1,1.12],['S','M','L'])}</div>
  <div class="opt"><label>Studio narrator (British actor voice)<br><span class="small">Speaks each passage; works offline once played</span></label>${sw('narrator')}</div>
  <div class="opt"><label>Reading voice</label><select id="vSel"><option value="">Automatic (calm English)</option>${voices.map(v=>`<option ${v.name===S.settings.voice?'selected':''}>${esc(v.name)}</option>`).join('')}</select></div>
