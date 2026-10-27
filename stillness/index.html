@@ -76,7 +76,8 @@ body.keepquote.sitting #quote{opacity:.85!important}
 .qtools button:active{background:rgba(255,255,255,.12)}
 .top button#menuBtn{font-size:20px;letter-spacing:0;filter:grayscale(.3);opacity:.85}
 .sec{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:20px 0 2px}
-.sheet{max-height:82vh;overflow-y:auto}
+.sheet{max-height:82vh;max-height:82dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sheet .close{position:sticky;top:0;float:right;margin:-6px -8px 0 0;z-index:3;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);color:var(--txt);font-size:22px;line-height:38px;text-align:center}
 .seg{flex-wrap:wrap;justify-content:flex-end}
 .swatches{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 4px}
 .sw{width:44px;height:44px;border-radius:50%;border:2px solid transparent;position:relative}
