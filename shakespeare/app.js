@@ -77,12 +77,12 @@ const AMBN={off:'Off',rain:'Rain',hearth:'Hearth',lute:'Lute',night:'Night wind'
 let voices=[];function loadVoices(){voices=(speechSynthesis.getVoices()||[]).filter(v=>/^en/i.test(v.lang))}
 if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
 function pickVoice(){if(!voices.length)loadVoices();return voices.find(v=>v.name===S.settings.voice)||voices.find(v=>/en-GB/i.test(v.lang)&&/male|daniel|george|arthur/i.test(v.name))||voices.find(v=>/en-GB/i.test(v.lang))||voices[0]}
-let speaking=null,audioEl=null;
+let speaking=null,audioEl=null;const PLAYER=new Audio();PLAYER.preload='auto';
 function stopSpeak(){speaking=null;try{speechSynthesis.cancel()}catch(e){}if(audioEl){audioEl.pause();audioEl=null}document.querySelectorAll('.reading').forEach(e=>e.classList.remove('reading'));document.querySelectorAll('[data-say].on').forEach(b=>{b.classList.remove('on');b.querySelector('span').textContent=b.dataset.label})}
 function sayText(text,el,done){const token={};speaking=token;const parts=text.replace(/--/g,', ').match(/[^.!?;:]+[.!?;:]*\s*/g)||[text];let i=0;el&&el.classList.add('reading');
  const next=()=>{if(speaking!==token)return;if(i>=parts.length){el&&el.classList.remove('reading');done&&done();return}
-  const u=new SpeechSynthesisUtterance(parts[i++].trim());const v=pickVoice();if(v)u.voice=v;u.lang=v?v.lang:'en-GB';u.rate=S.settings.rate;u.pitch=.95;u.onend=next;u.onerror=next;speechSynthesis.speak(u)};next()}
-function playNarration(day,el,done,kind,fb){kind=kind||'d';const token={};speaking=token;el&&el.classList.add('reading');audioEl=new Audio(`audio/${kind}${pad(day)}.mp3`);audioEl.playbackRate=Math.max(.8,Math.min(1.2,S.settings.rate/.9));
+  const u=new SpeechSynthesisUtterance(parts[i++].trim());const v=pickVoice();if(v)u.voice=v;u.lang=v?v.lang:'en-GB';u.rate=S.settings.rate;u.pitch=.95;let st=false;u.onstart=()=>{st=true};u.onend=next;u.onerror=next;try{speechSynthesis.resume()}catch(e){}speechSynthesis.speak(u);setTimeout(()=>{if(!st&&speaking===token){try{speechSynthesis.cancel()}catch(e){}el&&el.classList.remove('reading');toast('Phone voice unavailable');done&&done()}},5000)};next()}
+function playNarration(day,el,done,kind,fb){kind=kind||'d';const token={};speaking=token;el&&el.classList.add('reading');audioEl=PLAYER;audioEl.src=`audio/${kind}${pad(day)}.mp3`;audioEl.playbackRate=Math.max(.8,Math.min(1.2,S.settings.rate/.9));
  audioEl.onended=()=>{el&&el.classList.remove('reading');if(speaking===token)done&&done()};audioEl.onerror=()=>{el&&el.classList.remove('reading');if(speaking!==token)return;fb?fb():sayText(byDay(day).passage.replace(/\n/g,' ').replace(/([A-Z]{3,})\. /g,'$1: '),el,done)};audioEl.play().catch(()=>audioEl.onerror())}
 
 // ---------- rendering: tabs ----------
@@ -222,7 +222,7 @@ function openLesson(d){if(!unlocked(d)&&!isDone(d)){toast('Unlocks after the day
   box.querySelectorAll('button').forEach(x=>{if(+x.dataset.i===q.answer)x.classList.add('right');else if(x===b)x.classList.add('wrong')});(S.answers[d]=S.answers[d]||{})[qi]=i;save();buzz(i===q.answer?20:[30,40,30])});
  document.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>{const was=b.classList.contains('on');stopSpeak();if(was)return;b.classList.add('on');b.querySelector('span').textContent='Stop';
   const fin=()=>stopSpeak();const passage=next=>S.settings.narrator?playNarration(d,$('pTxt'),next):sayText(l.passage.replace(/\n/g,' '),$('pTxt'),next);
-  if(b.dataset.say==='passage')passage(fin);else passage(lessonTTS);function lessonTTS(){sayText('In plain words. '+l.plain,document.querySelector('.plain'),()=>sayText(l.context.replace(/\n+/g,' '),$('eTxt'),()=>sayText('Remember. '+l.key,document.querySelector('.keycard'),fin)))}});
+  if(b.dataset.say==='passage')passage(fin);else passage(()=>playNarration(d,document.querySelector('.lcol2'),fin,'l',lessonTTS));function lessonTTS(){sayText('In plain words. '+l.plain,document.querySelector('.plain'),()=>sayText(l.context.replace(/\n+/g,' '),$('eTxt'),()=>sayText('Remember. '+l.key,document.querySelector('.keycard'),fin)))}});
  $('lDone').onclick=()=>{if(done){closeLesson();return}complete(d)}}
 function closeLesson(){stopSpeak();$('lesson').classList.remove('show');document.body.classList.remove('house-dim');curL=null;render()}
 $('lClose').onclick=()=>history.state&&history.state.l?history.back():closeLesson();
@@ -246,7 +246,7 @@ $('setBtn').onclick=()=>{loadVoices();
  openSheet(`<h3>Settings</h3>
  <div class="opt"><label>Light</label>${seg('theme',['auto','dawn','night'],['Auto','Matinee','Evening'])}</div>
  <div class="opt"><label>Text size</label>${seg('fs',[.92,1,1.12],['S','M','L'])}</div>
- <div class="opt"><label>Studio narrator (British actor voice)<br><span class="small">Speaks each passage; works offline once played</span></label>${sw('narrator')}</div>
+ <div class="opt"><label>Studio narrator (British actor voice)<br><span class="small">Reads the passage and the whole lesson; works offline once played</span></label>${sw('narrator')}</div>
  <div class="opt"><label>Reading voice</label><select id="vSel"><option value="">Automatic (calm English)</option>${voices.map(v=>`<option ${v.name===S.settings.voice?'selected':''}>${esc(v.name)}</option>`).join('')}</select></div>
  <div class="opt"><label>Reading pace</label><input type="range" min=".7" max="1.15" step=".05" value="${S.settings.rate}" id="rate"></div>
  <div class="opt"><label></label><button class="btn ghost sm" id="vTest">Test voice</button></div>
@@ -265,7 +265,7 @@ $('setBtn').onclick=()=>{loadVoices();
  $('vSel').onchange=e=>{S.settings.voice=e.target.value;save()};$('rate').oninput=e=>{S.settings.rate=+e.target.value;save()};
  $('avol').oninput=e=>{S.settings.ambVol=+e.target.value;save();if(amb)amb.master.gain.value=S.settings.ambVol*.6};
  $('vTest').onclick=()=>{stopSpeak();if(S.settings.narrator){playNarration(1,null,()=>stopSpeak());return}sayText('All the world is a stage, and all the men and women merely players.',null,()=>{})};
- $('dlAudio').onclick=async e=>{const b=e.target;b.disabled=true;try{const c=await caches.open('shk-audio');for(let d=1;d<=N;d++){b.textContent=`${d}/${N}`;for(const k of['d']){const u=`audio/${k}${pad(d)}.mp3`;if(!(await c.match(u))){const r=await fetch(u);if(r.ok)await c.put(u,r)}}}b.textContent='Saved ✓'}catch(err){b.textContent='Try again';b.disabled=false}};
+ $('dlAudio').onclick=async e=>{const b=e.target;b.disabled=true;try{const c=await caches.open('shk-audio');for(let d=1;d<=N;d++){b.textContent=`${d}/${N}`;for(const k of['d','l']){const u=`audio/${k}${pad(d)}.mp3`;if(!(await c.match(u))){const r=await fetch(u);if(r.ok)await c.put(u,r)}}}b.textContent='Saved ✓'}catch(err){b.textContent='Try again';b.disabled=false}};
  $('exp').onclick=()=>{const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`shakespeare-backup-${ymd()}.json`;a.click()};
  $('imp').onclick=()=>{const i=document.createElement('input');i.type='file';i.accept='application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;f.text().then(t=>{try{const o=JSON.parse(t);if(!o.done)throw 0;S=Object.assign({},DEF,o);S.settings=Object.assign({},DEF.settings,o.settings||{});save();applyTheme();closeSheet();render();toast('Backup restored')}catch(e){toast('That file is not a Shakespeare backup')}})};i.click()};
  $('reset').onclick=()=>{if(confirm('Erase all progress, journal entries and saved passages on this phone?')){localStorage.removeItem(LS);location.reload()}}};
