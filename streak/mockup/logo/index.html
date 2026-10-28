@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Streak · Logo options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--txt:#eef0f4;--ink2:#c3c8d3;--ink3:#9aa1b0;--acc:#ff9a5c;--raise:#171d2b;--well:#0a0e18;--serif:"Shippori Mincho",Georgia,serif;--sans:"Zen Kaku Gothic New",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#0e1420;color:var(--txt);font-family:var(--sans);padding:calc(env(safe-area-inset-top) + 28px) 20px 60px}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(130% 55% at 50% 118%,rgba(255,138,76,.28),transparent 70%)}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-family:var(--serif);font-weight:500;font-size:clamp(28px,7vw,38px);margin:0 0 6px}
+.lead{color:var(--ink2);line-height:1.6;margin:0 0 26px;max-width:560px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.opt{background:var(--raise);border-radius:22px;padding:20px}
+.opt h2{font-family:var(--serif);font-weight:500;font-size:21px;margin:0}
+.opt h2 b{color:var(--acc);font-weight:500;margin-right:6px}
+.opt p{color:var(--ink2);font-size:14.5px;line-height:1.55;margin:6px 0 16px}
+.tag{display:inline-block;font-size:12px;padding:3px 9px;border-radius:10px;background:rgba(255,154,92,.14);color:var(--acc);margin-left:6px;vertical-align:3px}
+.row{display:flex;align-items:center;gap:18px}
+.tile{width:112px;height:112px;border-radius:26px;flex:none;overflow:hidden;background:radial-gradient(95% 95% at 50% 100%,#7a3d2c 0%,#2b2740 45%,#0e1420 100%);box-shadow:0 12px 30px -12px rgba(0,0,0,.8)}
+.tile svg,.lock svg,.tiny svg{display:block;width:100%;height:100%}
+.side{display:flex;flex-direction:column;gap:14px}
+.lock{display:flex;align-items:center;gap:8px;font-family:var(--serif);font-size:20px;letter-spacing:.06em;color:var(--ink2)}
+.lock span{width:34px;height:34px}
+.tiny{display:flex;align-items:center;gap:12px}
+.tiny span{display:block}
+.tiny .t1{width:30px;height:30px;border-radius:8px;overflow:hidden;background:radial-gradient(95% 95% at 50% 100%,#7a3d2c,#2b2740 45%,#0e1420)}
+.tiny .t2{width:18px;height:18px}
+.tiny small{color:var(--ink3);font-size:12px}
+.foot{color:var(--ink3);font-size:13.5px;text-align:center;margin-top:28px}
+</style></head><body><div class="wrap">
+<h1>Streak logo options</h1>
+<p class="lead">Six directions in the same ember-and-navy palette as the app. Each is shown as the Home Screen icon, beside the name, and tiny like a tab or browser icon.</p>
+<div class="grid" id="g"></div>
+<p class="foot">Mockup only. Not linked from the app.</p>
+</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<linearGradient id="ember" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd08a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient>
+<linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc27a"/><stop offset="1" stop-color="#ff6e4a"/></linearGradient>
+<radialGradient id="disk" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#ffd59a"/><stop offset="1" stop-color="#ff7d4c"/></radialGradient>
+<clipPath id="above"><rect x="0" y="0" width="100" height="64"/></clipPath>
+<clipPath id="badge"><circle cx="50" cy="50" r="40"/></clipPath>
+<symbol id="fl" viewBox="0 0 24 24"><path d="M12 21.5a7 7 0 0 0 7-7c0-4.6-3.4-6.6-4.6-10.9-2.2 2.4-4.6 4.2-4.9 7-.9-.8-1.4-1.9-1.5-3.2C6.1 9.2 5 11.6 5 14.5a7 7 0 0 0 7 7z"/></symbol>
+</defs></svg>
+<script>
+const FL='M12 21.5a7 7 0 0 0 7-7c0-4.6-3.4-6.6-4.6-10.9-2.2 2.4-4.6 4.2-4.9 7-.9-.8-1.4-1.9-1.5-3.2C6.1 9.2 5 11.6 5 14.5a7 7 0 0 0 7 7z';
+const IN='M12 21.5a3 3 0 0 1-3-3c0-1.8 1.4-2.7 3-4.7 1.6 2 3 2.9 3 4.7a3 3 0 0 1-3 3z';
+function ring(){let s='';const r=36,n=7,gap=9;for(let i=0;i<n;i++){const a0=(-90+i*360/n+gap/2)*Math.PI/180,a1=(-90+(i+1)*360/n-gap/2)*Math.PI/180;
+ const x0=50+r*Math.cos(a0),y0=50+r*Math.sin(a0),x1=50+r*Math.cos(a1),y1=50+r*Math.sin(a1);
+ s+=`<path d="M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}" stroke="${i<6?'#ff9a5c':'#ffd08a'}" stroke-opacity="${i<6?.35+i*.1:1}" stroke-width="7" stroke-linecap="round" fill="none"/>`}return s}
+const M=[
+ ['A','Ember',0,'The app\u2019s flame, refined: warm gradient with a bright core. Simple, bold, instantly \u201cstreak.\u201d',
+  `<g transform="translate(14 10) scale(3)"><path d="${FL}" fill="url(#ember)"/><path d="${IN}" fill="#fff" fill-opacity=".6"/></g>`],
+ ['B','Okinawa sunrise',0,'A sun rising over the sea, sliced by three horizon lines. Morning workouts, a fresh start each day.',
+  `<g clip-path="url(#above)"><circle cx="50" cy="64" r="30" fill="url(#sun)"/></g><rect x="18" y="47" width="64" height="3.2" fill="#2b2740"/><rect x="18" y="55" width="64" height="3.2" fill="#2b2740"/><path d="M14 68h72" stroke="#ffd08a" stroke-width="3.2" stroke-linecap="round"/><path d="M26 77h48" stroke="#ff9a5c" stroke-opacity=".6" stroke-width="3.2" stroke-linecap="round"/>`],
+ ['C','Seven-day ring',0,'Seven arcs for the week, glowing brighter day by day around a small flame. The streak itself is the logo.',
+  ring()+`<g transform="translate(38 36) scale(1)"><path d="${FL}" fill="url(#ember)"/></g>`],
+ ['D','Coach badge',1,'Your manga coach, thumbs up, framed in an ember circle. Friendly and personal, and it matches the demos.',
+  `<circle cx="50" cy="50" r="40" fill="url(#disk)"/><g clip-path="url(#badge)"><image href="coach-bust.webp" x="12" y="13" width="76" height="76"/></g><circle cx="50" cy="50" r="40" fill="none" stroke="#ffd08a" stroke-width="2"/>`],
+ ['E','Stride into the sun',1,'The coach in silhouette, striding forward with a fist pump across a rising sun. Energetic, still heart-safe walking.',
+  `<circle cx="50" cy="54" r="32" fill="url(#disk)"/><image href="coach-stride-ink.webp" x="31.5" y="14" width="37" height="68.8"/><path d="M14 86h72" stroke="#ffd08a" stroke-width="2.6" stroke-linecap="round"/>`],
+ ['F','Heartbeat flame',0,'A flame outline with a calm heartbeat line running through it. Your streak, kept in step with your heart.',
+  `<g transform="translate(14 8) scale(3)"><path d="${FL}" fill="none" stroke="url(#ember)" stroke-width="1.5" stroke-linejoin="round"/></g><path d="M12 58h22l5-10 7 20 6-16 4 6h32" fill="none" stroke="#fff3e6" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>`],
+];
+const sv=b=>`<svg viewBox="0 0 100 100" aria-hidden="true">${b}</svg>`;
+document.getElementById('g').innerHTML=M.map(([k,n,c,d,b])=>`<section class="opt"><h2><b>${k}</b>${n}${c?'<span class="tag">with coach</span>':''}</h2><p>${d}</p>
+<div class="row"><div class="tile">${sv(b)}</div><div class="side"><div class="lock"><span>${sv(b)}</span>streak</div><div class="tiny"><span class="t1">${sv(b)}</span><span class="t2">${sv(b)}</span><small>tiny</small></div></div></div></section>`).join('');
+</script></body></html>
