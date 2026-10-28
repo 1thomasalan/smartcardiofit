@@ -61,7 +61,7 @@ h1{font-family:var(--serif);font-weight:500;font-size:clamp(27px,7.4vw,34px);lin
 .day.is-today{color:var(--txt)}
 .dot .m{position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--mind);border:2px solid var(--raise)}
 /* meditate row */
-.mind{display:flex;align-items:center;gap:14px;margin-top:12px;background:linear-gradient(120deg,#1c2338,#2b2740);border-radius:18px;padding:14px 16px;text-decoration:none;width:100%;text-align:left}
+.mind{display:flex;align-items:center;gap:14px;margin-top:12px;background:radial-gradient(120% 140% at 15% 120%,rgba(201,143,107,.35),transparent 60%),linear-gradient(120deg,#1b2238,#2b3352 55%,#3a3350);border-radius:18px;padding:14px 16px;text-decoration:none;width:100%;text-align:left}
 .mind .ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(243,217,164,.12);color:var(--mind)}
 .mind .tx{flex:1;display:flex;flex-direction:column;gap:2px}
 .mind b{font-weight:500;font-size:16px}.mind small{color:var(--ink2);font-size:13.5px}
@@ -212,7 +212,7 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:0;border-radiu
 /* toast */
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 84px);transform:translate(-50%,8px);background:var(--raise2);color:var(--txt);padding:12px 18px;border-radius:14px;font-size:14.5px;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:50;box-shadow:0 10px 30px -10px rgba(0,0,0,.6);max-width:calc(100% - 40px);text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
-#mindFrame{position:fixed;inset:0;z-index:30;display:none;background:#0e1420}#mindFrame.show{display:block}#mindFrame iframe{width:100%;height:100%;border:0}
+#mindFrame{position:fixed;inset:0;z-index:30;display:none;background:#0e1420}#mindFrame.show{display:block;animation:fade .5s}#mindFrame iframe{width:100%;height:100%;border:0}
 /* manga demos */
 .mdemo{position:relative;width:100%;height:100%}
 .mdemo:before{content:'';position:absolute;left:24%;right:24%;bottom:3%;height:7%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.55),transparent)}
@@ -233,6 +233,7 @@ svg.demo{display:block;width:100%;height:100%}
 <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 21.5a7 7 0 0 0 7-7c0-4.6-3.4-6.6-4.6-10.9-2.2 2.4-4.6 4.2-4.9 7-.9-.8-1.4-1.9-1.5-3.2C6.1 9.2 5 11.6 5 14.5a7 7 0 0 0 7 7z"/><path d="M12 21.5a3 3 0 0 1-3-3c0-1.8 1.4-2.7 3-4.7 1.6 2 3 2.9 3 4.7a3 3 0 0 1-3 3z"/></symbol>
 <symbol id="i-flamef" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 21.5a7 7 0 0 0 7-7c0-4.6-3.4-6.6-4.6-10.9-2.2 2.4-4.6 4.2-4.9 7-.9-.8-1.4-1.9-1.5-3.2C6.1 9.2 5 11.6 5 14.5a7 7 0 0 0 7 7z"/><path fill="#fff" fill-opacity=".55" stroke="none" d="M12 21.5a3 3 0 0 1-3-3c0-1.8 1.4-2.7 3-4.7 1.6 2 3 2.9 3 4.7a3 3 0 0 1-3 3z"/></symbol>
 <symbol id="i-moves" viewBox="0 0 24 24"><path d="M6.5 8v8M3.5 10v4M17.5 8v8M20.5 10v4M6.5 12h11"/></symbol>
+<clipPath id="hzClip"><rect width="64" height="39"/></clipPath><symbol id="i-nagi" viewBox="0 0 64 64"><g clip-path="url(#hzClip)"><circle cx="32" cy="35" r="13" fill="currentColor"/></g><path d="M11 40H53" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M24 46H40M28 52H36" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" opacity=".45"/></symbol>
 <symbol id="i-lotus" viewBox="0 0 24 24"><path d="M12 19.5c-2.4-2-3.6-4.4-3.6-7 0-2.2 1.4-4.3 3.6-6 2.2 1.7 3.6 3.8 3.6 6 0 2.6-1.2 5-3.6 7z"/><path d="M12 19.5c-3.8.2-7-1.4-8.5-4.6 2.3-.6 4.3-.3 6 .7M12 19.5c3.8.2 7-1.4 8.5-4.6-2.3-.6-4.3-.3-6 .7"/></symbol>
 <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
 <symbol id="i-set" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></symbol>
@@ -254,7 +255,7 @@ svg.demo{display:block;width:100%;height:100%}
 <nav aria-label="Main"><div class="in">
 <button data-tab="home" class="on" aria-current="page"><svg class="i"><use href="#i-flame"/></svg>Today</button>
 <button data-tab="ex"><svg class="i"><use href="#i-moves"/></svg>Moves</button>
-<button data-tab="mind"><svg class="i"><use href="#i-lotus"/></svg>Meditate</button>
+<button data-tab="mind"><svg class="i" style="stroke:none;color:inherit;width:26px;height:26px;margin:-2px 0"><use href="#i-nagi"/></svg>Meditate</button>
 <button data-tab="hist"><svg class="i"><use href="#i-cal"/></svg>History</button>
 <button data-tab="set"><svg class="i"><use href="#i-set"/></svg>Settings</button>
 </div></nav>
@@ -333,7 +334,7 @@ const $=s=>document.querySelector(s);
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2200)}
 let tab='home';
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='mind'){openMind();return}tab=b.dataset.tab;document.querySelectorAll('nav button').forEach(x=>{x.classList.toggle('on',x===b);x.toggleAttribute('aria-current',x===b);if(x===b)x.setAttribute('aria-current','page')});render();scrollTo(0,0)});
-function openMind(){const m=$('#mindFrame');if(!m.firstChild)m.innerHTML='<iframe title="Stillness" src="../stillness/?embed=1" allow="screen-wake-lock; autoplay; fullscreen"></iframe>';m.classList.add('show')}
+function openMind(){const m=$('#mindFrame');if(!m.firstChild)m.innerHTML='<iframe title="Nagi-dō" src="../../nagi-do/?embed=1" allow="screen-wake-lock; autoplay; fullscreen"></iframe>';m.classList.add('show')}
 window.addEventListener('message',e=>{if(e.data==='stillness-close'){$('#mindFrame').classList.remove('show');if(tab==='home')render()}});
 function render(){({home,ex:exView,hist,set:settings})[tab]()}
 const fill=r=>r.style.setProperty('--p',((r.value-r.min)/(r.max-r.min)*100)+'%');
@@ -370,7 +371,7 @@ function home(){
     <div class="streak"><div class="flame ${st?'':'off'}">${ic('flamef')}</div><div><div class="big">${st}</div><div class="lead">${st===1?'day':'days'} in a row · best ${Math.max(S.best||0,st)}</div></div></div>
     <div class="week">${week}</div>
   </div>
-  <button class="mind" id="mindCard"><span class="ic">${ic('lotus')}</span><span class="tx"><b>${mt?'Meditated today · '+Math.round(mt.s/60)+' min':'Stillness'}</b><small>${ms?plural(ms,'day')+' of mindfulness':'A few quiet minutes to round out today'}</small></span><span class="chev">${ic('chevr')}</span></button>
+  <button class="mind" id="mindCard"><span class="ic"><svg class="i" style="stroke:none;width:30px;height:30px" aria-hidden="true"><use href="#i-nagi"/></svg></span><span class="tx"><b>${mt?'Sat today · '+Math.max(1,Math.round(mt.s/60))+' min':'Nagi-dō'}</b><small>${ms?plural(ms,'day')+' of stillness':'The way of stillness. A few quiet minutes.'}</small></span><span class="chev">${ic('chevr')}</span></button>
   <h2 class="gt">How long today?</h2>
   <div class="tide" id="picker" role="group" aria-label="Workout length in minutes"></div>
   <div class="tidecap">minutes · swipe to change</div>
@@ -449,7 +450,7 @@ function settings(){
   <h2 class="gt">Your data</h2><div class="grp"><button class="rowbtn" id="exp">${ic('down')}Export backup</button><button class="rowbtn" id="imp">${ic('up')}Import backup</button></div>
   <p class="help">Everything stays on this phone. Export a backup before you switch phones.</p><input type="file" id="file" accept="application/json" hidden>
   <div class="about"><svg class="k" aria-hidden="true"><use href="#i-flamef"/></svg><h4>streak</h4><div class="sub">Move a little every day</div>
-  <p>Short, heart-safe workouts with a coach who shows every move. Meditate opens Stillness right here, and a gold dot on a day means you meditated.</p></div>
+  <p>Short, heart-safe workouts with a coach who shows every move. Meditate opens Nagi-dō right here, and a gold dot on a day means you sat.</p></div>
   <p class="credit">Built for Alan by Hark</p>`;
   document.querySelectorAll('.toggle').forEach(b=>b.onclick=()=>{const k=b.dataset.k;S[k]=!S[k];save();b.classList.toggle('on',S[k]);b.setAttribute('aria-checked',S[k])});
   const hrr=$('#hrr'),rpr=$('#rpr');fill(hrr);fill(rpr);
