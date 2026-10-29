@@ -129,7 +129,11 @@ textarea:focus{outline:2px solid var(--gold2);outline-offset:1px}
 .q .opts button{text-align:left;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card2);font-family:var(--sans);font-size:14px;line-height:1.35}
 .q .opts button.right{border-color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent)}
 .q .opts button.wrong{border-color:var(--rose);background:color-mix(in srgb,var(--rose) 16%,transparent);opacity:.8}
-.q .why{margin-top:10px;font-family:var(--sans);font-size:13px;color:var(--ink2);line-height:1.45;display:none}
+.q .flash .back .rlab,.rkeep .rlab{margin:16px 0 6px;font-size:11px}.flash .back .rlab:first-child{margin-top:0}
+.flash .back p.quote,.rkeep .quote{font-size:calc(21px*var(--fs));line-height:1.4;font-family:var(--serif);color:var(--ink);margin:0}
+.flash .back p.plain,.rkeep .plain{font-size:calc(16px*var(--fs));line-height:1.55;font-family:var(--serif);color:var(--ink);margin:0}
+.rkeep{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);text-align:left}
+.why{margin-top:10px;font-family:var(--sans);font-size:13px;color:var(--ink2);line-height:1.45;display:none}
 .q.answered .why{display:block}
 .finish{text-align:center;margin:36px 0 10px}
 .done-ov{position:fixed;inset:0;z-index:8;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:30px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px)}
