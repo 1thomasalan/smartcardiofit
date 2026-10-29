@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Streak · Logo options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--txt:#eef0f4;--ink2:#c3c8d3;--ink3:#9aa1b0;--acc:#ff9a5c;--raise:#171d2b;--well:#0a0e18;--serif:"Shippori Mincho",Georgia,serif;--sans:"Zen Kaku Gothic New",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#0e1420;color:var(--txt);font-family:var(--sans);padding:calc(env(safe-area-inset-top) + 28px) 20px 60px}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(130% 55% at 50% 118%,rgba(255,138,76,.28),transparent 70%)}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-family:var(--serif);font-weight:500;font-size:clamp(28px,7vw,38px);margin:0 0 6px}
+.lead{color:var(--ink2);line-height:1.6;margin:0 0 26px;max-width:560px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.opt{background:var(--raise);border-radius:22px;padding:20px}
+.opt h2{font-family:var(--serif);font-weight:500;font-size:21px;margin:0}
+.opt h2 b{color:var(--acc);font-weight:500;margin-right:6px}
+.opt p{color:var(--ink2);font-size:14.5px;line-height:1.55;margin:6px 0 16px}
+.tag{display:inline-block;font-size:12px;padding:3px 9px;border-radius:10px;background:rgba(255,154,92,.14);color:var(--acc);margin-left:6px;vertical-align:3px}
+.row{display:flex;align-items:center;gap:18px}
+.tile{width:112px;height:112px;border-radius:26px;flex:none;overflow:hidden;background:radial-gradient(95% 95% at 50% 100%,#7a3d2c 0%,#2b2740 45%,#0e1420 100%);box-shadow:0 12px 30px -12px rgba(0,0,0,.8)}
+.tile svg,.lock svg,.tiny svg{display:block;width:100%;height:100%}
+.side{display:flex;flex-direction:column;gap:14px}
+.lock{display:flex;align-items:center;gap:8px;font-family:var(--serif);font-size:20px;letter-spacing:.06em;color:var(--ink2)}
+.lock span{width:34px;height:34px}
+.tiny{display:flex;align-items:center;gap:12px}
+.tiny span{display:block}
+.tiny .t1{width:30px;height:30px;border-radius:8px;overflow:hidden;background:radial-gradient(95% 95% at 50% 100%,#7a3d2c,#2b2740 45%,#0e1420)}
+.tiny .t2{width:18px;height:18px}
+.tiny small{color:var(--ink3);font-size:12px}
+.foot{color:var(--ink3);font-size:13.5px;text-align:center;margin-top:28px}
+</style></head><body><div class="wrap">
+<h1>Seven-day ring + sunrise</h1>
+<p class="lead">Option C’s week ring, with the Okinawa sunrise in the middle instead of the flame. Six takes, each shown as the Home Screen icon, beside the name, and tiny.</p>
+<div class="grid" id="g"></div>
+<p class="foot">Mockup only. Not linked from the app.</p>
+</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<linearGradient id="ember" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd08a"/><stop offset="1" stop-color="#ff7a45"/></linearGradient>
+<linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc27a"/><stop offset="1" stop-color="#ff6e4a"/></linearGradient>
+<radialGradient id="disk" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#ffd59a"/><stop offset="1" stop-color="#ff7d4c"/></radialGradient>
+<clipPath id="above"><rect x="0" y="0" width="100" height="64"/></clipPath>
+<clipPath id="badge"><circle cx="50" cy="50" r="40"/></clipPath>
+<symbol id="fl" viewBox="0 0 24 24"><path d="M12 21.5a7 7 0 0 0 7-7c0-4.6-3.4-6.6-4.6-10.9-2.2 2.4-4.6 4.2-4.9 7-.9-.8-1.4-1.9-1.5-3.2C6.1 9.2 5 11.6 5 14.5a7 7 0 0 0 7 7z"/></symbol>
+
+<clipPath id="up"><rect x="0" y="0" width="100" height="56"/></clipPath>
+<clipPath id="up2"><rect x="0" y="0" width="100" height="60"/></clipPath>
+<clipPath id="win"><circle cx="50" cy="50" r="27"/></clipPath>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2238"/><stop offset=".75" stop-color="#7a3d2c"/><stop offset="1" stop-color="#c26a45"/></linearGradient>
+<clipPath id="sl1"><rect width="100" height="44.5"/><rect y="47.1" width="100" height="2.9"/><rect y="52.6" width="100" height="3.4"/></clipPath><clipPath id="sl5"><rect width="100" height="46"/><rect y="49" width="100" height="3.5"/><rect y="55.5" width="100" height="4.5"/></clipPath>
+<linearGradient id="dawn" gradientUnits="userSpaceOnUse" x1="10" y1="90" x2="90" y2="10"><stop offset="0" stop-color="#ff6e4a"/><stop offset="1" stop-color="#ffd08a"/></linearGradient>
+</defs></svg>
+<script>
+function ring(o={}){const r=o.r||38,w=o.w||6,gap=o.gap||9,n=7;let s='';for(let i=0;i<n;i++){const a0=(-90+i*360/n+gap/2)*Math.PI/180,a1=(-90+(i+1)*360/n-gap/2)*Math.PI/180;
+ const x0=50+r*Math.cos(a0),y0=50+r*Math.sin(a0),x1=50+r*Math.cos(a1),y1=50+r*Math.sin(a1);
+ const col=o.solid?'#ff9a5c':(i<6?'#ff9a5c':'#ffd08a'),op=o.solid?1:(i<6?.35+i*.1:1);
+ s+=`<path d="M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}" stroke="${col}" stroke-opacity="${op}" stroke-width="${w}" stroke-linecap="round" fill="none"/>`}return s}
+const M=[
+ ['C1','Sunrise in the ring','Option B shrunk into the ring: half sun on the sea, two horizon slices, two reflection lines.',
+  ring()+`<g clip-path="url(#sl1)"><circle cx="50" cy="56" r="17" fill="url(#sun)"/></g><path d="M30 60h40" stroke="#ffd08a" stroke-width="2.8" stroke-linecap="round"/><path d="M39 67h22" stroke="#ff9a5c" stroke-opacity=".6" stroke-width="2.8" stroke-linecap="round"/>`],
+ ['C2','Clean sunrise','Just the sun and one horizon line, no slices. The simplest version, strongest at tiny sizes.',
+  ring({w:7})+`<g clip-path="url(#up2)"><circle cx="50" cy="60" r="18" fill="url(#sun)"/></g><path d="M27 60h46" stroke="#ffd08a" stroke-width="3.4" stroke-linecap="round"/>`],
+ ['C3','Sun with rays','The rising sun throws five short rays toward the week ring, like each day pushing it higher.',
+  ring({w:6})+`<g clip-path="url(#up2)"><circle cx="50" cy="60" r="13" fill="url(#sun)"/></g><path d="M29 60h42" stroke="#ffd08a" stroke-width="3" stroke-linecap="round"/>`+[-150,-120,-90,-60,-30].map(a=>{const c=Math.cos(a*Math.PI/180),s=Math.sin(a*Math.PI/180);return `<path d="M${(50+17*c).toFixed(1)} ${(60+17*s).toFixed(1)}L${(50+23*c).toFixed(1)} ${(60+23*s).toFixed(1)}" stroke="#ffc27a" stroke-width="2.6" stroke-linecap="round"/>`}).join('')],
+ ['C4','Window on the sea','A dawn sky and sea fill the middle like a porthole, with the sun lifting off the water.',
+  ring({r:39,w:6})+`<g clip-path="url(#win)"><rect x="0" y="0" width="100" height="100" fill="url(#sky)"/><rect x="0" y="58" width="100" height="42" fill="#141a2b"/><g clip-path="url(#up2)"><circle cx="50" cy="58" r="13" fill="url(#disk)"/></g><path d="M38 64h24M43 69h14M46 74h8" stroke="#ff9a5c" stroke-opacity=".7" stroke-width="2.2" stroke-linecap="round"/></g>`],
+ ['C5','Dawn ring','All seven days lit, the ring warming from ember to gold like the sky at dawn, around a big sliced sun.',
+  ring({solid:1,w:5.5,r:40}).replace(/stroke="#ff9a5c"/g,'stroke="url(#dawn)"')+`<g clip-path="url(#sl5)"><circle cx="50" cy="60" r="22" fill="url(#sun)"/></g><path d="M24 60h52" stroke="#ffd08a" stroke-width="3" stroke-linecap="round"/><path d="M36 67h28" stroke="#ff9a5c" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>`],
+ ['C6','Today’s sun','The sun sits where today’s arc would be, rising out of the ring at the top, with the sea line below.',
+  ring({w:6}).split('<path').slice(1,7).map(p=>'<path'+p).join('').replace(/stroke-opacity="[^"]*"/g,'stroke-opacity=".75"')+`<circle cx="50" cy="50" r="15" fill="url(#sun)"/><path d="M28 70h44" stroke="#ffd08a" stroke-width="3" stroke-linecap="round"/><path d="M38 77h24" stroke="#ff9a5c" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>`],
+];
+const sv=b=>`<svg viewBox="0 0 100 100" aria-hidden="true">${b}</svg>`;
+document.getElementById('g').innerHTML=M.map(([k,n,d,b])=>`<section class="opt"><h2><b>${k}</b>${n}</h2><p>${d}</p>
+<div class="row"><div class="tile">${sv(b)}</div><div class="side"><div class="lock"><span>${sv(b)}</span>streak</div><div class="tiny"><span class="t1">${sv(b)}</span><span class="t2">${sv(b)}</span><small>tiny</small></div></div></div></section>`).join('');
+</script></body></html>
