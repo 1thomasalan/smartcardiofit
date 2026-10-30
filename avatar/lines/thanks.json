@@ -1,0 +1,31 @@
+{
+ "id": "thanks",
+ "text": "Always, Alan. That's what I'm here for.",
+ "words": [
+  "Always,",
+  "Alan.",
+  "That's",
+  "what",
+  "I'm",
+  "here",
+  "for."
+ ],
+ "wtimes": [
+  0,
+  697,
+  1393,
+  1788,
+  1985,
+  2171,
+  2426
+ ],
+ "wdurations": [
+  650,
+  545,
+  348,
+  151,
+  128,
+  197,
+  593
+ ]
+}
