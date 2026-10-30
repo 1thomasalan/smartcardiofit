@@ -1,0 +1,52 @@
+{
+ "id": "who",
+ "text": "I'm your companion in the cave. Part butler, part watchman, entirely at your service.",
+ "words": [
+  "I'm",
+  "your",
+  "companion",
+  "in",
+  "the",
+  "cave.",
+  "Part",
+  "butler,",
+  "part",
+  "watchman,",
+  "entirely",
+  "at",
+  "your",
+  "service."
+ ],
+ "wtimes": [
+  0,
+  302,
+  488,
+  1138,
+  1242,
+  1358,
+  2194,
+  2577,
+  3320,
+  3715,
+  4563,
+  5468,
+  5735,
+  6002
+ ],
+ "wdurations": [
+  244,
+  128,
+  603,
+  58,
+  70,
+  685,
+  325,
+  627,
+  314,
+  732,
+  812,
+  186,
+  186,
+  964
+ ]
+}
