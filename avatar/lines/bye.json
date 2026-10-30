@@ -1,0 +1,34 @@
+{
+ "id": "bye",
+ "text": "Goodbye, Alan. I'll keep watch until you're back.",
+ "words": [
+  "Goodbye,",
+  "Alan.",
+  "I'll",
+  "keep",
+  "watch",
+  "until",
+  "you're",
+  "back."
+ ],
+ "wtimes": [
+  0,
+  580,
+  1265,
+  1498,
+  1741,
+  2067,
+  2380,
+  2577
+ ],
+ "wdurations": [
+  546,
+  511,
+  186,
+  174,
+  279,
+  255,
+  174,
+  720
+ ]
+}
