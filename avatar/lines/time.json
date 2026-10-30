@@ -1,0 +1,46 @@
+{
+ "id": "time",
+ "text": "Allow me to check the clock. The time is on your screen.",
+ "words": [
+  "Allow",
+  "me",
+  "to",
+  "check",
+  "the",
+  "clock.",
+  "The",
+  "time",
+  "is",
+  "on",
+  "your",
+  "screen."
+ ],
+ "wtimes": [
+  0,
+  406,
+  522,
+  650,
+  964,
+  1091,
+  1718,
+  1927,
+  2368,
+  2601,
+  2856,
+  3111
+ ],
+ "wdurations": [
+  337,
+  82,
+  58,
+  256,
+  69,
+  511,
+  140,
+  383,
+  163,
+  174,
+  186,
+  836
+ ]
+}
