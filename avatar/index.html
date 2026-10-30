@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>The Batcave</title>
+  <meta name="theme-color" content="#03060c">
+  <meta name="description" content="A talking 3D companion in a dark cave. Phase 1.">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.186/build/three.module.js/+esm",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186/examples/jsm/",
+      "talkinghead": "https://cdn.jsdelivr.net/gh/met4citizen/TalkingHead@1.8.2/modules/talkinghead.mjs"
+  } }
+  </script>
+</head>
+<body data-state="idle">
+  <!-- Cave atmosphere (behind the transparent WebGL canvas) -->
+  <div class="cave" aria-hidden="true">
+    <div class="cave__glow"></div>
+    <div class="cave__beam"></div>
+    <svg class="cave__rock cave__rock--top" viewBox="0 0 1440 220" preserveAspectRatio="none">
+      <path d="M0 0H1440V60L1395 96 1360 70 1322 150 1290 84 1250 110 1214 64 1180 132 1150 76 1110 92 1068 58 1030 170 996 80 960 98 924 60 890 120 850 72 812 88 780 54 744 140 712 70 676 96 640 62 604 118 570 74 532 90 496 56 460 156 428 78 392 100 356 64 320 126 286 72 250 92 214 58 178 134 142 76 104 102 70 64 34 112 0 70Z"/>
+    </svg>
+    <svg class="cave__rock cave__rock--bottom" viewBox="0 0 1440 160" preserveAspectRatio="none">
+      <path d="M0 160V96L60 110 120 80 210 104 300 72 380 98 470 84 560 112 660 90 760 108 860 78 950 102 1040 86 1130 110 1230 80 1330 100 1440 76V160Z"/>
+    </svg>
+    <div class="cave__fog cave__fog--a"></div>
+    <div class="cave__fog cave__fog--b"></div>
+    <div class="cave__floor"></div>
+    <canvas id="dust"></canvas>
+    <div class="cave__vignette"></div>
+  </div>
+
+  <div id="avatar" aria-label="3D companion"></div>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true"></span>
+      <span class="brand__name">THE&nbsp;CAVE</span>
+    </div>
+    <div class="status" role="status" aria-live="polite">
+      <span class="status__dot"></span><span id="statusText">Idle</span>
+    </div>
+    <div class="topbar__actions">
+      <button id="btnFrame" class="iconbtn" aria-label="Toggle full body" title="Full body / close-up">
+        <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        <span id="frameLabel">Full</span>
+      </button>
+      <button id="btnSettings" class="iconbtn" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Time readout (for the "what time is it" intent) -->
+  <div id="clock" class="clock" hidden>
+    <div class="clock__label">LOCAL TIME</div>
+    <div class="clock__time" id="clockTime">--:--</div>
+    <div class="clock__date" id="clockDate"></div>
+  </div>
+
+  <!-- Bottom dock -->
+  <section class="dock">
+    <div class="captions" id="captions">
+      <p class="captions__you" id="youLine" hidden></p>
+      <p class="captions__line" id="captionLine"></p>
+    </div>
+    <div class="chips" id="chips" role="toolbar" aria-label="Quick prompts"></div>
+    <div class="ptt-wrap">
+      <div class="meter" id="meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <button id="ptt" class="ptt" aria-label="Hold to talk">
+        <span class="ptt__ring"></span>
+        <svg viewBox="0 0 24 24" class="ptt__icon"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      </button>
+      <div class="meter meter--r" id="meterR" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <p class="hint" id="hint">Hold to talk<span class="hint__key"> · or hold Space</span></p>
+  </section>
+
+  <!-- Settings sheet -->
+  <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+  <aside class="sheet" id="sheet" aria-hidden="true" aria-label="Settings">
+    <div class="sheet__grab"></div>
+    <h2>Settings</h2>
+    <div class="field">
+      <label>Camera framing</label>
+      <div class="seg" data-setting="view">
+        <button data-v="head">Head</button><button data-v="upper">Upper</button><button data-v="mid">Waist</button><button data-v="full">Full</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Mood</label>
+      <div class="seg" data-setting="mood">
+        <button data-v="neutral">Calm</button><button data-v="happy">Warm</button><button data-v="angry">Stern</button><button data-v="sad">Brooding</button>
+      </div>
+    </div>
+    <div class="field field--row">
+      <label for="tglCaptions">Captions</label>
+      <input type="checkbox" id="tglCaptions" class="toggle">
+    </div>
+    <div class="field field--row">
+      <label for="tglMute">Mute voice</label>
+      <input type="checkbox" id="tglMute" class="toggle">
+    </div>
+    <p class="sheet__foot">Phase 1 · pre-recorded lines · voice by ElevenLabs · avatar by TalkingHead</p>
+    <button class="sheet__close" id="sheetClose">Done</button>
+  </aside>
+
+  <!-- Enter / loading / fallback overlay -->
+  <div class="gate" id="gate">
+    <div class="gate__inner">
+      <div class="gate__emblem" aria-hidden="true"></div>
+      <h1>The Cave</h1>
+      <p class="gate__sub" id="gateSub">Powering up the systems…</p>
+      <div class="gate__bar"><i id="gateBar"></i></div>
+      <button id="btnEnter" class="gate__btn" disabled>Enter the cave</button>
+    </div>
+  </div>
+
+  <div class="fallback" id="fallback" hidden>
+    <div class="fallback__inner">
+      <div class="gate__emblem" aria-hidden="true"></div>
+      <h1>The lights won't come on</h1>
+      <p id="fallbackMsg">This browser couldn't start the 3D view. Try the latest Chrome or Safari, and make sure hardware acceleration is turned on.</p>
+      <button class="gate__btn" onclick="location.reload()">Try again</button>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
