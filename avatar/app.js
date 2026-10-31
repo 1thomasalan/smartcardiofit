@@ -2,19 +2,31 @@
 // Stock TalkingHead avatar + pre-rendered ElevenLabs lines + keyword intents.
 // No API keys live in this file. Phase 2 swaps LINES for a live LLM + TTS proxy.
 
+// Two Batman models. Default: the sculpted "Epic" statue-style avatar (v2). The v1 costume reskin stays selectable
+// in Settings (Model) or with ?model=v1 in the URL.
+const RETARGET = {
+  Neck: { z: -0.01, rx: -0.15 }, Neck1: { z: -0.01, rx: -0.15 }, Neck2: { z: -0.01, rx: -0.15 },
+  LeftShoulder: { rz: -0.3 }, RightShoulder: { rz: 0.3 },
+  scaleToEyesLevel: 1.0, origin: { y: -0.1 }
+};
+const MODELS = {
+  // Sculpted classic-comic Batman (image-to-3D statue body + cowl with tall ears + heavy cape), rigged to TalkingHead's
+  // stock skeleton; the stock face (66 ARKit + Oculus viseme blend shapes, real eyes, teeth, tongue) shows through the cowl.
+  // Built by work/epic/build.sh in the Hark project.
+  epic: { url: 'batman-epic-v2.glb', cam: {} },
+  // v1: TalkingHead's stock avatarsdk.glb with a painted cowl/suit, ears, cape (work/batsuit/build.py).
+  v1: { url: 'batman-classic-v1.glb', cam: {} },
+};
+const urlModel = new URLSearchParams(location.search).get('model');
+const MODEL_ID = (urlModel === 'v1' || urlModel === 'epic') ? urlModel
+  : (JSON.parse(localStorage.getItem('cave.prefs') || '{}').model === 'v1' ? 'v1' : 'epic');
 const AVATAR = {
-  // Classic comic-book Batman: the TalkingHead stock avatarsdk.glb (same rig + blend shapes) with a painted cowl/suit,
-  // smoothed scalp, pointed ears, cape + mantle, gauntlet fins. Built by work/batsuit/build.py in the Hark project.
-  url: 'batman-classic-v1.glb',
+  url: MODELS[MODEL_ID].url,
   body: 'M',
   avatarMood: 'neutral',
   lipsyncLang: 'en',
-  // Skeleton/blendshape tweaks for this model, from TalkingHead's siteconfig.js
-  retarget: {
-    Neck: { z: -0.01, rx: -0.15 }, Neck1: { z: -0.01, rx: -0.15 }, Neck2: { z: -0.01, rx: -0.15 },
-    LeftShoulder: { rz: -0.3 }, RightShoulder: { rz: 0.3 },
-    scaleToEyesLevel: 1.0, origin: { y: -0.1 }
-  },
+  // Skeleton/blendshape tweaks for this rig, from TalkingHead's siteconfig.js (both models share the stock rig)
+  retarget: RETARGET,
   baseline: { headRotateX: -0.04, eyeBlinkLeft: 0.05, eyeBlinkRight: 0.05 }
 };
 
@@ -44,7 +56,7 @@ const el = {
 };
 
 // ---------- Settings (persisted) ----------
-const prefs = Object.assign({ view: 'upper', mood: 'neutral', captions: true, mute: false, debug: false },
+const prefs = Object.assign({ view: 'upper', mood: 'neutral', captions: true, mute: false, debug: false, model: 'epic' },
   JSON.parse(localStorage.getItem('cave.prefs') || '{}'));
 const savePrefs = () => localStorage.setItem('cave.prefs', JSON.stringify(prefs));
 
@@ -138,6 +150,7 @@ async function initAvatar() {
     lipsyncModules: ['en'],
     lipsyncLang: 'en',
     cameraView: prefs.view,
+    ...MODELS[MODEL_ID].cam,
     cameraRotateEnable: true,
     cameraZoomEnable: false,
     modelFPS: 30,
@@ -555,6 +568,12 @@ function applyView(v) {
   el.btnFrame.setAttribute('aria-label', v === 'full' ? 'Close-up view' : 'Full body view');
   syncSeg('view', v);
 }
+function applyModel(m) {
+  // Switching models reloads the page (TalkingHead builds the scene around one avatar). Drops any ?model= override.
+  if (m === MODEL_ID) return;
+  prefs.model = m; savePrefs(); syncSeg('model', m);
+  const u = new URL(location.href); u.searchParams.delete('model'); location.replace(u.toString());
+}
 function applyMood(m) { prefs.mood = m; savePrefs(); try { head?.setMood(m); } catch {} syncSeg('mood', m); }
 function applyCaptions(on) { prefs.captions = on; savePrefs(); document.body.classList.toggle('no-captions', !on); el.tglCaptions.checked = on; }
 function applyMute(on) { prefs.mute = on; savePrefs(); head?.setMixerGain(on ? 0 : 2.2); el.tglMute.checked = on; }
@@ -574,7 +593,9 @@ function wireSettings() {
   el.backdrop.addEventListener('click', close);
   document.querySelectorAll('.seg').forEach((seg) => seg.addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
-    if (seg.dataset.setting === 'view') applyView(b.dataset.v); else applyMood(b.dataset.v);
+    if (seg.dataset.setting === 'view') applyView(b.dataset.v);
+    else if (seg.dataset.setting === 'model') applyModel(b.dataset.v);
+    else applyMood(b.dataset.v);
   }));
   el.tglCaptions.addEventListener('change', () => applyCaptions(el.tglCaptions.checked));
   el.tglMute.addEventListener('change', () => applyMute(el.tglMute.checked));
@@ -585,7 +606,7 @@ function wireSettings() {
     setTimeout(() => (el.dbgCopy.textContent = 'Copy log'), 1500);
   });
   el.btnFrame.addEventListener('click', () => applyView(prefs.view === 'full' ? 'upper' : 'full'));
-  syncSeg('view', prefs.view); syncSeg('mood', prefs.mood);
+  syncSeg('view', prefs.view); syncSeg('mood', prefs.mood); syncSeg('model', MODEL_ID);
   el.frameLabel.textContent = prefs.view === 'full' ? 'Close' : 'Full';
   applyCaptions(prefs.captions);
   el.tglMute.checked = prefs.mute;
