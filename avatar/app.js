@@ -2,24 +2,28 @@
 // Stock TalkingHead avatar + pre-rendered ElevenLabs lines + keyword intents.
 // No API keys live in this file. Phase 2 swaps LINES for a live LLM + TTS proxy.
 
-// Two Batman models. Default: the sculpted "Epic" statue-style avatar (v2). The v1 costume reskin stays selectable
-// in Settings (Model) or with ?model=v1 in the URL.
+// Three Batman models. Default: "Epic v3", sculpted to match Alan's statue. v2 (first sculpt) and v1 (costume reskin)
+// stay selectable in Settings (Model) or with ?model=v2 / ?model=v1 in the URL.
 const RETARGET = {
   Neck: { z: -0.01, rx: -0.15 }, Neck1: { z: -0.01, rx: -0.15 }, Neck2: { z: -0.01, rx: -0.15 },
   LeftShoulder: { rz: -0.3 }, RightShoulder: { rz: 0.3 },
   scaleToEyesLevel: 1.0, origin: { y: -0.1 }
 };
 const MODELS = {
-  // Sculpted classic-comic Batman (image-to-3D statue body + cowl with tall ears + heavy cape), rigged to TalkingHead's
-  // stock skeleton; the stock face (66 ARKit + Oculus viseme blend shapes, real eyes, teeth, tongue) shows through the cowl.
-  // Built by work/epic/build.sh in the Hark project.
-  epic: { url: 'batman-epic-v2.glb', cam: {} },
+  // v3 (default): statue-matched classic Batman. Image-to-3D body repainted in the statue's palette (silver-gray suit with
+  // blue shading, deep blue cape/gloves/trunks/V-cut boots, khaki belt, black bat), a heavy shoulder mantle with sculpted
+  // folds, three fins per glove, and a sculpted cowl head that is ONE mesh with the face: the full stock TalkingHead head
+  // (66 ARKit + Oculus viseme blend shapes, real eyes, teeth, tongue) reshaped into the cowl (scowl brow, nose bridge,
+  // square jaw, hard lower mask edge, tall ears), so the chin can't separate from the cowl. Built by work/epic3/build.sh.
+  epic: { url: 'batman-epic-v3b.glb', cam: {} },
+  // v2: first sculpt (stock face inside a cowl opening). Built by work/epic/build.sh.
+  v2: { url: 'batman-epic-v2.glb', cam: {} },
   // v1: TalkingHead's stock avatarsdk.glb with a painted cowl/suit, ears, cape (work/batsuit/build.py).
   v1: { url: 'batman-classic-v1.glb', cam: {} },
 };
-const urlModel = new URLSearchParams(location.search).get('model');
-const MODEL_ID = (urlModel === 'v1' || urlModel === 'epic') ? urlModel
-  : (JSON.parse(localStorage.getItem('cave.prefs') || '{}').model === 'v1' ? 'v1' : 'epic');
+const urlModel = { v3: 'epic', epic: 'epic', v2: 'v2', v1: 'v1' }[new URLSearchParams(location.search).get('model')];
+const savedModel = JSON.parse(localStorage.getItem('cave.prefs') || '{}').model;
+const MODEL_ID = urlModel || (savedModel === 'v1' || savedModel === 'v2' ? savedModel : 'epic');
 const AVATAR = {
   url: MODELS[MODEL_ID].url,
   body: 'M',
