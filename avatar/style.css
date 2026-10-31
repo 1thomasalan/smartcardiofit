@@ -101,6 +101,17 @@ body[data-state="speaking"] .status__dot{background:var(--speak);box-shadow:0 0 
 body.no-captions .captions__line{visibility:hidden}
 .captions__you{margin:0 0 6px;font-size:14px;color:var(--listen);opacity:.9;font-style:italic}
 .captions__you::before{content:"You: ";font-style:normal;font-family:var(--cond);letter-spacing:.15em;opacity:.7}
+.captions__you.is-live::before{content:"Hearing: "}
+.captions__you.is-said::before{content:"You said: "}
+.captions__you.is-error{color:#ffb4a8;font-style:normal}
+.captions__you.is-error::before{content:"⚠ ";letter-spacing:0}
+.dbg{position:fixed;left:10px;top:64px;z-index:40;width:min(92vw,440px);max-height:42vh;display:flex;flex-direction:column;
+  background:rgba(4,8,14,.88);border:1px solid rgba(124,196,255,.35);border-radius:10px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.dbg[hidden]{display:none}
+.dbg__head{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;font-family:var(--cond);letter-spacing:.18em;font-size:12px;color:#7cc4ff}
+.dbg__head button{font:inherit;letter-spacing:.08em;color:#cfe6ff;background:#13243a;border:1px solid rgba(124,196,255,.35);border-radius:6px;padding:3px 8px;cursor:pointer}
+.dbg__log{margin:0;padding:4px 10px 10px;overflow:auto;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#bcd3ee;white-space:pre-wrap;word-break:break-word}
+.field small{opacity:.6;font-size:.8em}
 .captions__line{margin:0;font-size:clamp(17px,2.2vw,22px);line-height:1.4;font-weight:500;text-shadow:0 2px 12px #000}
 .captions__line .w{color:rgba(223,232,245,.28);transition:color .15s, text-shadow .15s}
 .captions__line .w.on{color:#fff;text-shadow:0 0 14px rgba(124,196,255,.55),0 2px 10px #000}
