@@ -1,5 +1,7 @@
 // The Cave service worker — scope: /smartcardiofit/avatar/
-const VERSION = 'cave-v3';
+const VERSION = 'cave-v6';
+// Models are cached by filename (batman-epic-v3b.glb etc.); bump MODELS only if a .glb is ever replaced in place.
+const MODELS = 'cave-models';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'icon-mask.svg',
   ...['greeting','who','can','time','brief','joke','thanks','bye','fallback'].flatMap((id) => [`lines/${id}.json`, `lines/${id}.mp3`])];
 
@@ -7,7 +9,7 @@ self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith('cave-') && k !== VERSION && k !== VERSION + '-cdn' && k !== 'cave-models').map((k) => caches.delete(k))))
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith('cave-') && k !== VERSION && k !== VERSION + '-cdn' && k !== MODELS).map((k) => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', (e) => {
@@ -18,8 +20,8 @@ self.addEventListener('fetch', (e) => {
   const cdn = /(^|\.)jsdelivr\.net$|fonts\.(googleapis|gstatic)\.com$/.test(url.hostname);
   if (!sameScope && !cdn) return;
   if (sameScope && /\.glb$/.test(url.pathname)) {
-    // Avatar model: cache first (filename is versioned, e.g. batman-epic-v2.glb), so the phone doesn't re-download ~13 MB.
-    e.respondWith(caches.open('cave-models').then((c) => c.match(req).then((hit) => hit || fetch(req).then((res) => {
+    // Avatar model: cache first (filename is versioned, e.g. batman-epic-v3b.glb), so the phone doesn't re-download ~13 MB.
+    e.respondWith(caches.open(MODELS).then((c) => c.match(req).then((hit) => hit || fetch(req).then((res) => {
       if (res.ok) c.put(req, res.clone());
       return res;
     }))));
