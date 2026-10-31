@@ -1,31 +1,43 @@
 {
  "id": "thanks",
- "text": "Always, Alan. That's what I'm here for.",
+ "text": "Anytime, Alan. Genuinely. Just don't let it go to your head.",
  "words": [
-  "Always,",
+  "Anytime,",
   "Alan.",
-  "That's",
-  "what",
-  "I'm",
-  "here",
-  "for."
+  "Genuinely.",
+  "Just",
+  "don't",
+  "let",
+  "it",
+  "go",
+  "to",
+  "your",
+  "head."
  ],
  "wtimes": [
-  0,
-  697,
-  1393,
-  1788,
-  1985,
-  2171,
-  2426
+  204,
+  672,
+  1100,
+  2688,
+  2760,
+  2980,
+  3067,
+  3173,
+  3333,
+  3472,
+  3664
  ],
  "wdurations": [
-  650,
-  545,
-  348,
-  151,
+  436,
+  328,
+  820,
+  32,
+  200,
+  60,
+  53,
+  107,
+  107,
   128,
-  197,
-  593
+  2656
  ]
 }
