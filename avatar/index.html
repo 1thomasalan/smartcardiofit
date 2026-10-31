@@ -80,14 +80,20 @@
     <div class="chips" id="chips" role="toolbar" aria-label="Quick prompts"></div>
     <div class="ptt-wrap">
       <div class="meter" id="meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <button id="ptt" class="ptt" aria-label="Hold to talk">
+      <button id="ptt" class="ptt" aria-label="Hold to talk, or tap to start and tap again to send">
         <span class="ptt__ring"></span>
         <svg viewBox="0 0 24 24" class="ptt__icon"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
       </button>
       <div class="meter meter--r" id="meterR" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
-    <p class="hint" id="hint">Hold to talk<span class="hint__key"> · or hold Space</span></p>
+    <p class="hint" id="hint">Hold to talk · or tap, then tap to send<span class="hint__key"> · or hold Space</span></p>
   </section>
+
+  <!-- Mic debug readout (Settings → Mic debug) -->
+  <div class="dbg" id="dbgPanel" hidden>
+    <div class="dbg__head"><span>MIC DEBUG</span><button id="dbgCopy" type="button">Copy log</button></div>
+    <pre class="dbg__log" id="dbgLog"></pre>
+  </div>
 
   <!-- Settings sheet -->
   <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
@@ -114,7 +120,11 @@
       <label for="tglMute">Mute voice</label>
       <input type="checkbox" id="tglMute" class="toggle">
     </div>
-    <p class="sheet__foot">Phase 1 · pre-recorded lines · voice by ElevenLabs · avatar by TalkingHead</p>
+    <div class="field field--row">
+      <label for="tglDebug">Mic debug <small>(shows what the microphone hears)</small></label>
+      <input type="checkbox" id="tglDebug" class="toggle">
+    </div>
+    <p class="sheet__foot">Phase 1.1 · pre-recorded lines · voice by ElevenLabs · avatar by TalkingHead</p>
     <button class="sheet__close" id="sheetClose">Done</button>
   </aside>
 
