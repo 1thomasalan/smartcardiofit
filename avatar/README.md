@@ -1,4 +1,25 @@
-# The Cave — talking 3D avatar (Phase 1.3)
+# Alfie — snarky armoured co-pilot, floating in space (Phase 1.4)
+
+Live: https://1thomasalan.github.io/smartcardiofit/avatar/
+Repo: `1thomasalan/smartcardiofit`, folder `avatar/` (on both `main` and `gh-pages`; Pages serves `gh-pages`).
+Plain HTML/CSS/vanilla JS, no build step, no API keys in the client.
+
+## How Alfie works (2.5D)
+- `alfie-body.webp` + `alfie-head.webp`: one generated full-body render (work/alfie/alfie-single.png) cut into two same-size layers
+  (split at the neck, source row 381 of 1085) so the head can tilt around the neck pivot (CSS transform-origin 50% 34.75%).
+- `#face` canvas sits on the blank visor (left 22.6%, top 11.6%, 55.6% x 19.6% of the bot box). `app.js` draws glowing cyan eyes,
+  brows, mouth and thinking dots every frame from eased parameters; expressions: neutral, smug, happy, listening, thinking, surprised, sheepish.
+  Blinks and glances are random. CSS adds scanlines, a sweep and a glow that rises with his voice (`--glow`).
+- Lip sync: each line plays through a Web Audio AnalyserNode; RMS is quantised to 5 mouth-openness levels.
+- Motion: zero-g bob/drift/rotation, lean-in + head tilt when listening, tilt when thinking, hop or spin after some lines,
+  thruster particles at the feet, drifting 3-layer star canvas, slow parallax on the space backdrop (`space-tall.webp` portrait, `space-wide.webp` landscape).
+- Voice: ElevenLabs James (`yBXjgyIwt8fF3slvxWZi`), `eleven_v3` with audio tags, light helmet-shimmer flanger blend + loudnorm. Rebuild with `python3 work/alfie/gen_lines.py [ids]`.
+- Assets: `python3 work/alfie/make_assets.py` (layers, backdrops, icons). Screens: `python3 work/alfie/shots.py`.
+- Hidden fallback: `cave.html` (= old Batman cave: cave.js/cave.css + the GLBs) and `index.html?model=v3b|v3|v2|v1` redirects there.
+  It now plays Alfie's line files.
+
+---
+# (Previous) The Cave — talking 3D avatar
 
 Live: https://1thomasalan.github.io/smartcardiofit/avatar/
 Repo: `1thomasalan/smartcardiofit`, folder `avatar/` (on both `main` and `gh-pages`; Pages serves `gh-pages`).
