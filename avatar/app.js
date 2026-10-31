@@ -3,8 +3,9 @@
 // No API keys live in this file. Phase 2 swaps LINES for a live LLM + TTS proxy.
 
 const AVATAR = {
-  // Stock male avatar from the TalkingHead repo (MIT), served by jsDelivr.
-  url: 'https://cdn.jsdelivr.net/gh/met4citizen/TalkingHead@1.8.2/avatars/avatarsdk.glb',
+  // Classic comic-book Batman: the TalkingHead stock avatarsdk.glb (same rig + blend shapes) with a painted cowl/suit,
+  // smoothed scalp, pointed ears, cape + mantle, gauntlet fins. Built by work/batsuit/build.py in the Hark project.
+  url: 'batman-classic-v1.glb',
   body: 'M',
   avatarMood: 'neutral',
   lipsyncLang: 'en',
@@ -19,14 +20,14 @@ const AVATAR = {
 
 // Intents: keywords (checked in order) → pre-rendered line + a hand gesture.
 const INTENTS = [
-  { id: 'brief',    chip: 'Good morning',     keys: ['good morning', 'morning', 'brief', 'briefing', 'news'], gesture: 'index' },
-  { id: 'time',     chip: 'What time is it?', keys: ['time', 'clock', 'what hour'], gesture: 'index', mirror: true },
-  { id: 'who',      chip: 'Who are you?',     keys: ['who are you', 'your name', 'what are you', 'who is this'], gesture: 'index' },
-  { id: 'can',      chip: 'What can you do?', keys: ['what can you do', 'can you do', 'help', 'abilities', 'capable'], gesture: 'side' },
-  { id: 'joke',     chip: 'Tell me a joke',   keys: ['joke', 'funny', 'make me laugh'], gesture: 'shrug' },
-  { id: 'thanks',   chip: 'Thank you',        keys: ['thank', 'thanks', 'appreciate', 'cheers'], gesture: 'thumbup' },
-  { id: 'bye',      chip: 'Goodbye',          keys: ['goodbye', 'bye', 'good night', 'see you', 'later', 'signing off'], gesture: 'handup' },
-  { id: 'greeting', chip: 'Hello',            keys: ['hello', 'hi', 'hey', 'greetings', "what's up", 'whats up', 'yo', 'evening', 'afternoon'], gesture: 'handup' },
+  { id: 'brief',    chip: 'Good morning',     keys: ['good morning', 'morning', 'brief', 'briefing', 'brief me', 'news', 'whats new', 'update me', 'daily update'], gesture: 'index' },
+  { id: 'time',     chip: 'What time is it?', keys: ['time', 'clock', 'oclock', 'what hour', 'whats the date', 'what day', 'todays date'], gesture: 'index', mirror: true },
+  { id: 'who',      chip: 'Who are you?',     keys: ['who are you', 'what are you', 'your name', 'who is this', 'whos this', 'who am i talking to', 'introduce yourself'], gesture: 'index' },
+  { id: 'can',      chip: 'What can you do?', keys: ['what can you do', 'can you do', 'what do you do', 'help', 'abilities', 'capable', 'features', 'how do you work', 'what can i ask'], gesture: 'side' },
+  { id: 'joke',     chip: 'Tell me a joke',   keys: ['joke', 'jokes', 'funny', 'make me laugh', 'laugh', 'humor', 'humour'], gesture: 'shrug' },
+  { id: 'thanks',   chip: 'Thank you',        keys: ['thank you', 'thanks', 'thank', 'thx', 'appreciate', 'cheers', 'good job', 'nice work', 'well done'], gesture: 'thumbup' },
+  { id: 'bye',      chip: 'Goodbye',          keys: ['goodbye', 'good bye', 'bye', 'bye bye', 'see you', 'see ya', 'later', 'good night', 'goodnight', 'signing off', 'thats all', 'im out'], gesture: 'handup' },
+  { id: 'greeting', chip: 'Hello',            keys: ['hello', 'hi', 'hey', 'yo', 'hiya', 'howdy', 'greetings', 'whats up', 'sup', 'good evening', 'good afternoon', 'evening', 'afternoon', 'hey there', 'hello there'], gesture: 'handup' },
 ];
 const FALLBACK = { id: 'fallback', gesture: 'shrug' };
 
@@ -39,10 +40,11 @@ const el = {
   meterL: $('#meter'), meterR: $('#meterR'), clock: $('#clock'), clockTime: $('#clockTime'), clockDate: $('#clockDate'),
   sheet: $('#sheet'), backdrop: $('#sheetBackdrop'), btnSettings: $('#btnSettings'), sheetClose: $('#sheetClose'),
   btnFrame: $('#btnFrame'), frameLabel: $('#frameLabel'), tglCaptions: $('#tglCaptions'), tglMute: $('#tglMute'),
+  tglDebug: $('#tglDebug'), dbgPanel: $('#dbgPanel'), dbgLog: $('#dbgLog'), dbgCopy: $('#dbgCopy'),
 };
 
 // ---------- Settings (persisted) ----------
-const prefs = Object.assign({ view: 'upper', mood: 'neutral', captions: true, mute: false },
+const prefs = Object.assign({ view: 'upper', mood: 'neutral', captions: true, mute: false, debug: false },
   JSON.parse(localStorage.getItem('cave.prefs') || '{}'));
 const savePrefs = () => localStorage.setItem('cave.prefs', JSON.stringify(prefs));
 
@@ -265,111 +267,224 @@ function showClock() {
 }
 
 // ---------- Intent matching ----------
+// Lowercase, straighten apostrophes, drop punctuation, pad with spaces so keys match whole words/phrases.
+function normalize(text) {
+  return ' ' + String(text || '').toLowerCase()
+    .replace(/[\u2018\u2019\u02bc`]/g, "'")
+    .replace(/'/g, '')                 // what's → whats, o'clock → oclock
+    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ').trim() + ' ';
+}
+// Content intents win over social ones ("hey, what time is it?" → time).
+const INTENT_PRIORITY = ['time', 'who', 'can', 'joke', 'brief', 'thanks', 'bye', 'greeting'];
 function matchIntent(text) {
-  const t = ' ' + (text || '').toLowerCase().replace(/[^a-z' ]+/g, ' ').replace(/\s+/g, ' ') + ' ';
-  for (const it of INTENTS) {
-    for (const k of it.keys) {
-      if (t.includes(' ' + k + ' ') || (k.length > 4 && t.includes(k))) return it;
-    }
+  const t = normalize(text);
+  if (t.trim() === '') return FALLBACK;
+  for (const id of INTENT_PRIORITY) {
+    const it = INTENTS.find((x) => x.id === id);
+    if (it && it.keys.some((k) => t.includes(normalize(k)))) return it;
   }
   return FALLBACK;
 }
 
-// ---------- Listening (push-to-talk) ----------
+// ---------- Mic debug readout (Settings → Mic debug) ----------
+const dbgLines = [];
+function dbg(msg) {
+  const ts = new Date().toLocaleTimeString([], { hour12: false }) + '.' + String(Date.now() % 1000).padStart(3, '0');
+  dbgLines.push(`${ts}  ${msg}`);
+  if (dbgLines.length > 60) dbgLines.shift();
+  if (el.dbgLog) el.dbgLog.textContent = dbgLines.slice(-16).join('\n');
+  console.debug('[mic]', msg);
+}
+
+// ---------- Listening: hold-to-talk OR tap-to-toggle ----------
+// Root cause of the old "I didn't catch that" bug: the recognizer was only created after an awaited getUserMedia()
+// (the level meter). A quick tap, or the first-time permission prompt, released the button before the recognizer
+// existed, so an empty transcript went straight to the fallback line. On Android, the getUserMedia meter also holds
+// the mic while SpeechRecognition wants it. Now the recognizer starts synchronously inside the tap, the real meter
+// only runs on desktop (after recognition has the mic), and we wait for the final result before deciding.
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec = null, finalText = '', interimText = '', micStream = null, meterRaf = 0, listening = false, releaseTimer = 0;
+const IS_ANDROID = /Android/i.test(navigator.userAgent);
+const TAP_MS = 350;          // shorter press = tap → toggle mode (tap again to stop)
+const MAX_LISTEN_MS = 20000; // safety auto-stop in toggle mode
+const ERR_MSG = {
+  'not-allowed': 'Mic blocked — allow microphone for this site (lock icon in the address bar → Microphone → Allow), then try again.',
+  'service-not-allowed': 'Mic blocked — allow microphone for this site (lock icon in the address bar → Microphone → Allow), then try again.',
+  'audio-capture': 'No microphone available — another app may be using it. Close it and try again.',
+  'network': 'Speech service unreachable — check your connection (Chrome sends speech to Google to transcribe).',
+  'language-not-supported': 'English speech recognition isn’t available on this device.',
+  'start-failed': 'The microphone didn’t start. Reload the page and try again.',
+  'unsupported': 'Voice input isn’t available in this browser — use Chrome, or tap a prompt below.',
+};
+const FATAL = new Set(['not-allowed', 'service-not-allowed', 'audio-capture', 'network', 'language-not-supported', 'start-failed']);
+
+const mic = {
+  active: false, mode: null, downAt: 0, rec: null, ended: true, resolved: true,
+  committed: '', sessFinal: '', interim: '', error: null, restarts: 0, stopTimer: 0, maxTimer: 0,
+  ignoreUp: false, stream: null, meterRaf: 0, fakeRaf: 0, activity: 0,
+};
 const barsL = [...el.meterL.children], barsR = [...el.meterR.children];
 
-async function startListening() {
-  if (!entered || listening) return;
-  listening = true;
-  speakToken++; head?.stopSpeaking(); cancelAnimationFrame(captionRaf);
-  finalText = ''; interimText = '';
-  el.you.hidden = false; el.you.textContent = '…';
-  el.caption.textContent = '';
-  setState('listening');
-  head?.makeEyeContact(10000);
-  head?.setBaselineValue?.('headRotateZ', 0.09); // slight attentive head tilt
-  head?.setBaselineValue?.('headRotateX', 0.02);
+function setYou(kind, text) {
+  el.you.hidden = !text;
+  el.you.className = 'captions__you is-' + kind;   // is-live | is-said | is-error | is-chip
+  el.you.textContent = text || '';
+}
+function heardText() { return (mic.committed + ' ' + mic.sessFinal + ' ' + mic.interim).replace(/\s+/g, ' ').trim(); }
 
-  // Mic level meter + TalkingHead listening mode
+function drawMeter(lvl) {
+  document.body.style.setProperty('--lvl', lvl.toFixed(3));
+  const set = (b, i) => { const v = Math.max(0, lvl * 1.4 - i * 0.09 + Math.random() * .08); b.style.height = (6 + v * 38) + 'px'; };
+  barsL.forEach(set); barsR.forEach(set);
+}
+function resetMeter() {
+  cancelAnimationFrame(mic.meterRaf); cancelAnimationFrame(mic.fakeRaf);
+  document.body.style.setProperty('--lvl', 0);
+  [...barsL, ...barsR].forEach((b) => (b.style.height = '6px'));
+  if (mic.stream) { mic.stream.getTracks().forEach((t) => t.stop()); mic.stream = null; }
+}
+// Desktop: real level meter, opened only after recognition has the mic. Android: animated meter, no second mic.
+async function startRealMeter() {
+  if (IS_ANDROID || !navigator.mediaDevices?.getUserMedia || mic.stream || !mic.active) return;
   try {
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-    if (!listening) { micStream.getTracks().forEach((t) => t.stop()); micStream = null; return; }
-    const ctx = head.audioCtx;
-    const src = ctx.createMediaStreamSource(micStream);
-    const an = ctx.createAnalyser();
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    if (!mic.active) { stream.getTracks().forEach((t) => t.stop()); return; }
+    mic.stream = stream;
+    cancelAnimationFrame(mic.fakeRaf);
+    const ctx = head.audioCtx, src = ctx.createMediaStreamSource(stream), an = ctx.createAnalyser();
     src.connect(an);
-    head.startListening(an);
+    try { head.startListening(an); } catch {}
     const data = new Uint8Array(an.frequencyBinCount);
     const tick = () => {
       an.getByteFrequencyData(data);
       let sum = 0; for (let i = 2; i < 40; i++) sum += data[i];
-      const lvl = Math.min(1, sum / (38 * 170));
-      document.body.style.setProperty('--lvl', lvl.toFixed(3));
-      barsL.forEach((b, i) => { const v = Math.max(0, lvl * 1.4 - i * 0.09 + Math.random() * .08); b.style.height = (6 + v * 38) + 'px'; });
-      barsR.forEach((b, i) => { const v = Math.max(0, lvl * 1.4 - i * 0.09 + Math.random() * .08); b.style.height = (6 + v * 38) + 'px'; });
-      meterRaf = requestAnimationFrame(tick);
+      drawMeter(Math.min(1, sum / (38 * 170)));
+      mic.meterRaf = requestAnimationFrame(tick);
     };
     tick();
-  } catch (e) {
-    console.warn('Mic unavailable', e);
-  }
-
-  if (SR) {
-    try {
-      rec = new SR();
-      rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
-      rec.onresult = (ev) => {
-        interimText = '';
-        for (let i = ev.resultIndex; i < ev.results.length; i++) {
-          const r = ev.results[i];
-          if (r.isFinal) finalText += r[0].transcript + ' ';
-          else interimText += r[0].transcript;
-        }
-        el.you.textContent = (finalText + interimText).trim() || '…';
-      };
-      rec.onerror = (e) => console.warn('SpeechRecognition', e.error);
-      rec.onend = () => { if (!listening) resolveTranscript(); };
-      rec.start();
-    } catch (e) { console.warn(e); rec = null; }
-  }
+    dbg('meter: real (getUserMedia)');
+  } catch (e) { dbg('meter: unavailable (' + (e.name || e) + ')'); }
+}
+function startFakeMeter() {
+  const tick = () => {
+    mic.activity *= 0.94;
+    drawMeter(Math.min(1, 0.12 + mic.activity * 0.8 + Math.random() * 0.08));
+    mic.fakeRaf = requestAnimationFrame(tick);
+  };
+  tick();
 }
 
-function stopListening() {
-  if (!listening) return;
-  listening = false;
-  cancelAnimationFrame(meterRaf);
-  document.body.style.setProperty('--lvl', 0);
-  [...barsL, ...barsR].forEach((b) => (b.style.height = '6px'));
-  head?.stopListening();
+function newRecognizer() {
+  const rec = new SR();
+  rec.lang = 'en-US';
+  rec.interimResults = true;
+  rec.continuous = !IS_ANDROID;      // Android Chrome's continuous mode repeats/duplicates results; restart instead
+  rec.maxAlternatives = 1;
+  rec.onstart = () => { mic.ended = false; dbg('onstart'); };
+  rec.onaudiostart = () => { dbg('onaudiostart'); startRealMeter(); };
+  rec.onspeechstart = () => { mic.activity = 1; dbg('onspeechstart'); };
+  rec.onspeechend = () => dbg('onspeechend');
+  rec.onnomatch = () => dbg('onnomatch');
+  rec.onresult = (ev) => {
+    // Rebuild this session's text from index 0 (avoids Android's duplicated finals).
+    let fin = '', inter = '';
+    for (let i = 0; i < ev.results.length; i++) {
+      const r = ev.results[i];
+      if (r.isFinal) fin += r[0].transcript + ' '; else inter += r[0].transcript + ' ';
+    }
+    mic.sessFinal = fin.trim(); mic.interim = inter.trim(); mic.activity = 1;
+    dbg(`onresult final="${mic.sessFinal}" interim="${mic.interim}"`);
+    if (mic.active || !mic.resolved) setYou('live', heardText() || 'Listening…');
+  };
+  rec.onerror = (e) => {
+    dbg('onerror: ' + e.error + (e.message ? ' (' + e.message + ')' : ''));
+    if (e.error === 'no-speech' || e.error === 'aborted') { if (!mic.error) mic.error = e.error; return; }
+    mic.error = e.error;
+    if (FATAL.has(e.error) && mic.active) stopListening(true);
+  };
+  rec.onend = () => {
+    dbg('onend');
+    mic.ended = true;
+    mic.committed = (mic.committed + ' ' + mic.sessFinal).trim();
+    // An unfinished interim from an auto-ended session is still what he said.
+    if (mic.active && mic.interim) mic.committed = (mic.committed + ' ' + mic.interim).trim();
+    if (mic.active) mic.interim = '';
+    mic.sessFinal = '';
+    if (mic.active && IS_ANDROID && mic.mode === 'toggle' && heardText()) { dbg('android: phrase done → send'); stopListening(); return; }
+    if (mic.active && !FATAL.has(mic.error) && mic.restarts < 12) {
+      // Still holding / toggle still on: Chrome ended the session on its own (silence, Android one-shot). Restart.
+      mic.restarts++;
+      try { rec.start(); dbg('restart #' + mic.restarts); return; } catch (err) { dbg('restart failed: ' + err.message); }
+    }
+    if (!mic.active) finishListening('onend');
+    else stopListening();
+  };
+  return rec;
+}
+
+function startListening(mode) {
+  if (!entered || mic.active) return;
+  if (!SR) { setYou('error', ERR_MSG.unsupported); dbg('no SpeechRecognition in this browser'); return; }
+  speakToken++; head?.stopSpeaking(); cancelAnimationFrame(captionRaf);
+  clearTimeout(mic.stopTimer);
+  try { mic.rec?.abort(); } catch {}
+  Object.assign(mic, { active: true, mode, downAt: performance.now(), committed: '', sessFinal: '', interim: '',
+    error: null, restarts: 0, resolved: false, ended: true, activity: 0 });
+  el.caption.textContent = '';
+  setYou('live', 'Listening…');
+  setState('listening');
+  el.hint.textContent = 'Listening… release to send · or tap once to talk hands-free';
+  head?.makeEyeContact(10000);
+  head?.setBaselineValue?.('headRotateZ', 0.09);   // slight attentive head tilt
+  head?.setBaselineValue?.('headRotateX', 0.02);
+  dbg(`start (${mode}) android=${IS_ANDROID} continuous=${!IS_ANDROID}`);
+  startFakeMeter();
+  mic.rec = newRecognizer();
+  try { mic.rec.start(); }      // synchronous, inside the user gesture
+  catch (e) { dbg('start threw: ' + e.message); mic.error = 'start-failed'; stopListening(true); return; }
+  clearTimeout(mic.maxTimer);
+  mic.maxTimer = setTimeout(() => { if (mic.active) { dbg('auto-stop after ' + MAX_LISTEN_MS / 1000 + 's'); stopListening(); } }, MAX_LISTEN_MS);
+}
+
+function stopListening(cancel) {
+  if (!mic.active) return;
+  mic.active = false;
+  clearTimeout(mic.maxTimer);
+  resetMeter();
+  try { head?.stopListening(); } catch {}
   head?.setBaselineValue?.('headRotateZ', 0);
   head?.setBaselineValue?.('headRotateX', AVATAR.baseline.headRotateX);
-  if (micStream) { micStream.getTracks().forEach((t) => t.stop()); micStream = null; }
+  setHint();
+  dbg('stop' + (cancel ? ' (error)' : '') + ' — waiting for final result');
   setState('thinking');
-  pending = true;
-  if (rec) {
-    try { rec.stop(); } catch {}
-    clearTimeout(releaseTimer);
-    releaseTimer = setTimeout(resolveTranscript, 2500); // safety net if onend never fires
-  } else {
-    resolveTranscript(true);
-  }
+  if (mic.ended) { finishListening('already-ended'); return; }
+  try { mic.rec.stop(); } catch (e) { dbg('stop threw: ' + e.message); }
+  // Safety net: if onend never arrives, decide with whatever we have (interim included).
+  clearTimeout(mic.stopTimer);
+  mic.stopTimer = setTimeout(() => { dbg('no onend after 3s — using what was heard'); try { mic.rec.abort(); } catch {} finishListening('timeout'); }, 3000);
 }
 
-let pending = false;
-function resolveTranscript(noSR) {
-  clearTimeout(releaseTimer);
-  if (!pending || listening) return;
-  pending = false;
-  rec = null;
-  const text = (finalText + ' ' + interimText).trim();
-  if (noSR && !text) {
-    el.you.textContent = SR ? '(no speech heard)' : '(voice input isn’t supported in this browser — tap a prompt below)';
-  } else {
-    el.you.textContent = text || '(no speech heard)';
+function finishListening(why) {
+  if (mic.resolved) return;
+  mic.resolved = true;
+  clearTimeout(mic.stopTimer);
+  const text = heardText();
+  dbg(`finish (${why}) text="${text}" error=${mic.error || 'none'}`);
+  if (!text) {
+    setState('idle');
+    if (FATAL.has(mic.error)) setYou('error', ERR_MSG[mic.error]);
+    else setYou('error', 'I didn’t hear anything. Hold the mic (or tap once), speak, then release or tap again.');
+    return;
   }
-  speak(text ? matchIntent(text) : FALLBACK);
+  setYou('said', text);
+  const it = matchIntent(text);
+  dbg('intent: ' + it.id);
+  speak(it);
+}
+
+function setHint() {
+  if (!SR) { el.hint.textContent = 'Voice input isn’t available here — tap a prompt'; return; }
+  el.hint.innerHTML = 'Hold to talk · or tap, then tap to send<span class="hint__key"> · or hold Space</span>';
 }
 
 // ---------- UI wiring ----------
@@ -381,27 +496,56 @@ function buildChips() {
     b.className = 'chip'; b.textContent = it.chip;
     b.addEventListener('click', () => {
       if (!entered) return;
-      el.you.hidden = false; el.you.textContent = it.chip;
+      if (mic.active) { mic.resolved = true; stopListening(true); }
+      setYou('chip', it.chip);
       speak(it);
     });
     el.chips.appendChild(b);
   }
 }
 
+function pressStart(src) {
+  if (mic.active && mic.mode === 'toggle') { mic.ignoreUp = true; dbg(src + ': second tap → send'); stopListening(); return; }
+  mic.ignoreUp = false;
+  startListening('hold');
+}
+function pressEnd(src) {
+  if (mic.ignoreUp) { mic.ignoreUp = false; return; }
+  if (!mic.active || mic.mode !== 'hold') return;
+  if (performance.now() - mic.downAt < TAP_MS) {
+    mic.mode = 'toggle';
+    el.hint.textContent = 'Listening… tap the mic again to send';
+    dbg(src + ': quick tap → hands-free (tap again to send)');
+  } else {
+    stopListening();
+  }
+}
 function wirePTT() {
   const p = el.ptt;
-  p.addEventListener('pointerdown', (e) => { e.preventDefault(); p.setPointerCapture?.(e.pointerId); startListening(); });
-  const up = () => stopListening();
-  p.addEventListener('pointerup', up);
-  p.addEventListener('pointercancel', up);
-  p.addEventListener('lostpointercapture', up);
+  p.addEventListener('pointerdown', (e) => {
+    if (e.button !== undefined && e.button > 0) return;
+    e.preventDefault(); try { p.setPointerCapture(e.pointerId); } catch {}
+    pressStart('pointer');
+  });
+  p.addEventListener('pointerup', () => pressEnd('pointer'));
+  p.addEventListener('pointercancel', () => { dbg('pointercancel'); pressEnd('pointer'); });
   p.addEventListener('contextmenu', (e) => e.preventDefault());
   window.addEventListener('keydown', (e) => {
+    if (e.code === 'Escape' && mic.active) { mic.resolved = true; stopListening(true); setYou('error', 'Cancelled.'); setState('idle'); return; }
     if (e.code !== 'Space' || e.repeat || el.sheet.classList.contains('open')) return;
-    e.preventDefault(); startListening();
+    if (/^(INPUT|TEXTAREA|BUTTON|SELECT)$/.test(document.activeElement?.tagName) && document.activeElement !== el.ptt) document.activeElement.blur();
+    e.preventDefault(); pressStart('space');
   });
-  window.addEventListener('keyup', (e) => { if (e.code === 'Space') { e.preventDefault(); stopListening(); } });
-  if (!SR) el.hint.textContent = 'Voice input isn’t available here — tap a prompt';
+  window.addEventListener('keyup', (e) => { if (e.code === 'Space') { e.preventDefault(); pressEnd('space'); } });
+  setHint();
+}
+
+async function logPermission() {
+  try {
+    const st = await navigator.permissions.query({ name: 'microphone' });
+    dbg('mic permission: ' + st.state);
+    st.onchange = () => dbg('mic permission → ' + st.state);
+  } catch { dbg('mic permission: (query not supported)'); }
 }
 
 function applyView(v) {
@@ -414,6 +558,10 @@ function applyView(v) {
 function applyMood(m) { prefs.mood = m; savePrefs(); try { head?.setMood(m); } catch {} syncSeg('mood', m); }
 function applyCaptions(on) { prefs.captions = on; savePrefs(); document.body.classList.toggle('no-captions', !on); el.tglCaptions.checked = on; }
 function applyMute(on) { prefs.mute = on; savePrefs(); head?.setMixerGain(on ? 0 : 2.2); el.tglMute.checked = on; }
+function applyDebug(on) {
+  prefs.debug = on; savePrefs(); el.tglDebug.checked = on; el.dbgPanel.hidden = !on;
+  if (on) el.dbgLog.textContent = dbgLines.slice(-16).join('\n') || '(no mic events yet — press the mic)';
+}
 function syncSeg(name, v) {
   document.querySelectorAll(`.seg[data-setting="${name}"] button`).forEach((b) => b.classList.toggle('on', b.dataset.v === v));
 }
@@ -430,11 +578,18 @@ function wireSettings() {
   }));
   el.tglCaptions.addEventListener('change', () => applyCaptions(el.tglCaptions.checked));
   el.tglMute.addEventListener('change', () => applyMute(el.tglMute.checked));
+  el.tglDebug.addEventListener('change', () => applyDebug(el.tglDebug.checked));
+  el.dbgCopy.addEventListener('click', async () => {
+    const txt = `The Cave mic log · ${navigator.userAgent}\n` + dbgLines.join('\n');
+    try { await navigator.clipboard.writeText(txt); el.dbgCopy.textContent = 'Copied'; } catch { el.dbgCopy.textContent = 'Copy failed'; }
+    setTimeout(() => (el.dbgCopy.textContent = 'Copy log'), 1500);
+  });
   el.btnFrame.addEventListener('click', () => applyView(prefs.view === 'full' ? 'upper' : 'full'));
   syncSeg('view', prefs.view); syncSeg('mood', prefs.mood);
   el.frameLabel.textContent = prefs.view === 'full' ? 'Close' : 'Full';
   applyCaptions(prefs.captions);
   el.tglMute.checked = prefs.mute;
+  applyDebug(prefs.debug);
 }
 
 // ---------- Boot ----------
@@ -443,6 +598,7 @@ async function boot() {
   buildChips();
   wirePTT();
   wireSettings();
+  logPermission();
   const linesP = loadLines().catch((e) => { console.error('lines', e); });
   const ok = await initAvatar();
   if (!ok) return;
@@ -462,7 +618,8 @@ async function boot() {
 }
 
 // Debug/test hook
-window.__cave = { get head() { return head; }, get state() { return state; }, speak: (id) => speak(INTENTS.find((x) => x.id === id) || FALLBACK), matchIntent };
+window.__cave = { get head() { return head; }, get state() { return state; }, speak: (id) => speak(INTENTS.find((x) => x.id === id) || FALLBACK),
+  matchIntent, normalize, mic, dbgLines, enter: () => { entered = true; } };
 
 boot();
 
