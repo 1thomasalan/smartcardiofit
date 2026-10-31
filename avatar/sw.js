@@ -1,5 +1,5 @@
 // The Cave service worker — scope: /smartcardiofit/avatar/
-const VERSION = 'cave-v2';
+const VERSION = 'cave-v3';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'icon-mask.svg',
   ...['greeting','who','can','time','brief','joke','thanks','bye','fallback'].flatMap((id) => [`lines/${id}.json`, `lines/${id}.mp3`])];
 
@@ -18,7 +18,7 @@ self.addEventListener('fetch', (e) => {
   const cdn = /(^|\.)jsdelivr\.net$|fonts\.(googleapis|gstatic)\.com$/.test(url.hostname);
   if (!sameScope && !cdn) return;
   if (sameScope && /\.glb$/.test(url.pathname)) {
-    // Avatar model: cache first (filename is versioned, e.g. batman-classic-v1.glb), so the phone doesn't re-download ~13 MB.
+    // Avatar model: cache first (filename is versioned, e.g. batman-epic-v2.glb), so the phone doesn't re-download ~13 MB.
     e.respondWith(caches.open('cave-models').then((c) => c.match(req).then((hit) => hit || fetch(req).then((res) => {
       if (res.ok) c.put(req, res.clone());
       return res;
