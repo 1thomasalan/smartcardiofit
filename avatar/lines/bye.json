@@ -1,34 +1,40 @@
 {
  "id": "bye",
- "text": "Goodbye, Alan. I'll keep watch until you're back.",
+ "text": "Right, off you go. I'll hold orbit till you're back.",
  "words": [
-  "Goodbye,",
-  "Alan.",
+  "Right,",
+  "off",
+  "you",
+  "go.",
   "I'll",
-  "keep",
-  "watch",
-  "until",
+  "hold",
+  "orbit",
+  "till",
   "you're",
   "back."
  ],
  "wtimes": [
-  0,
-  580,
-  1265,
-  1498,
-  1741,
-  2067,
-  2380,
-  2577
+  280,
+  680,
+  840,
+  1040,
+  1909,
+  2050,
+  2309,
+  2690,
+  2902,
+  3106
  ],
  "wdurations": [
-  546,
-  511,
-  186,
-  174,
-  279,
-  255,
-  174,
-  720
+  360,
+  120,
+  120,
+  240,
+  93,
+  192,
+  333,
+  192,
+  140,
+  336
  ]
 }
