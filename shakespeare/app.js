@@ -95,7 +95,7 @@ function render(){document.querySelectorAll('#tabs button').forEach(b=>b.classLi
  (afterRender[tab]||(()=>{}))()}
 const afterRender={};
 
-function greet(){const h=new Date().getHours();return h<5?'The quiet hour, Alan':h<12?'Good morning, Alan':h<17?'Good afternoon, Alan':'Good evening, Alan'}
+function greet(){const h=new Date().getHours();return h<5?'The quiet hour':h<12?'Good morning':h<17?'Good afternoon':'Good evening'}
 const LAUREL=`<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M60 106c-26-14-38-36-36-66M60 106c26-14 38-36 36-66"/>${[0,1,2,3,4].map(i=>{const y=88-i*13,x=34-i*1.8;return`<path d="M${x+4} ${y}c-10-2-14-8-14-14 8 0 13 6 14 14z" fill="currentColor" opacity=".25"/><path d="M${120-x-4} ${y}c10-2 14-8 14-14-8 0-13 6-14 14z" fill="currentColor" opacity=".25"/>`}).join('')}</svg>`;
 
 function vToday(){const cd=currentDay(),st=streak(),due=dueList().length,doneN=Object.keys(S.done).length;let hero;
