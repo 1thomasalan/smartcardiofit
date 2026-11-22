@@ -1,8 +1,8 @@
 // Japanese Daily Practice — one pattern a day. Plain JS; everything stays on this phone.
 (function(){
 const LS='nihongo.v1',$=id=>document.getElementById(id),Ls=window.LESSONS,N=Ls.length,STG=window.STAGES;
-const DEF={les:{},activity:{},today:{},early:{},settings:{theme:'auto',voice:'',rate:.8,help:true,bell:true,vibrate:false,sayit:true,ahead:false,k:1}};
-let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(LS)||'{}'));S.settings=Object.assign({},DEF.settings,S.settings||{})}catch(e){S=JSON.parse(JSON.stringify(DEF))}
+const DEF={les:{},activity:{},done:{},today:{},early:{},settings:{theme:'auto',voice:'',rate:.8,help:true,bell:true,cheer:true,vibrate:false,sayit:true,ahead:false,k:1}};
+let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(LS)||'{}'));S.done=S.done||{};S.settings=Object.assign({},DEF.settings,S.settings||{})}catch(e){S=JSON.parse(JSON.stringify(DEF))}
 const save=()=>localStorage.setItem(LS,JSON.stringify(S));
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
@@ -89,6 +89,29 @@ const MIC='<svg viewBox="0 0 24 24" width="13" height="13" style="vertical-align
 const RATE_ICONS={shaky:'M20 50 Q30 38 40 50 Q50 62 60 50 Q70 38 80 50',getting:'M18 62 Q40 60 52 46 Q62 36 82 34',auto:''};
 function rateSvg(k){if(k==='auto')return `<svg viewBox="0 0 100 100"><path d="${ensoPath(50,50,34,-1.8,5.7,1,7,2)}" class="ensof"/></svg>`;return `<svg viewBox="0 0 100 100"><path d="${RATE_ICONS[k]}" class="is" filter="url(#brush)"/></svg>`}
 
+// ---------- streak strip + celebration ----------
+function streakStrip(){const s=streak(),b=bestStreak(),dt=!!S.done[today()];
+ return `<div class="sstrip card"><div class="sbig"><svg viewBox="0 0 100 100"><path d="${ensoPath(50,50,40,-1.8,5.7,1,9,s+1)}" class="ensof"/></svg><b>${s}</b></div>
+ <div class="smid"><div class="st1">${s===1?'day in a row':'days in a row'}</div><div class="st2">${dt?'Done for today ✓':s?'Practice today to keep it going':'Your streak starts today'}${b>s?` · best ${b}`:''}</div></div>
+ <div class="sweek">${weekHTML()}</div></div>`}
+const CHEERS=['audio/cheer/cheer1.mp3','audio/cheer/cheer2.mp3','audio/cheer/cheer3.mp3'];
+let cheerEl=null;
+function cheer(){if(!S.settings.cheer)return;stopSpeak();try{if(cheerEl)cheerEl.pause();cheerEl=new Audio(CHEERS[Math.floor(Math.random()*CHEERS.length)]);cheerEl.play().catch(cheerTTS)}catch(e){cheerTTS()}}
+function cheerTTS(){try{const u=new SpeechSynthesisUtterance('やったー！ おめでとう ございます！ また あした ね！');u.lang='ja-JP';const v=pickVoice();if(v)u.voice=v;u.pitch=1.8;u.rate=1.05;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function chime(){try{const a=actx(),t=a.currentTime;[523.25,659.25,783.99,1046.5].forEach((f,i)=>{const o=a.createOscillator(),g=a.createGain();o.type='triangle';o.frequency.value=f;const s=t+i*.11;g.gain.setValueAtTime(0,s);g.gain.linearRampToValueAtTime(.16,s+.015);g.gain.exponentialRampToValueAtTime(.0001,s+1.4);o.connect(g);g.connect(a.destination);o.start(s);o.stop(s+1.5)})}catch(e){}}
+function finishDay(n){const t=today();const first=!S.done[t];S.done[t]=true;markActive(n);save();celebrate(first)}
+function celebrate(first){const c=$('cel'),s=streak();const pet=Array.from({length:26},(_,i)=>`<i style="left:${Math.random()*100}%;animation-delay:${(Math.random()*2.2).toFixed(2)}s;animation-duration:${(3.2+Math.random()*2.6).toFixed(2)}s;--r:${Math.floor(Math.random()*360)}deg;--x:${Math.floor(Math.random()*120-60)}px;${i%3===0?'background:var(--shu)':''}"></i>`).join('');
+ c.innerHTML=`<div class="petals">${pet}</div><div class="celin">
+  <div class="celmark"><svg viewBox="0 0 200 200"><path d="${ensoPath(100,100,78,-1.7,5.75,1,14,7)}" class="ensof cdraw"/></svg><div class="celseal">でき<br>た</div></div>
+  <h1 class="celjp speakable" id="celjp">おめでとう ございます！</h1>
+  <p class="celro">Omedetō gozaimasu! · Congratulations!</p>
+  <div class="celstreak"><b>${s}</b><span>${s===1?'day in a row':'days in a row'}</span></div>
+  ${weekHTML()}
+  <p class="celbye"><span class="jpx">また あした！</span><br><small>Mata ashita! · See you tomorrow.</small></p>
+  <button class="btn shu" id="celok">Done</button></div>`;
+ c.classList.add('on');if(S.settings.bell)chime();buzz([40,60,40,60,120]);setTimeout(cheer,550);
+ $('celjp').onclick=cheer;$('celok').onclick=()=>{c.classList.remove('on');if(cheerEl)cheerEl.pause();renderAll()}}
+
 // ---------- streak pill ----------
 function renderStreak(){const s=streak();$('streakPill').innerHTML=`<svg viewBox="0 0 100 100" width="16" height="16"><path d="${ensoPath(50,50,36,-1.8,5.6,1,10,1)}" class="ensof"/></svg><b>${s}</b> day${s===1?'':'s'}`;
  $('revDot').hidden=!dueList().length}
@@ -98,13 +121,13 @@ let timerInt=null;
 function renderToday(){const cur=currentN(),v=$('v-today');clearInterval(timerInt);
  if(cur>N){v.innerHTML=`<div class="done card"><div class="big">${motif('star')}</div><h1>All 60 patterns, mastered.</h1><p class="sub">おめでとう ございます. Omedetō gozaimasu. Congratulations. Keep your reviews going and revisit any pattern from the Journey.</p></div>`;return}
  if(waitingForTomorrow(cur)){const P=L$(cur-1),Nx=L$(cur);
-  v.innerHTML=`<div class="done"><div class="big"><svg viewBox="0 0 200 200"><path d="${ensoPath(100,100,80,-1.7,5.6,1,12,cur)}" class="ensof"/><g transform="translate(70 70) scale(.6)" filter="url(#brush)">${motif('star').replace(/^<svg[^>]*>|<\/svg>$/g,'')}</g></svg></div>
+  v.innerHTML=streakStrip()+`<div class="done"><div class="big"><svg viewBox="0 0 200 200"><path d="${ensoPath(100,100,80,-1.7,5.6,1,12,cur)}" class="ensof"/><g transform="translate(70 70) scale(.6)" filter="url(#brush)">${motif('star').replace(/^<svg[^>]*>|<\/svg>$/g,'')}</g></svg></div>
   <p class="eyebrow">Day ${cur-1} · mastered today</p><h1>${esc(P.t)}</h1><p class="sub">Beautiful work. Let it settle tonight. Tomorrow you’ll warm up with it, then meet:</p>
   <div class="card mt" style="text-align:left"><span class="badge">Day ${cur} · opens tomorrow</span><div style="font-size:20px;margin-top:8px">${esc(Nx.t)}</div></div>
   ${dueList().length?`<button class="btn shu mt" id="goRev">Do your ${dueList().length} review${dueList().length>1?'s':''}</button><br>`:''}
   <button class="link mt" id="early" style="margin-top:22px">I’d rather start Day ${cur} now</button></div>`;
   $('early').onclick=()=>{S.early[cur]=true;save();renderToday()};if($('goRev'))$('goRev').onclick=()=>show('review');return}
- v.innerHTML=lessonHTML(cur,'today');wireLesson(cur,'today')}
+ v.innerHTML=streakStrip()+lessonHTML(cur,'today');wireLesson(cur,'today')}
 
 function lessonHTML(n,mode){const L=L$(n),l=les(n),ds=dayState(n,mode),t=today();const pd=l.days.includes(t)?l.days.length:l.days.length+1;
  const sents=L.w.map((_,i)=>sentence(L,i));const pt=patternTok(L);
@@ -145,6 +168,8 @@ function lessonHTML(n,mode){const L=L$(n),l=les(n),ds=dayState(n,mode),t=today()
   <div class="rate">${[['shaky','Shaky','still reading'],['getting','Getting there','mostly smooth'],['auto','Automatic','comes out on its own']].map(([k,a,b])=>`<button data-rate="${k}" class="${l.ratedOn===t&&l.rating===k?'on':''}">${rateSvg(k)}${a}<small>${b}</small></button>`).join('')}</div>
   <div id="rateMsg"></div>
   <div class="card mt ctr"><p class="sub" style="margin:0 0 12px">Or prove it with a short recall check: listen and pick, English to Japanese, then say one from memory.</p><button class="btn" id="chk">Take the recall check</button></div>`}
+  ${browse?'':`<div class="sec"><span class="n">6</span><h2>Finish</h2></div>
+  <div class="card ctr finish">${S.done[t]?`<p class="sub" style="margin:0 0 12px">You’re done for today. また あした (mata ashita), see you tomorrow.</p><button class="btn ghost" id="fin">Celebrate again</button>`:`<p class="sub" style="margin:0 0 12px">All set? Mark today done to keep your streak.</p><button class="btn shu big" id="fin">Done for today</button>`}</div>`}
  </div></div>`}
 function warmHTML(p){const P=L$(p);const ss=P.w.map((_,i)=>sentence(P,i));
  return `<div class="card warm"><p class="eyebrow">Warm-up · Day ${p}</p><h2 style="margin-bottom:4px">${esc(P.t)}</h2><p class="small" style="margin:0 0 6px">Say yesterday’s three sentences once before the new pattern.</p>
@@ -160,9 +185,10 @@ function wireLesson(n,mode){const v=mode==='browse'?$('v-journey'):$('v-today');
  const tb=$('tbtn');if(tb)tb.onclick=()=>{if(timerInt){clearInterval(timerInt);timerInt=null;return}actx();timerInt=setInterval(()=>{ds.timer=(ds.timer||0)+1;if(ds.timer>=300){clearInterval(timerInt);timerInt=null;ds.timer=300;if(S.settings.bell)bell();buzz([40,80,40]);toast('Five minutes. Lovely.')}save();tb.innerHTML=ensoProgress(ds.timer/300);$('tval').textContent=fmt(300-ds.timer)},1000)};
  v.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>{const k=b.dataset.rate;l.rating=k;l.ratedOn=today();markActive(n);save();v.querySelectorAll('[data-rate]').forEach(x=>x.classList.toggle('on',x===b));
   const m=$('rateMsg');const days=l.days.length;
-  if(k==='auto'){master(n,'rating');m.innerHTML=`<div class="card mt ctr"><h2>Automatic. Day ${n} mastered.</h2><p class="sub">${n<N?`Day ${n+1} opens tomorrow, after a quick warm-up with this one.`:'That was the last pattern.'}</p><button class="btn" id="okDone">Done for today</button></div>`;$('okDone').onclick=()=>{show('today')}}
+  if(k==='auto'){master(n,'rating');m.innerHTML=`<div class="card mt ctr"><h2>Automatic. Day ${n} mastered.</h2><p class="sub">${n<N?`Day ${n+1} opens tomorrow, after a quick warm-up with this one.`:'That was the last pattern.'}</p><button class="btn" id="okDone">Done for today</button></div>`;$('okDone').onclick=()=>finishDay(n)}
   else{m.innerHTML=`<div class="card mt ctr"><p class="sub" style="margin:0">${k==='shaky'?'That’s normal. Repeat this same lesson tomorrow; it gets easier on day two.':'Close. One more day on this pattern will make it automatic.'}${days>=3?`<br><br>You’ve given this pattern ${days} days. Take the check, or move on when you feel ready.`:''}</p>${days>=3?`<button class="btn ghost mt" id="moveOn">Move on anyway</button>`:''}</div>`;if($('moveOn'))$('moveOn').onclick=()=>{master(n,'moved');toast('Moving on. It will come back in review.');renderAll()}}});
- if($('chk'))$('chk').onclick=()=>startCheck(n,'unlock')}
+ if($('chk'))$('chk').onclick=()=>startCheck(n,'unlock');
+ if($('fin'))$('fin').onclick=()=>finishDay(n)}
 let browseFrom='journey';
 function rerender(n,mode){const sc=$('main').scrollTop;if(mode==='browse'){$('v-journey').innerHTML=lessonHTML(n,'browse');wireLesson(n,'browse')}else renderToday();$('main').scrollTop=sc}
 
@@ -192,7 +218,7 @@ function startCheck(n,purpose){const L=L$(n);const ss=L.w.map((_,i)=>sentence(L,
   save();if(pass&&S.settings.bell)bell();
   box.innerHTML=head()+`<div class="done"><div class="big"><svg viewBox="0 0 200 200"><path d="${ensoPath(100,100,80,-1.7,pass?5.9:3.6,1,12,n)}" class="ensof"/>${pass?'<rect x="122" y="122" width="40" height="40" rx="4" class="seal"/>':''}</svg></div>
    <h1>${score} of ${Q.length}${pass?'. Passed.':'.'}</h1><p class="sub">${purpose==='unlock'?(pass?`Day ${n} is mastered. ${n<N?`Day ${n+1} opens tomorrow.`:''}`:'Repeat this same lesson tomorrow and try again. That’s how it sticks.'):(pass?`See you again in ${IV[l.srs.stage]} days.`:'It comes back tomorrow for another pass.')}</p>
-   <button class="btn mt" id="ovd">Done</button></div>`;$('ovd').onclick=closeOv;$('ovx').onclick=closeOv}
+   ${purpose==='unlock'?`<button class="btn shu mt" id="ovf">Done for today</button><br><button class="link mt" id="ovd" style="margin-top:14px">Close</button>`:`<button class="btn mt" id="ovd">Done</button>`}</div>`;$('ovd').onclick=closeOv;$('ovx').onclick=closeOv;if($('ovf'))$('ovf').onclick=()=>{stopSpeak();$('ov').classList.remove('on');finishDay(n)}}
  draw()}
 function closeOv(){stopSpeak();$('ov').classList.remove('on');renderAll()}
 
@@ -235,6 +261,7 @@ function renderSettings(){const v=$('v-settings'),s=S.settings;const vs=voices;
   <div class="set"><div><label>Theme</label><small>Auto is ink-dark before 6 AM and after 7 PM</small></div>${seg('theme',[['auto','Auto'],['washi','Washi'],['sumi','Sumi']])}</div>
   <div class="set"><div><label>Text size</label></div>${seg('k',[[.9,'A−'],[1,'A'],[1.15,'A+']])}</div>
   <div class="set"><div><label>Soft bell</label><small>On completion</small></div>${sw('bell')}</div>
+  <div class="set"><div><label>Cheer voice</label><small>Anime-style おめでとう when you finish</small></div>${sw('cheer')}</div>
   <div class="set"><div><label>Vibration</label></div>${sw('vibrate')}</div>
   <div class="set"><div><label>Open next lesson the same day</label><small>Off keeps it to one new pattern a day</small></div>${sw('ahead')}</div>
  </div>
@@ -246,7 +273,7 @@ function renderSettings(){const v=$('v-settings'),s=S.settings;const vs=voices;
  <p class="small ctr">Japanese Daily Practice · 60 patterns · works offline<br>Native recordings can be added later; they play automatically when present.</p>`;
  $('voice').onchange=e=>{s.voice=e.target.value;save();speak('わたしはみずをのみます。')};
  v.querySelectorAll('[data-seg]').forEach(b=>b.onclick=()=>{const k=b.dataset.seg,val=b.dataset.val;s[k]=isNaN(+val)?val:+val;save();applyTheme();renderSettings();if(k==='rate')speak('わたしはみずをのみます。')});
- v.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{const k=b.dataset.sw;s[k]=!s[k];save();b.classList.toggle('on',s[k]);if(k==='bell'&&s[k])bell(.35);if(k==='vibrate'&&s[k])buzz(40)});
+ v.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{const k=b.dataset.sw;s[k]=!s[k];save();b.classList.toggle('on',s[k]);if(k==='bell'&&s[k])bell(.35);if(k==='cheer'&&s[k])cheer();if(k==='vibrate'&&s[k])buzz(40)});
  $('exp').onclick=()=>{const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`nihongo-progress-${today()}.json`;a.click();toast('Backup saved')};
  $('imp').onclick=()=>$('impf').click();
  $('impf').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{const j=JSON.parse(t);if(!j.les)throw 0;S=Object.assign({},DEF,j);S.settings=Object.assign({},DEF.settings,j.settings||{});save();applyTheme();renderAll();toast('Progress restored')}).catch(()=>toast('That file didn’t look like a backup'))};
