@@ -103,7 +103,7 @@ function finishDay(n){const t=today();const first=!S.done[t];S.done[t]=true;mark
 function celebrate(first){const c=$('cel'),s=streak();const pet=Array.from({length:26},(_,i)=>`<i style="left:${Math.random()*100}%;animation-delay:${(Math.random()*2.2).toFixed(2)}s;animation-duration:${(3.2+Math.random()*2.6).toFixed(2)}s;--r:${Math.floor(Math.random()*360)}deg;--x:${Math.floor(Math.random()*120-60)}px;${i%3===0?'background:var(--shu)':''}"></i>`).join('');
  c.innerHTML=`<div class="petals">${pet}</div><div class="celin">
   <div class="celmark"><svg viewBox="0 0 200 200"><path d="${ensoPath(100,100,78,-1.7,5.75,1,14,7)}" class="ensof cdraw"/></svg><div class="celseal">でき<br>た</div></div>
-  <h1 class="celjp speakable" id="celjp">おめでとう ございます！</h1>
+  <h1 class="celjp speakable" id="celjp"><span class="nw">おめでとう</span> <span class="nw">ございます！</span></h1>
   <p class="celro">Omedetō gozaimasu! · Congratulations!</p>
   <div class="celstreak"><b>${s}</b><span>${s===1?'day in a row':'days in a row'}</span></div>
   ${weekHTML()}
