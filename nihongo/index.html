@@ -218,6 +218,32 @@ select{background:var(--card);border:1px solid var(--line);border-radius:10px;pa
  .word .k{font-size:19px}.words{gap:7px}
  .card{padding:16px}
 }
+.sstrip{display:flex;align-items:center;gap:16px;padding:14px 18px;margin:2px 0 22px}
+.sbig{position:relative;width:62px;height:62px;flex:none}.sbig svg{width:100%;height:100%}
+.sbig b{position:absolute;inset:0;display:grid;place-items:center;font-size:26px;color:var(--shu);font-weight:600}
+.smid{flex:1;min-width:0}.st1{font-size:19px}.st2{font-family:var(--sans);font-size:12px;color:var(--mut);margin-top:2px}
+.sweek{flex:0 1 300px}.sweek .week{margin:0}.sweek .wd i{width:22px;height:22px}
+@media (max-width:620px){.sstrip{flex-wrap:wrap}.sweek{flex:1 1 100%}}
+.btn.big{padding:17px 34px;font-size:16px}
+.cel{position:fixed;inset:0;z-index:20;display:none;place-items:center;background:color-mix(in srgb,var(--paper) 94%,transparent);overflow:hidden}
+.cel.on{display:grid;animation:celfade .35s ease}
+@keyframes celfade{from{opacity:0}to{opacity:1}}
+.celin{position:relative;text-align:center;padding:24px;max-width:460px;width:100%}
+.celmark{position:relative;width:170px;height:170px;margin:0 auto 6px}.celmark svg{width:100%;height:100%}
+.cdraw{transform-origin:100px 100px;animation:draw .9s cubic-bezier(.2,.9,.3,1) both}
+@keyframes draw{from{transform:rotate(-120deg) scale(.6);opacity:0}to{transform:none;opacity:.82}}
+.celseal{position:absolute;right:6px;bottom:10px;width:58px;height:58px;border-radius:7px;background:var(--shu);color:#fff6ec;display:grid;place-items:center;font-weight:700;font-size:15px;line-height:1.1;transform:rotate(-8deg) scale(0);animation:stamp .45s cubic-bezier(.2,1.6,.4,1) .9s forwards}
+@keyframes stamp{to{transform:rotate(-8deg) scale(1)}}
+.celjp{font-size:clamp(28px,7vw,40px);margin:8px 0 4px;color:var(--shu);cursor:pointer;animation:pop .6s cubic-bezier(.2,1.5,.4,1) .3s both}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.celro{font-family:var(--sans);font-size:13px;color:var(--mut);margin:0 0 18px}
+.celstreak b{font-size:56px;font-weight:600;line-height:1;display:block}.celstreak span{font-family:var(--sans);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)}
+.cel .week{margin:16px auto 8px;max-width:330px}
+.celbye{margin:18px 0 22px;font-size:22px}.celbye small{font-family:var(--sans);font-size:12.5px;color:var(--mut)}
+.petals{position:absolute;inset:0;pointer-events:none}
+.petals i{position:absolute;top:-30px;width:12px;height:9px;border-radius:12px 0 12px 0;background:#f2b8c6;opacity:.85;animation:fall linear infinite}
+@keyframes fall{0%{transform:translate(0,-20px) rotate(0)}100%{transform:translate(var(--x),110vh) rotate(var(--r))}}
+@media (prefers-reduced-motion:reduce){.petals{display:none}.cdraw{animation:none}}
 </style>
 </head>
 <body data-theme="washi">
@@ -242,6 +268,7 @@ select{background:var(--card);border:1px solid var(--line);border-radius:10px;pa
 </div>
 <div class="ov" id="ov"><div class="washi"></div><div class="ovin" id="ovin"></div></div>
 <div class="toast" id="toast"></div>
+<div class="cel" id="cel" role="dialog" aria-label="Done for today"></div>
 <script src="lessons.js"></script>
 <script src="visuals.js"></script>
 <script src="app.js"></script>
