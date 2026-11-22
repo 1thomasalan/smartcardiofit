@@ -1,5 +1,5 @@
-const C='nihongo-v3',A='nihongo-audio';
-const F=['./','index.html','app.js','visuals.js','lessons.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png','audio/map.json'];
+const C='nihongo-v4',A='nihongo-audio';
+const F=['./','index.html','app.js','visuals.js','lessons.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png','audio/map.json','audio/cheer/cheer1.mp3','audio/cheer/cheer2.mp3','audio/cheer/cheer3.mp3'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(F)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C&&x!==A).map(x=>caches.delete(x)))));self.clients.claim()});
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.method!=='GET')return;
