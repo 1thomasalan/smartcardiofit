@@ -243,6 +243,39 @@ body>.page{padding:0;max-width:none;display:block}
   .x-node:not(:first-child)::after{display:none}
   .x-cchar{left:10%}
 }
+/* daily practice + streaks */
+.x-strk{flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:6px;min-height:40px;border:3px solid #fff;border-radius:12px;background:#0003;color:var(--cr);font-size:13px;padding:2px 8px;cursor:pointer;white-space:nowrap}
+.x-dots{flex:none;display:flex;gap:3px}.x-dots i{width:8px;height:8px;border-radius:50%;border:2px solid #fff8;background:none}.x-dots i.on{background:var(--gd);border-color:var(--gd)}
+.x-sl{overflow:hidden;text-overflow:ellipsis}.x-ss{display:none}
+@media (max-width:400px){.x-sl{display:none}.x-ss{display:inline}.x-strk{padding:2px 6px;gap:4px}.x-dots{gap:2px}.x-dots i{width:6px;height:6px}}
+.x-dwrap{width:100%;display:flex;justify-content:center;padding:14px 16px 0;z-index:2}
+.x-daily{font-size:20px;padding:10px 28px;background:var(--gd);color:var(--ind);box-shadow:0 6px 0 #9a6b00,0 10px 20px #0006}
+.x-daily.done{background:#ffffff1a;color:var(--cr);border-color:#fff8;font-size:16px;min-height:44px;box-shadow:none}
+.x-daily.x-pulse{animation:x-dpulse 1.2s infinite}
+@keyframes x-dpulse{50%{box-shadow:0 0 0 10px #f2b63299,0 6px 0 #9a6b00}}
+#journey{position:absolute;inset:0;z-index:8;display:flex;align-items:flex-end;justify-content:center;background:#0009;animation:x-fade .25s ease}
+#journey[hidden]{display:none}
+.x-jpanel{position:relative;width:100%;max-height:92%;overflow-y:auto;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));border-radius:22px 22px 0 0;animation:x-slide .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes x-slide{from{transform:translateY(100%)}}
+.x-jpanel h3{margin:0 0 4px;font-size:15px;color:var(--v);letter-spacing:1px}
+.x-jbig{margin:0 0 12px;font-size:18px;color:var(--ind)}.x-jbig b{font-size:48px;line-height:1;color:var(--v)}
+.x-jstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.x-jstats div{background:#2f426214;border-radius:14px;padding:8px 4px;text-align:center}
+.x-jstats b{display:block;font-size:22px;color:var(--ind)}.x-jstats small{font-size:12px;color:#4d5466}
+.x-jmon{margin:0 0 6px;font-size:15px;color:var(--ind)}
+.x-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.x-cal span{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:13px;line-height:1.1;color:var(--ink);background:#2f42620d}
+.x-cal .h{aspect-ratio:auto;background:none;font-size:12px;color:#4d5466;padding:2px 0}
+.x-cal .e{background:none}
+.x-cal .p{background:var(--gd);color:var(--ind)}.x-cal .p i{font-style:normal;font-size:11px}
+.x-cal .t{outline:3px solid var(--v);outline-offset:-3px}
+@media (min-width:700px){#journey{align-items:center}.x-jpanel{max-width:440px;border-radius:22px}}
+.x-wstreak{display:flex;justify-content:center;align-items:center;gap:24px;margin:8px 0;position:relative}
+.x-wstreak>div{display:flex;flex-direction:column;align-items:center}
+.x-wstreak b{font-size:40px;line-height:1;color:var(--v)}.x-wstreak #wsM{font-size:28px;color:var(--ind)}
+.x-wstreak small{font-size:12px;color:#4d5466}
+.x-wsup{position:absolute;right:0;top:-8px;background:var(--gd);color:var(--ind);border-radius:99px;padding:3px 10px;font-size:13px}
+.x-wsup[hidden]{display:none}
 @media (prefers-reduced-motion:reduce){.x-game *,.x-game{animation:none !important;transition:none !important}}
 </style>
 </head>
@@ -265,9 +298,20 @@ body>.page{padding:0;max-width:none;display:block}
 </section>
 
 <section class="x-scr" id="map">
-  <div class="x-hud"><span class="x-lv" id="hLv">Lv 3</span><div class="x-xp"><i id="hXp"></i></div><span class="x-stat" id="hPts">✿ 85</span><span class="x-stat" id="hStr">🔥 12</span><span class="x-score">SCORE <b class="x-num" id="hScore">0000</b></span><button class="x-sbtn" id="studyBtn" aria-label="Study">📖<span> Study</span></button></div>
+  <div class="x-hud"><span class="x-lv" id="hLv">Lv 1</span><div class="x-xp"><i id="hXp"></i></div><span class="x-stat" id="hPts">✿ 0</span><button class="x-strk" id="hStr" aria-label="Your journey"><span class="x-dots" aria-hidden="true"></span><span class="x-sl">Start your streak</span><span class="x-ss">0</span></button><span class="x-score">SCORE <b class="x-num" id="hScore">0000</b></span><button class="x-sbtn" id="studyBtn" aria-label="Study">📖<span> Study</span></button></div>
+  <div class="x-dwrap"><button class="x-btn x-daily" id="dailyBtn">▶ Today's practice</button></div>
   <div class="x-path" id="path"></div>
   <div class="x-toast x-panel" id="toast"></div>
+  <div id="journey" role="dialog" aria-modal="true" aria-labelledby="jTitle" hidden>
+    <div class="x-jpanel x-panel">
+      <button class="x-sclose" id="jClose" aria-label="Close">✕</button>
+      <h3 id="jTitle">YOUR JOURNEY</h3>
+      <p class="x-jbig"><b id="jN">0</b> <span id="jNL">days in a row</span></p>
+      <div class="x-jstats"><div><b id="jBest">0</b><small>best streak</small></div><div><b id="jMonth">0</b><small>days this month</small></div><div><b id="jKana">0/92</b><small>kana collected</small></div></div>
+      <p class="x-jmon" id="jMon"></p>
+      <div class="x-cal" id="jCal"></div>
+    </div>
+  </div>
 </section>
 
 <section class="x-scr" id="battle">
@@ -345,7 +389,8 @@ body>.page{padding:0;max-width:none;display:block}
   <div class="x-wpanel x-panel x-pop">
     <p style="font-size:22px;color:var(--v)"><span class="x-nw">おめでとう</span> <span class="x-nw">ございます！</span></p>
     <p style="font-size:14px">Omedetō gozaimasu! Congratulations!</p>
-    <div class="x-gains"><span>+50 XP</span><span>+10 ✿</span><span id="wStr">🔥 13 day streak</span><span id="wPerf" hidden>PERFECT +500</span></div>
+    <div class="x-gains"><span>+50 XP</span><span>+10 ✿</span><span id="wPerf" hidden>PERFECT +500</span></div>
+    <div class="x-wstreak"><div><b id="wsN">0</b><small id="wsL">days in a row</small></div><div><b id="wsM">0</b><small>wins this month</small></div><span class="x-wsup" id="wsUp" hidden>🔥 Streak +1</span></div>
     <div class="x-sc"><div><small>STAGE</small><b class="x-num" id="wScore">0000</b></div><div class="x-rank" id="wRank">C</div><div><small>TOTAL</small><b class="x-num" id="wTotal">0000</b></div></div>
     <div class="x-best" id="wBest" hidden>NEW BEST!</div>
     <div class="x-cards" id="cards"></div>
@@ -353,6 +398,7 @@ body>.page{padding:0;max-width:none;display:block}
     <div class="x-lvup" id="lvup"></div>
   </div>
   <button class="x-btn" id="mapBtn">Map</button>
+  <div class="x-toast x-panel" id="wToast" style="top:16px;bottom:auto;justify-content:center" aria-live="polite"></div>
 </section>
 
 </main>
@@ -378,6 +424,7 @@ const STAGES={1:{set:row(0),pool:row(0)},2:{set:row(1),pool:[...row(1),...row(0)
   14:{set:[...krow(6),...krow(7)],pool:[...krow(6),...krow(7),...krow(5)]},
   15:{set:[...krow(8),...krow(9),...krow(10)],pool:[...krow(8),...krow(9),...krow(10),...krow(7)]},
   16:{set:null,pool:ALLK,boss:1,hp:200,time:7000,name:"Lantern Queen"}};
+STAGES.daily={set:null,pool:[...row(0),...row(1)],daily:1,hp:100,dmg:10};
 const NODES=[
   {id:1,icon:"あ",name:"Vowel Shrine",sub:"a · i · u · e · o"},
   {id:2,icon:"か",name:"K Forest",sub:"ka · ki · ku · ke · ko"},
@@ -400,9 +447,21 @@ function safeGet(name){try{return window[name]}catch(e){return undefined}}
 function safeStore(name){try{const s=window[name];if(!s)return null;const k="__kq_t";s.setItem(k,"1");s.removeItem(k);return s}catch(e){return null}}
 const LS=safeStore("localStorage");safeStore("sessionStorage");
 const store={get(k){try{return LS?LS.getItem(k):null}catch(e){return null}},set(k,v){try{if(LS)LS.setItem(k,v)}catch(e){}}};
-let S={lv:3,xp:240,pts:85,streak:12,day:"",cleared:[],total:0,best:{}};
-try{const s=JSON.parse(store.get("kanaquest")||"null");if(s&&typeof s==="object")S=Object.assign(S,s);if(!Array.isArray(S.cleared))S.cleared=[];if(!S.best||typeof S.best!=="object")S.best={};S.total=+S.total||0}catch(e){}
+let S={lv:1,xp:0,pts:0,streak:0,bestStreak:0,day:"",log:{},cleared:[],total:0,best:{}};
+try{const s=JSON.parse(store.get("kanaquest")||"null");if(s&&typeof s==="object")S=Object.assign(S,s);if(!Array.isArray(S.cleared))S.cleared=[];if(!S.best||typeof S.best!=="object")S.best={};S.total=+S.total||0;
+  if(!S.log||typeof S.log!=="object"||Array.isArray(S.log))S.log={};S.bestStreak=+S.bestStreak||0}catch(e){}
 const save=()=>{try{store.set("kanaquest",JSON.stringify(S))}catch(e){}};
+// practice log (local dates, like Nagi-dō)
+const dkey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const todayKey=()=>dkey(new Date());
+function daysAgo(n){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-n);return d}
+function streak(){let n=0,i=S.log[todayKey()]?0:1;while(S.log[dkey(daysAgo(i))]){n++;i++}return n}
+const monthKey=()=>todayKey().slice(0,7);
+function monthWins(){const m=monthKey();let w=0;for(const k in S.log)if(k.slice(0,7)===m)w+=+(S.log[k]&&S.log[k].wins)||0;return w}
+function monthDays(){const m=monthKey();return Object.keys(S.log).filter(k=>k.slice(0,7)===m).length}
+function logWin(score){const k=todayKey(),first=!S.log[k],e=S.log[k]||{wins:0,score:0};e.wins=(+e.wins||0)+1;e.score=(+e.score||0)+(+score||0);S.log[k]=e;
+  S.streak=streak();if(S.streak>S.bestStreak)S.bestStreak=S.streak;return first}
+S.streak=streak();if(S.streak>S.bestStreak)S.bestStreak=S.streak;
 let RM=false;try{RM=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)}catch(e){}
 
 // audio + speech
@@ -429,16 +488,37 @@ const SPEAK=["こんにちは","","いくよ"];
 let li=0,ci=0,typing=null;
 function typeLine(){const t=TEXT[li];ci=0;$("dlgText").textContent="";clearInterval(typing);if(SPEAK[li])say(SPEAK[li]);
   typing=setInterval(()=>{ci++;$("dlgText").textContent=t.slice(0,ci);if(ci>=t.length){clearInterval(typing);typing=null}},RM?1:35)}
-$("startBtn").onclick=()=>{tone(660,0,.15);if(S.cleared.length){showMap();return}show("story");li=0;typeLine()};
+let pulseDaily=false;
+const isDaily=()=>{try{return location.hash==="#daily"}catch(e){return false}};
+$("startBtn").onclick=()=>{tone(660,0,.15);if(isDaily()){pulseDaily=true;showMap();return}if(S.cleared.length){showMap();return}show("story");li=0;typeLine()};
 $("story").onclick=()=>{if(typing){clearInterval(typing);typing=null;$("dlgText").textContent=TEXT[li];return}
   li++;if(li<TEXT.length)typeLine();else showMap()};
 
 // map
-function hud(){$("hLv").textContent="Lv "+S.lv;$("hXp").style.width=(S.xp/300*100)+"%";$("hPts").textContent="✿ "+S.pts;$("hStr").textContent="🔥 "+S.streak;tick($("hScore"),S.total)}
+function hud(){$("hLv").textContent="Lv "+S.lv;$("hXp").style.width=(S.xp/300*100)+"%";$("hPts").textContent="✿ "+S.pts;
+  S.streak=streak();const n=S.streak,h=$("hStr");let dots="";for(let i=6;i>=0;i--)dots+=`<i${S.log[dkey(daysAgo(i))]?' class="on"':""}></i>`;
+  h.querySelector(".x-dots").innerHTML=dots;h.querySelector(".x-sl").textContent=n?n+"-day streak":"Start your streak";h.querySelector(".x-ss").textContent=n;
+  h.setAttribute("aria-label",(n?n+"-day streak":"Start your streak")+". Open your journey");tick($("hScore"),S.total)}
+function openJourney(){const n=streak(),now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  $("jN").textContent=n;$("jNL").textContent=n===1?"day in a row":"days in a row";$("jBest").textContent=Math.max(S.bestStreak,n);
+  $("jMonth").textContent=monthDays();$("jKana").textContent=collected().size+"/92";
+  let mon=y+"-"+(m+1);try{mon=now.toLocaleDateString("en",{month:"long",year:"numeric"})}catch(e){}$("jMon").textContent=mon;
+  let c="SMTWTFS".split("").map(d=>`<span class="h" aria-hidden="true">${d}</span>`).join("");
+  const lead=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();for(let i=0;i<lead;i++)c+='<span class="e"></span>';
+  for(let d=1;d<=days;d++){const p=!!S.log[dkey(new Date(y,m,d,12))],t=d===now.getDate();
+    c+=`<span class="${p?"p":""}${t?" t":""}" aria-label="${mon.split(" ")[0]} ${d}${p?", practiced":""}${t?", today":""}">${d}${p?"<i>✓</i>":""}</span>`}
+  $("jCal").innerHTML=c;$("journey").hidden=false;tone(700,0,.06,"triangle",.08);try{$("jClose").focus()}catch(e){}}
+function closeJourney(){$("journey").hidden=true;try{$("hStr").focus()}catch(e){}}
+$("hStr").onclick=openJourney;$("jClose").onclick=closeJourney;
+$("journey").onclick=e=>{if(e.target===$("journey"))closeJourney()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("journey").hidden)closeJourney()});
+function startDaily(){pulseDaily=false;const got=[...collected()];STAGES.daily.pool=got.length>=10?got:[...row(0),...row(1)];startBattle("daily")}
+$("dailyBtn").onclick=startDaily;
 function unlocked(n){return true}
 let toastT;
 function toast(html){const t=$("toast");t.innerHTML=html;t.classList.add("on");anim(t,"x-pop");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),3200)}
-function showMap(){show("map");hud();const p=$("path");p.innerHTML="";
+function showMap(){show("map");hud();$("journey").hidden=true;const p=$("path");p.innerHTML="";
+  const db=$("dailyBtn"),dn=!!S.log[todayKey()];db.classList.toggle("done",dn);db.textContent=dn?"✓ Practiced today · play again":"▶ Today's practice";db.classList.toggle("x-pulse",pulseDaily);
   const firstOpen=(NODES.find(n=>!S.cleared.includes(n.id))||{}).id;
   NODES.forEach(n=>{const open=unlocked(n)&&!n.lock,done=S.cleared.includes(n.id),cur=open&&n.id===firstOpen,bst=S.best[n.id];
     const b=document.createElement("button");b.className="x-node"+(open?"":" lock")+(n.cafe?" cafe":"")+(n.boss?" boss":"")+(cur?" cur":"");
@@ -469,7 +549,7 @@ $("bub").onclick=()=>say(B&&B.k);
 function pop(cls,txt){const d=document.createElement("div");d.className=cls;d.textContent=txt;$("arena").appendChild(d);setTimeout(()=>d.remove(),1000)}
 function pick(o,btn){if(B.busy)return;B.busy=true;clearTimeout(TT);$("timer").firstElementChild.style.transition="none";const ok=o===B.k;
   if(ok){btn.classList.add("ok");B.combo++;const crit=Date.now()-B.t0<3000;sfx.hit();say(B.k);
-    anim($("kc"),"dash");setTimeout(()=>{anim($("slash"),"go");anim($("yk"),"hit");B.hp=Math.max(0,B.hp-20);upd();pop("x-dmg","-20")},200);
+    anim($("kc"),"dash");setTimeout(()=>{anim($("slash"),"go");anim($("yk"),"hit");const dm=STAGES[B.st].dmg||20;B.hp=Math.max(0,B.hp-dm);upd();pop("x-dmg","-"+dm)},200);
     if(B.combo>1)pop("x-combo",B.combo+" COMBO!"+(crit?" Critical!":""));else if(crit)pop("x-combo","Critical!");
     const pts=Math.round((100+(crit?150:0))*(1+B.combo*.1));B.score+=pts;tick($("bScore"),B.score);pop("x-pts","+"+pts);
     $("hint").textContent=B.k+" = "+KANA[B.k];
@@ -540,17 +620,20 @@ DRINKS.forEach(d=>{const b=document.createElement("button");b.className="x-tile"
 
 // victory
 function victory(o){show("win");sfx.chime();say("おめでとう ございます");
-  $("wTitle").textContent=o.cafe?"EPISODE CLEAR!":STAGES[o.st].boss?"SHRINE SAVED!":"STAGE CLEAR!";anim($("wTitle"),"x-pop");
+  $("wTitle").textContent=o.cafe?"EPISODE CLEAR!":o.st==="daily"?"DAILY PRACTICE DONE!":STAGES[o.st].boss?"SHRINE SAVED!":"STAGE CLEAR!";anim($("wTitle"),"x-pop");
   const prev=S.best[o.st],rank=rankOf(o.score),nb=!prev||o.score>prev.s;if(nb)S.best[o.st]={s:o.score,r:rank};
   const tot0=S.total;S.total+=o.score;$("wPerf").hidden=!o.perfect;$("wBest").hidden=!nb;
   const rk=$("wRank");rk.textContent=rank;rk.className="x-rank r-"+rank;anim(rk,"x-rank");
   tick($("wScore"),0,true);tick($("wTotal"),tot0,true);setTimeout(()=>{tick($("wScore"),o.score);tick($("wTotal"),S.total)},300);
   if(nb)setTimeout(()=>{if(nb)[1047,1319,1568].forEach((f,i)=>tone(f,i*.08,.3,"square",.06))},1000);
-  const first=!S.cleared.includes(o.st);if(first)S.cleared.push(o.st);
-  const today=new Date().toDateString();if(S.day!==today){S.streak++;S.day=today}
+  const first=!S.cleared.includes(o.st);if(first&&o.st!=="daily")S.cleared.push(o.st);
+  const firstToday=logWin(o.score);S.day=new Date().toDateString();
   const before=S.xp;S.xp+=50;S.pts+=10;let lvl="";
   if(S.xp>=300){S.xp-=300;S.lv++;lvl="LEVEL UP! Lv "+S.lv}
-  save();$("wStr").textContent="🔥 "+S.streak+" day streak";
+  save();const sn=S.streak;$("wsN").textContent=sn;$("wsL").textContent=sn===1?"day in a row":"days in a row";$("wsM").textContent=monthWins();
+  const up=$("wsUp"),wt=$("wToast");up.hidden=!firstToday;wt.classList.remove("on");clearTimeout(wt._t);
+  if(firstToday){anim(up,"x-pop");setTimeout(sfx.chime,900);
+    if([7,30,100].includes(sn))setTimeout(()=>{wt.innerHTML="<div>🏆 <b>MILESTONE!</b> "+sn+"-day streak</div>";wt.classList.add("on");anim(wt,"x-pop");wt._t=setTimeout(()=>wt.classList.remove("on"),3200)},1200)}
   $("cards").innerHTML=o.cafe?DRINKS.map((d,i)=>`<div class="x-card x-word" style="animation-delay:${.3+i*.15}s">${d.w}<small>${d.r} · ${d.en.toLowerCase()}</small></div>`).join("")
     :(STAGES[o.st].set||shuffle(STAGES[o.st].pool).slice(0,5)).map((k,i)=>`<div class="x-card" style="animation-delay:${.3+i*.15}s">${k}<small>${KANA[k]}</small></div>`).join("");
   const bar=$("wXp");bar.style.transition="none";bar.style.width=(before/300*100)+"%";$("lvup").textContent="";
