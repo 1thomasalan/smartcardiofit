@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Kana Quest Playable Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap" />
+<link rel="stylesheet" href="hark.css" />
+<style>
+:root{--v:#c4432b;--ind:#2f4262;--cr:#fff6e6;--gd:#f2b632;--ink:#1d2433}
+html,body{margin:0;height:100%;min-height:100%;background:#0e1220 !important;overflow:hidden}
+body>.page{padding:0;max-width:none;display:block}
+.x-game,.x-game *{box-sizing:border-box;font-family:"M PLUS Rounded 1c",system-ui,sans-serif;font-weight:800}
+.x-game{display:block;position:relative;margin:0 auto;max-width:480px;min-height:560px;height:100vh;height:100dvh;opacity:1;overflow:hidden;background:var(--ind);color:var(--cr);user-select:none;-webkit-tap-highlight-color:transparent;box-shadow:0 0 60px #000}
+.x-scr{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;overflow:hidden}
+.x-scr.on{display:flex;animation:x-fade .35s ease}
+#title{display:flex}
+.x-game.x-run #title:not(.on){display:none}
+#title .x-pop{animation-fill-mode:none}
+.x-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+.x-dim{position:absolute;inset:0;background:linear-gradient(#0008,#000a);z-index:0}
+.x-scr>*:not(.x-bg):not(.x-dim):not(.x-over):not(.x-toast):not(.x-burst):not(.x-petal){position:relative;z-index:1}
+.x-btn{border:4px solid #fff;border-radius:999px;background:var(--v);color:#fff;font-size:22px;padding:12px 34px;min-height:52px;cursor:pointer;box-shadow:0 6px 0 #7d2414,0 10px 20px #0006;transition:transform .1s}
+.x-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #7d2414}
+.x-panel{background:var(--cr);color:var(--ink);border:5px solid #fff;border-radius:22px;box-shadow:0 8px 0 #0004,0 0 0 3px var(--ind)}
+.x-ban{display:inline-block;background:var(--v);color:#fff;padding:6px 22px;transform:skew(-12deg);border:3px solid #fff;box-shadow:4px 4px 0 var(--ind)}
+.x-ban>span{display:inline-block;transform:skew(12deg)}
+.x-pop{animation:x-pop .45s cubic-bezier(.3,1.6,.5,1) both}
+.x-nw{white-space:nowrap}
+/* title */
+#title{justify-content:space-between;padding:8vh 20px 5vh;text-align:center}
+.x-logo small{display:block;font-size:22px;color:var(--gd);letter-spacing:4px;text-shadow:0 2px 0 #000}
+.x-logo h1{margin:4px 0;font-size:56px;line-height:1;color:#fff;letter-spacing:2px;-webkit-text-stroke:2px var(--v);text-shadow:0 5px 0 var(--v),0 8px 16px #000}
+.x-logo p{margin:10px 0 0;font-size:16px;text-shadow:0 2px 4px #000}
+.x-hero{width:62%;max-width:260px;animation:x-bob 2.4s ease-in-out infinite;filter:drop-shadow(0 10px 12px #0008)}
+.x-free{font-size:12px;opacity:.85;margin-top:12px;text-shadow:0 1px 3px #000}
+/* story */
+#story{justify-content:flex-end;padding:16px;cursor:pointer}
+#story .x-hero{width:70%;max-width:300px;margin-bottom:-14px}
+.x-dlg{width:100%;padding:26px 18px 18px;min-height:150px;font-size:18px;line-height:1.5;position:relative}
+.x-tag{position:absolute;top:-20px;left:16px;font-size:16px}
+.x-next{position:absolute;right:16px;bottom:8px;color:var(--v);animation:x-bob 1s infinite}
+/* hud + map */
+.x-hud{display:flex;gap:8px;align-items:center;width:100%;padding:12px;background:var(--ind);border-bottom:4px solid #fff;z-index:3}
+.x-lv{background:var(--gd);color:var(--ind);border:3px solid #fff;border-radius:12px;padding:2px 8px;font-size:15px}
+.x-xp{flex:1;height:16px;background:#0005;border:3px solid #fff;border-radius:99px;overflow:hidden;position:relative}
+.x-xp i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--gd),#ffe08a);transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.x-stat{font-size:15px;white-space:nowrap}
+#map{background:radial-gradient(circle at 50% 30%,#3d5680,var(--ind))}
+.x-path{flex:1;width:100%;overflow-y:auto;padding:26px 20px 40px;display:flex;flex-direction:column-reverse;gap:26px;position:relative}
+.x-node{display:flex;align-items:center;gap:14px;background:none;border:0;color:var(--cr);cursor:pointer;text-align:left;padding:0;position:relative}
+.x-node:nth-child(even){flex-direction:row-reverse;text-align:right}
+.x-node:not(:first-child)::after{content:"";position:absolute;left:39px;top:84px;height:30px;border-left:6px dotted #fff8}
+.x-node:nth-child(even)::after{left:auto;right:39px}
+.x-orb{flex:none;width:84px;height:84px;border-radius:50%;border:5px solid #fff;background:var(--v);display:grid;place-items:center;font-size:36px;color:#fff;box-shadow:0 6px 0 #0005;position:relative}
+.x-node.lock .x-orb{background:#56607a;color:#c9cfdc}
+.x-node.cafe .x-orb{background:var(--gd)}
+.x-node.cur .x-orb{animation:x-glow 1.4s infinite}
+.x-star{position:absolute;top:-10px;right:-8px;font-size:26px;color:var(--gd);text-shadow:0 0 0 #fff,0 2px 0 #7a5a00}
+.x-node b{display:block;font-size:18px}.x-node em{font-style:normal;font-size:13px;opacity:.8}
+.x-toast{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);width:88%;padding:12px;display:none;gap:12px;align-items:center;z-index:9}
+.x-toast.on{display:flex}
+.x-toast img{width:84px;height:64px;object-fit:cover;border-radius:12px;border:3px solid var(--ind)}
+/* battle */
+.x-arena{position:relative;width:100%;height:42%;flex:none}
+.x-ehp{position:absolute;top:14px;right:14px;width:56%;text-align:right;font-size:14px;text-shadow:0 2px 3px #000}
+.x-bar{height:16px;border:3px solid #fff;border-radius:99px;background:#0007;overflow:hidden;margin-top:4px}
+.x-bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--v),#ff7a5c);transition:width .4s}
+.x-hearts{position:absolute;top:14px;left:14px;font-size:24px;letter-spacing:2px;filter:drop-shadow(0 2px 2px #000)}
+.x-kc{position:absolute;left:4%;bottom:0;width:38%;filter:drop-shadow(0 8px 8px #0008)}
+.x-yk,.x-crown{position:absolute;right:4%;bottom:6%;width:40%;animation:x-bob 2s ease-in-out infinite;filter:drop-shadow(0 8px 10px #000a)}
+.x-kc.dash{animation:x-dash .5s ease}
+.x-yk.hit{animation:x-hit .45s ease}
+.x-slash{position:absolute;right:12%;top:30%;width:34%;height:8px;background:#fff;border-radius:9px;box-shadow:0 0 18px var(--gd),0 0 6px #fff;transform:rotate(-35deg) scaleX(0);opacity:0}
+.x-slash.go{animation:x-slash .35s ease}
+.x-dmg{position:absolute;right:22%;top:18%;font-size:40px;color:#fff;-webkit-text-stroke:2px var(--v);animation:x-up .9s ease forwards;pointer-events:none}
+.x-combo{position:absolute;left:50%;top:40%;transform:translateX(-50%);font-size:24px;color:var(--gd);text-shadow:0 3px 0 var(--v),0 0 10px #000;white-space:nowrap}
+.x-q{flex:1;width:100%;padding:12px 16px 18px;background:linear-gradient(#0000,#0009 20%);display:flex;flex-direction:column;align-items:center;gap:12px}
+.x-bub{width:132px;height:132px;border-radius:50%;background:radial-gradient(circle,#fff,var(--cr));border:5px solid #fff;color:var(--ind);display:grid;place-items:center;font-size:72px;line-height:1;box-shadow:0 0 30px 6px var(--gd),0 6px 0 #0004;cursor:pointer}
+.x-bub.rom{font-size:52px}
+.x-hint{min-height:26px;font-size:18px;color:var(--gd);text-shadow:0 2px 3px #000;text-align:center}
+.x-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+.x-opt{min-height:60px;font-size:26px;border:4px solid #fff;border-radius:18px;background:var(--cr);color:var(--ind);box-shadow:0 5px 0 #0005;cursor:pointer}
+.x-opt.ok{background:#5bbf6a;color:#fff}.x-opt.bad{background:var(--v);color:#fff}
+.x-over{position:absolute;inset:0;z-index:8;background:#000b;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:20px}
+.x-over.on{display:flex}
+.x-shake{animation:x-shake .4s}
+/* victory */
+#win{justify-content:center;gap:10px;padding:20px;text-align:center;background:var(--v)}
+.x-burst{position:absolute;inset:-50%;background:repeating-conic-gradient(var(--gd) 0 6deg,#ffde7a 6deg 12deg);animation:x-spin 18s linear infinite;z-index:0}
+.x-burst::after{content:"";position:absolute;inset:0;background:radial-gradient(circle,#fff6e6 0 12%,#0000 45%)}
+#win .x-hero{width:40%;max-width:180px;animation:x-bounce .8s ease-in-out infinite}
+.x-clear{font-size:44px;color:#fff;-webkit-text-stroke:2px var(--v);text-shadow:0 5px 0 var(--v);margin:0}
+.x-wpanel{width:100%;padding:14px}
+.x-wpanel p{margin:2px 0}
+.x-gains{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:8px 0}
+.x-gains span{background:var(--ind);color:#fff;border-radius:99px;padding:4px 12px;font-size:15px}
+.x-cards{display:flex;justify-content:center;gap:6px;margin:8px 0;perspective:600px}
+.x-card{width:52px;height:70px;border-radius:10px;border:3px solid var(--gd);background:var(--ind);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:28px;animation:x-flip .6s both}
+.x-card small{font-size:12px;color:var(--gd)}
+.x-lvup{font-size:24px;color:var(--v)}
+.x-petal{position:absolute;top:-20px;width:14px;height:10px;background:#ffc0cf;border-radius:10px 0;z-index:2;animation:x-fall linear infinite;pointer-events:none}
+@keyframes x-fade{from{opacity:0}}
+@keyframes x-pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes x-bob{50%{transform:translateY(-10px)}}
+@keyframes x-bounce{50%{transform:translateY(-22px) scale(1.04,.96)}}
+@keyframes x-glow{50%{box-shadow:0 0 0 8px #f2b63299,0 6px 0 #0005}}
+@keyframes x-dash{40%{transform:translateX(90%) rotate(8deg)}}
+@keyframes x-hit{0%,100%{filter:none;transform:none}20%{filter:brightness(3);transform:translateX(10px)}50%{transform:translateX(-8px)}70%{transform:translateX(5px)}}
+@keyframes x-slash{30%{opacity:1;transform:rotate(-35deg) scaleX(1)}100%{opacity:0;transform:rotate(-35deg) scaleX(1.2)}}
+@keyframes x-up{0%{transform:scale(.5);opacity:0}25%{transform:scale(1.3);opacity:1}100%{transform:translateY(-60px);opacity:0}}
+@keyframes x-shake{20%{transform:translate(-10px,4px)}40%{transform:translate(9px,-4px)}60%{transform:translate(-6px,2px)}80%{transform:translate(4px,0)}}
+@keyframes x-spin{to{transform:rotate(360deg)}}
+@keyframes x-flip{from{transform:rotateY(180deg) scale(.5);opacity:0}}
+@keyframes x-fall{to{transform:translate(60px,110vh) rotate(540deg)}}
+/* score */
+.x-game .x-score{font-size:14px;color:var(--gd);white-space:nowrap;letter-spacing:1px;text-shadow:0 2px 0 #0008}
+.x-game .x-num{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;font-weight:700}
+.x-score .x-num{color:var(--gd);font-size:17px}
+.x-tick{animation:x-tick .3s ease}
+.x-bscore{position:absolute;top:calc(48px + env(safe-area-inset-top,0px));left:14px;background:#0008;border:3px solid #fff;border-radius:12px;padding:2px 10px}
+.x-pts{position:absolute;left:30%;top:22%;font-size:26px;color:var(--gd);text-shadow:0 3px 0 var(--v),0 0 8px #000;animation:x-up .9s ease forwards;pointer-events:none}
+.x-perfect{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-size:clamp(34px,10vw,56px);color:#fff;-webkit-text-stroke:2px var(--v);text-shadow:0 5px 0 var(--gd),0 0 20px #000;white-space:nowrap;animation:x-stamp .5s cubic-bezier(.3,1.6,.5,1) both;z-index:5}
+.x-sc{display:flex;justify-content:center;align-items:center;gap:14px;margin:8px 0}
+.x-sc small{display:block;font-size:12px;color:var(--v);letter-spacing:2px}
+.x-sc .x-num{font-size:24px;color:var(--ind)}
+.x-rank{width:76px;height:76px;flex:none;border-radius:50%;border:5px solid #fff;background:var(--v);color:#fff;display:grid;place-items:center;font-size:48px;line-height:1;box-shadow:0 0 0 3px var(--gd),0 6px 0 #0004;animation:x-stamp .55s .5s cubic-bezier(.3,1.7,.5,1) both}
+.x-rank.r-S{background:var(--gd);color:var(--ind)}.x-rank.r-A{background:var(--v)}.x-rank.r-B{background:var(--ind)}.x-rank.r-C{background:#56607a}
+.x-best{font-size:20px;color:var(--v);min-height:0;animation:x-pop .45s 1s both,x-bob 1s 1.5s infinite}
+.x-best[hidden]{display:none}
+.x-rb{position:absolute;bottom:-8px;left:-8px;width:32px;height:32px;border-radius:50%;border:3px solid #fff;background:var(--ind);color:#fff;font-size:16px;display:grid;place-items:center}
+.x-rb.r-S{background:var(--gd);color:var(--ind)}
+.x-card.x-word{width:auto;min-width:84px;padding:0 10px;font-size:20px}
+/* café */
+#cafe{justify-content:space-between;gap:8px;padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px))}
+.x-ctop{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:720px;flex:none}
+.x-ord{background:var(--ind);border:3px solid #fff;border-radius:12px;padding:2px 10px;font-size:15px}
+.x-stage{flex:1;min-height:110px;width:100%;max-width:720px}
+.x-cchar{position:absolute;left:4%;bottom:12px;height:min(100%,340px);max-width:50%;object-fit:contain;z-index:1;filter:drop-shadow(0 8px 8px #0008)}
+.x-counter{position:absolute;left:0;right:0;bottom:0;height:28px;background:linear-gradient(#b8814f,#7a4e2c);border:3px solid #fff;border-radius:10px;z-index:2;box-shadow:0 6px 0 #0005}
+.x-drinks{position:absolute;right:6%;bottom:28px;display:flex;align-items:flex-end;gap:30px;z-index:3}
+.x-drink{position:relative;animation:x-pop .5s cubic-bezier(.3,1.6,.5,1) both}
+.x-drink.mizu{width:34px;height:50px;border:3px solid #fff;border-top-width:1px;border-radius:0 0 10px 10px;background:linear-gradient(#fff3 30%,#8fd3ffdd 30%)}
+.x-drink.ocha{width:46px;height:40px;border:3px solid #fff;border-radius:6px 6px 16px 16px;background:linear-gradient(#7aa64e 24%,#e9dcc0 24%)}
+.x-drink.kohi{width:44px;height:46px;border:3px solid #fff;border-radius:4px 4px 12px 12px;background:linear-gradient(#5a3420 22%,#fff 22%)}
+.x-drink.kohi::after{content:"";position:absolute;right:-17px;top:8px;width:12px;height:18px;border:4px solid #fff;border-left:0;border-radius:0 10px 10px 0}
+.x-drink.ocha::before,.x-drink.kohi::before{content:"";position:absolute;left:40%;top:-24px;width:7px;height:18px;border-radius:9px;background:#fffa;animation:x-steam 1.6s ease-in-out infinite}
+.x-cbox{width:100%;max-width:720px;flex:none;display:flex;flex-direction:column;gap:10px}
+.x-cbox.intro .x-build,.x-cbox.intro .x-tiles{display:none}
+.x-build{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;min-height:62px;padding:5px;border:3px dashed #fffa;border-radius:18px;background:#0006}
+.x-tiles{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;min-height:52px}
+.x-tile{font-size:clamp(18px,5.5vw,24px);padding:4px 14px;min-height:48px;border:4px solid #fff;border-radius:14px;background:var(--cr);color:var(--ind);box-shadow:0 4px 0 #0005;cursor:pointer}
+.x-tile.used{visibility:hidden}
+.x-build .x-tile{background:var(--gd)}
+.x-build.ok .x-tile{background:#5bbf6a;color:#fff}
+.x-wig{animation:x-wig .45s ease}
+#cafe .x-dlg{min-height:108px;cursor:pointer;font-size:17px}
+#cafe .x-dlg small{font-size:15px;opacity:.85}
+@keyframes x-tick{35%{transform:scale(1.25)}}
+@keyframes x-stamp{0%{transform:scale(3) rotate(-25deg);opacity:0}60%{opacity:1}100%{transform:scale(1) rotate(-8deg);opacity:1}}
+@keyframes x-wig{20%{transform:rotate(-6deg)}40%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(3deg)}}
+@keyframes x-steam{0%{transform:translateY(6px) scaleY(.6);opacity:0}50%{opacity:1}100%{transform:translateY(-8px) scaleY(1.1);opacity:0}}
+/* boss + more levels */
+.x-cards{flex-wrap:wrap}
+.x-node.boss:not(.lock) .x-orb{background:linear-gradient(#ffe08a,var(--gd));color:var(--ind);box-shadow:0 0 0 4px var(--v),0 0 22px var(--gd),0 6px 0 #0005}
+.x-arena.boss .x-yk{scale:1.4;transform-origin:bottom right;filter:hue-rotate(160deg) saturate(1.4) drop-shadow(0 0 14px var(--gd)) drop-shadow(0 8px 10px #000a)}
+.x-crown{display:none;aspect-ratio:600/327;pointer-events:none;scale:1.4;transform-origin:bottom right;z-index:2}
+.x-arena.boss .x-crown{display:block;filter:drop-shadow(0 0 6px #ffd54a)}
+.x-crown::before{content:"";position:absolute;left:50%;top:-12%;width:30%;height:30%;transform:translateX(-50%);background:linear-gradient(#fff2b0,var(--gd) 55%,#b07a00);clip-path:polygon(0 100%,0 22%,22% 58%,36% 6%,50% 48%,64% 6%,78% 58%,100% 22%,100% 100%)}
+.x-timer{width:100%;max-width:420px;height:12px;flex:none;border:3px solid #fff;border-radius:99px;background:#0007;overflow:hidden}
+.x-timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--v),var(--gd))}
+.x-timer[hidden]{display:none}
+.x-intro{background:#000a;pointer-events:none;z-index:7}
+.x-intro .x-dlg{max-width:440px;min-height:0;text-align:left}
+.x-intro.flash::before{content:"";position:absolute;inset:0;background:#fff;opacity:0;animation:x-flash .8s ease-out}
+@keyframes x-flash{0%{opacity:1}100%{opacity:0}}
+/* study mode */
+.x-sbtn{flex:none;min-height:40px;min-width:44px;border:3px solid #fff;border-radius:12px;background:var(--cr);color:var(--ind);font-size:14px;padding:2px 8px;cursor:pointer;box-shadow:0 3px 0 #0005}
+#study{background-color:#f8eedb;background-image:radial-gradient(#c9b48d33 1px,#0000 1.6px),radial-gradient(#d9c7a433 1px,#0000 1.6px);background-size:18px 18px,31px 31px;background-position:0 0,9px 13px;color:var(--ink)}
+.x-stop{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;flex:none;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;background:var(--ind);color:var(--cr);border-bottom:4px solid #fff}
+.x-stop b{font-size:20px;white-space:nowrap}
+.x-back{font-size:15px;padding:6px 14px;min-height:44px;border-width:3px;box-shadow:0 4px 0 #7d2414}
+.x-sbody{flex:1;min-height:0;width:100%;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:14px 12px calc(16px + env(safe-area-inset-bottom,0px))}
+.x-tabs{display:flex;gap:6px;background:#2f42621a;border-radius:999px;padding:4px}
+.x-tabs button{flex:1;min-height:44px;border:0;border-radius:999px;background:none;color:var(--ind);font-size:16px;cursor:pointer}
+.x-tabs button[aria-selected="true"]{background:var(--v);color:#fff;box-shadow:0 3px 0 #7d2414}
+.x-prog{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 2px 6px;font-size:14px;flex-wrap:wrap}
+#study .x-score{color:var(--v);text-shadow:none}#study .x-score .x-num{color:var(--ind)}
+#study .x-xp{margin:0 2px 12px;height:14px;background:#2f426233;border-color:#fff}
+.x-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.x-kcard{min-height:58px;padding:2px;border:3px solid #fff;border-radius:14px;background:#fffdf7;color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 0 #0002;opacity:1}
+.x-kcard b{font-size:26px;line-height:1.15}.x-kcard small{font-size:12px;color:#4d5466}
+.x-kcard.got{opacity:1;background:linear-gradient(#fff3c4,#ffe08a);border-color:var(--gd);box-shadow:0 0 12px #f2b632aa,0 3px 0 #b07a0055}
+.x-kcard.sel{opacity:1;outline:3px solid var(--v);outline-offset:1px}
+.x-sheet{display:none;position:sticky;bottom:0;z-index:5;padding:14px 44px 14px 14px;gap:14px;align-items:center}
+.x-sheet.on{display:flex}
+.x-sbig{flex:none;width:84px;height:84px;border-radius:18px;border:4px solid var(--gd);background:var(--ind);color:#fff;display:grid;place-items:center;font-size:50px;cursor:pointer}
+.x-sinfo{flex:1;min-width:0}.x-sinfo p{margin:2px 0}
+.x-srom{font-size:24px;color:var(--v)}.x-ex{font-size:15px}.x-ex button{border:0;background:none;padding:0;font:inherit;color:var(--ind);text-decoration:underline;cursor:pointer;min-height:32px}
+.x-sclose{position:absolute;top:4px;right:4px;width:44px;height:44px;border:0;background:none;font-size:22px;color:var(--ind);cursor:pointer}
+.x-pat{padding:14px}.x-pat h3{margin:0 0 6px;font-size:15px;color:var(--v);letter-spacing:1px}.x-pat p{margin:2px 0;font-size:14px}
+.x-pat .x-pjp{font-size:22px;color:var(--ind)}
+.x-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+@media (max-width:400px){.x-sbtn span{display:none}.x-stop b{font-size:17px}}
+/* responsive: cover screen first */
+.x-game{max-width:min(480px,100%)}
+.x-logo h1{font-size:clamp(38px,13vw,56px)}
+.x-clear{font-size:clamp(28px,9vw,44px)}
+.x-hud{padding:calc(10px + env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 10px max(10px,env(safe-area-inset-left,0px));gap:6px}
+.x-xp{min-width:24px}
+.x-hearts,.x-ehp{top:calc(14px + env(safe-area-inset-top,0px))}
+.x-kc{width:clamp(104px,34%,200px)}
+.x-yk,.x-crown{width:clamp(112px,38%,210px)}
+.x-bub{width:clamp(88px,16vh,132px);height:clamp(88px,16vh,132px);width:clamp(88px,16dvh,132px);height:clamp(88px,16dvh,132px);font-size:clamp(46px,9vh,72px)}
+.x-bub.rom{font-size:clamp(36px,6.5vh,52px)}
+.x-opt{min-height:clamp(48px,7.5vh,60px);font-size:clamp(20px,6vw,26px)}
+.x-q{gap:clamp(6px,1.4vh,12px);padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+.x-dlg{max-width:720px}
+.x-toast{max-width:560px}
+#title,#story,#win{padding-bottom:calc(5vh + env(safe-area-inset-bottom,0px))}
+#win .x-hero{width:clamp(70px,14vh,180px)}
+#win .x-wpanel{max-width:560px}
+@media (max-width:380px){.x-stat,.x-lv{font-size:13px}.x-score .x-num{font-size:15px}.x-game .x-score{font-size:12px;letter-spacing:0}.x-sc{gap:8px}.x-sc .x-num{font-size:20px}.x-rank{width:62px;height:62px;font-size:38px}}
+@media (max-height:680px){.x-arena{height:38%}#win{gap:6px}.x-card{height:58px}}
+/* unfolded inner screen */
+@media (min-width:700px){
+  .x-game{max-width:1000px}
+  .x-arena{height:54%}
+  .x-kc{width:clamp(200px,30%,300px);left:8%}
+  .x-yk,.x-crown{width:clamp(210px,32%,320px);right:8%}
+  .x-sbody{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-areas:"main sheet" "main pat";align-content:start;align-items:start;gap:16px 20px;padding:18px 24px 24px;max-width:1000px;margin:0 auto;width:100%}
+  .x-smain{grid-area:main}.x-pat{grid-area:pat}
+  .x-sheet{grid-area:sheet;display:flex;position:static;box-shadow:0 6px 0 #0002}
+  .x-sheet .x-sclose{display:none}
+  .x-grid{gap:10px}.x-kcard{min-height:72px}.x-kcard b{font-size:32px}
+  .x-opts{grid-template-columns:repeat(4,1fr);max-width:880px}
+  .x-path{max-width:820px;margin:0 auto;gap:18px}
+  .x-node{width:50%}
+  .x-node:nth-child(odd){align-self:flex-start}
+  .x-node:nth-child(even){align-self:flex-end}
+  .x-node:not(:first-child)::after{display:none}
+  .x-cchar{left:10%}
+}
+@media (prefers-reduced-motion:reduce){.x-game *,.x-game{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+<div class="page" id="top">
+<main class="x-game" id="game">
+
+<section class="x-scr on" id="title">
+  <img class="x-bg" src="battle-bg.jpg" alt="" />
+  <div class="x-logo x-pop"><small>かな クエスト</small><h1>KANA QUEST</h1><p>Learn Japanese. Save the shrine.</p></div>
+  <img class="x-hero" src="kanachan.png" alt="Kana-chan" />
+  <div><button class="x-btn" id="startBtn">▶ Start</button><div class="x-free">Free · no sign-up · works offline</div></div>
+</section>
+
+<section class="x-scr" id="story">
+  <img class="x-bg" src="battle-bg.jpg" alt="" />
+  <div class="x-dim" style="background:linear-gradient(#0009,#000c)"></div>
+  <img class="x-hero" src="kanachan.png" alt="Kana-chan" />
+  <div class="x-dlg x-panel"><div class="x-tag x-ban"><span>Kana-chan</span></div><div id="dlgText"></div><div class="x-next">▼</div></div>
+</section>
+
+<section class="x-scr" id="map">
+  <div class="x-hud"><span class="x-lv" id="hLv">Lv 3</span><div class="x-xp"><i id="hXp"></i></div><span class="x-stat" id="hPts">✿ 85</span><span class="x-stat" id="hStr">🔥 12</span><span class="x-score">SCORE <b class="x-num" id="hScore">0000</b></span><button class="x-sbtn" id="studyBtn" aria-label="Study">📖<span> Study</span></button></div>
+  <div class="x-path" id="path"></div>
+  <div class="x-toast x-panel" id="toast"></div>
+</section>
+
+<section class="x-scr" id="battle">
+  <img class="x-bg" src="battle-bg.jpg" alt="" />
+  <div class="x-arena" id="arena">
+    <div class="x-hearts" id="hearts">❤❤❤</div>
+    <div class="x-bscore x-score">SCORE <b class="x-num" id="bScore">0000</b></div>
+    <div class="x-ehp"><span id="eName">Chōchin-obake</span> <span id="hpNum">100</span>/<span id="hpMax">100</span><div class="x-bar"><i id="hpBar"></i></div></div>
+    <img class="x-kc" id="kc" src="kanachan.png" alt="Kana-chan" />
+    <img class="x-yk" id="yk" src="yokai.png" alt="A lantern yokai" />
+    <div class="x-crown" aria-hidden="true"></div>
+    <div class="x-slash" id="slash"></div>
+  </div>
+  <div class="x-q">
+    <div class="x-timer" id="timer" hidden><i></i></div>
+    <div class="x-bub" id="bub" title="Tap to hear"></div>
+    <div class="x-hint" id="hint"></div>
+    <div class="x-opts" id="opts"></div>
+  </div>
+  <div class="x-over x-intro" id="bIntro"></div>
+  <div class="x-over" id="over">
+    <div class="x-panel" style="padding:20px 24px">
+      <p style="font-size:30px;margin:0;color:var(--v)">もう いちど！</p>
+      <p style="margin:6px 0 0">Mō ichido! Try again</p>
+    </div>
+    <button class="x-btn" id="retryBtn">Retry</button>
+    <button class="x-btn" id="quitBtn" style="background:var(--ind)">Map</button>
+  </div>
+</section>
+
+<section class="x-scr" id="cafe">
+  <img class="x-bg" src="cafe-bg.jpg" alt="" />
+  <div class="x-dim" style="background:linear-gradient(#0003 30%,#000a)"></div>
+  <div class="x-ctop"><span class="x-ord" id="cOrd">Café</span><span class="x-score">SCORE <b class="x-num" id="cScore">0000</b></span></div>
+  <div class="x-stage">
+    <img class="x-cchar" id="cKc" src="kanachan.png" alt="Kana-chan" />
+    <div class="x-drinks" id="drinks"></div>
+    <div class="x-counter"></div>
+  </div>
+  <div class="x-cbox intro" id="cBox">
+    <div class="x-build" id="build" aria-label="Your sentence"></div>
+    <div class="x-tiles" id="tiles"></div>
+    <div class="x-dlg x-panel" id="cDlg"><div class="x-tag x-ban"><span id="cTag">Barista</span></div><div id="cText"></div><div class="x-next" id="cNext">▼</div></div>
+  </div>
+</section>
+
+<section class="x-scr" id="study">
+  <div class="x-stop"><b>📖 Study</b><button class="x-btn x-back" id="backBtn">▶ Back to the quest</button></div>
+  <div class="x-sbody">
+    <div class="x-smain">
+      <div class="x-tabs" role="tablist"><button role="tab" aria-selected="true" data-t="h">Hiragana</button><button role="tab" aria-selected="false" data-t="k">Katakana</button></div>
+      <div class="x-prog"><span id="sProg">Collected 0 / 92</span><span class="x-score">SCORE <b class="x-num" id="sScore">0000</b></span></div>
+      <div class="x-xp"><i id="sBar"></i></div>
+      <div class="x-grid" id="grid" role="tabpanel"></div>
+    </div>
+    <div class="x-pat x-panel">
+      <h3>TODAY'S PATTERN</h3>
+      <p class="x-pjp">___ を ください。</p>
+      <p>___ o kudasai.</p>
+      <p>___, please.</p>
+      <div class="x-chips" id="chips"></div>
+    </div>
+    <div class="x-sheet x-panel" id="sheet" aria-live="polite">
+      <div class="x-sbig" id="sBig">あ</div>
+      <div class="x-sinfo"><p class="x-srom" id="sRom">Tap a card</p><p class="x-ex" id="sEx">Hear it and see an example word.</p></div>
+      <button class="x-sclose" id="sClose" aria-label="Close">✕</button>
+    </div>
+  </div>
+</section>
+
+<section class="x-scr" id="win">
+  <div class="x-burst"></div>
+  <h2 class="x-clear x-pop" id="wTitle">STAGE CLEAR!</h2>
+  <img class="x-hero" src="kanachan.png" alt="Kana-chan celebrating" />
+  <div class="x-wpanel x-panel x-pop">
+    <p style="font-size:22px;color:var(--v)"><span class="x-nw">おめでとう</span> <span class="x-nw">ございます！</span></p>
+    <p style="font-size:14px">Omedetō gozaimasu! Congratulations!</p>
+    <div class="x-gains"><span>+50 XP</span><span>+10 ✿</span><span id="wStr">🔥 13 day streak</span><span id="wPerf" hidden>PERFECT +500</span></div>
+    <div class="x-sc"><div><small>STAGE</small><b class="x-num" id="wScore">0000</b></div><div class="x-rank" id="wRank">C</div><div><small>TOTAL</small><b class="x-num" id="wTotal">0000</b></div></div>
+    <div class="x-best" id="wBest" hidden>NEW BEST!</div>
+    <div class="x-cards" id="cards"></div>
+    <div class="x-xp" style="margin:6px 0"><i id="wXp"></i></div>
+    <div class="x-lvup" id="lvup"></div>
+  </div>
+  <button class="x-btn" id="mapBtn">Map</button>
+</section>
+
+</main>
+</div>
+<script src="hark.js"></script>
+<script>
+(function(){try{
+const $=id=>document.getElementById(id);
+// gojūon table: "・" marks an empty slot
+const GH=["あいうえお","かきくけこ","さしすせそ","たちつてと","なにぬねの","はひふへほ","まみむめも","や・ゆ・よ","らりるれろ","わ・・・を","ん・・・・"];
+const GK=["アイウエオ","カキクケコ","サシスセソ","タチツテト","ナニヌネノ","ハヒフヘホ","マミムメモ","ヤ・ユ・ヨ","ラリルレロ","ワ・・・ヲ","ン・・・・"];
+const GR=["a i u e o","ka ki ku ke ko","sa shi su se so","ta chi tsu te to","na ni nu ne no","ha hi fu he ho","ma mi mu me mo","ya - yu - yo","ra ri ru re ro","wa - - - wo","n - - - -"].map(r=>r.split(" "));
+const KANA={};[GH,GK].forEach(g=>g.forEach((r,i)=>[...r].forEach((k,j)=>{if(k!=="・")KANA[k]=GR[i][j]})));
+const row=i=>[...GH[i]].filter(k=>k!=="・"),ALLH=GH.flatMap((r,i)=>row(i));
+const krow=i=>[...GK[i]].filter(k=>k!=="・"),ALLK=GK.flatMap((r,i)=>krow(i));
+const STAGES={1:{set:row(0),pool:row(0)},2:{set:row(1),pool:[...row(1),...row(0)]},4:{set:row(2),pool:[...row(2),...row(1)]},
+  5:{set:row(3),pool:[...row(3),...row(2)]},6:{set:row(4),pool:[...row(4),...row(3)]},7:{set:row(5),pool:[...row(5),...row(4)]},
+  8:{set:row(6),pool:[...row(6),...row(5)]},9:{set:[...row(7),...row(8),...row(9),...row(10)],pool:[...row(7),...row(8),...row(9),...row(10)]},
+  10:{set:null,pool:ALLH,boss:1,hp:200,time:7000,name:"Lantern King"},
+  11:{set:[..."アイウエオカキクケコ"],pool:[..."アイウエオカキクケコ"],line:"カタカナ is for foreign words, like コーヒー!",speak:"コーヒー"},
+  12:{set:[...krow(2),...krow(3)],pool:[...krow(2),...krow(3),...krow(1)]},
+  13:{set:[...krow(4),...krow(5)],pool:[...krow(4),...krow(5),...krow(3)]},
+  14:{set:[...krow(6),...krow(7)],pool:[...krow(6),...krow(7),...krow(5)]},
+  15:{set:[...krow(8),...krow(9),...krow(10)],pool:[...krow(8),...krow(9),...krow(10),...krow(7)]},
+  16:{set:null,pool:ALLK,boss:1,hp:200,time:7000,name:"Lantern Queen"}};
+const NODES=[
+  {id:1,icon:"あ",name:"Vowel Shrine",sub:"a · i · u · e · o"},
+  {id:2,icon:"か",name:"K Forest",sub:"ka · ki · ku · ke · ko"},
+  {id:3,icon:"☕",name:"Café · ___ を ください",sub:"___ o kudasai · ___ please",cafe:1},
+  {id:4,icon:"さ",name:"S River",sub:"sa · shi · su · se · so"},
+  {id:5,icon:"た",name:"T Bridge",sub:"ta · chi · tsu · te · to"},
+  {id:6,icon:"な",name:"N Village",sub:"na · ni · nu · ne · no"},
+  {id:7,icon:"は",name:"H Hot Spring",sub:"ha · hi · fu · he · ho"},
+  {id:8,icon:"ま",name:"M Mountain",sub:"ma · mi · mu · me · mo"},
+  {id:9,icon:"や",name:"や・ら・わ Sky Path",sub:"ya yu yo · ra ri ru re ro · wa wo n"},
+  {id:10,icon:"👑",name:"BOSS · Lantern King",sub:"All hiragana · 7s timer",boss:1},
+  {id:11,icon:"カ",name:"カタカナ Island",sub:"a i u e o · ka ki ku ke ko"},
+  {id:12,icon:"サ",name:"サ・タ Harbor",sub:"sa shi su se so · ta chi tsu te to"},
+  {id:13,icon:"ナ",name:"ナ・ハ Market",sub:"na ni nu ne no · ha hi fu he ho"},
+  {id:14,icon:"マ",name:"マ・ヤ Lighthouse",sub:"ma mi mu me mo · ya yu yo"},
+  {id:15,icon:"ラ",name:"ラ・ワ Neon Street",sub:"ra ri ru re ro · wa wo n"},
+  {id:16,icon:"👑",name:"BOSS · Lantern Queen",sub:"All katakana · 7s timer",boss:1}];
+// safe access: sandboxed iframes throw on the first read of these globals
+function safeGet(name){try{return window[name]}catch(e){return undefined}}
+function safeStore(name){try{const s=window[name];if(!s)return null;const k="__kq_t";s.setItem(k,"1");s.removeItem(k);return s}catch(e){return null}}
+const LS=safeStore("localStorage");safeStore("sessionStorage");
+const store={get(k){try{return LS?LS.getItem(k):null}catch(e){return null}},set(k,v){try{if(LS)LS.setItem(k,v)}catch(e){}}};
+let S={lv:3,xp:240,pts:85,streak:12,day:"",cleared:[],total:0,best:{}};
+try{const s=JSON.parse(store.get("kanaquest")||"null");if(s&&typeof s==="object")S=Object.assign(S,s);if(!Array.isArray(S.cleared))S.cleared=[];if(!S.best||typeof S.best!=="object")S.best={};S.total=+S.total||0}catch(e){}
+const save=()=>{try{store.set("kanaquest",JSON.stringify(S))}catch(e){}};
+let RM=false;try{RM=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)}catch(e){}
+
+// audio + speech
+let AC;
+function tone(f,t0,d,type,vol){try{const Ctx=safeGet("AudioContext")||safeGet("webkitAudioContext");if(!Ctx)return;AC=AC||new Ctx();const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+t0;o.type=type||"sine";o.frequency.value=f;g.gain.setValueAtTime(vol||.2,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d)}catch(e){}}
+const sfx={hit:()=>{tone(880,0,.12,"square",.08);tone(1320,.06,.15,"triangle",.1)},bad:()=>tone(140,0,.3,"sawtooth",.12),
+  chime:()=>[784,988,1175,1568].forEach((f,i)=>tone(f,i*.12,.6,"sine",.18))};
+function say(t){try{if(!t)return;const SS=safeGet("speechSynthesis"),U=safeGet("SpeechSynthesisUtterance");if(!SS||!U)return;SS.cancel();const u=new U(t);u.lang="ja-JP";const v=(SS.getVoices()||[]).find(v=>/ja/i.test(v.lang));if(v)u.voice=v;u.rate=.85;SS.speak(u)}catch(e){}}
+
+function show(id){$("game").classList.add("x-run");document.querySelectorAll(".x-scr").forEach(s=>s.classList.toggle("on",s.id===id))}
+function anim(el,c){el.classList.remove(c);void el.offsetWidth;el.classList.add(c)}
+const shuffle=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+// score
+const pad=n=>String(Math.max(0,Math.round(n))).padStart(4,"0");
+const raf=f=>{try{const r=safeGet("requestAnimationFrame");if(r)return r.call(window,f)}catch(e){}setTimeout(f,16)};
+function tick(el,to,reset){if(!el)return;const from=reset?to:(+el.dataset.v||0);el.dataset.v=to;
+  if(RM||from===to){el.textContent=pad(to);return}anim(el,"x-tick");const t0=Date.now(),d=Math.min(1200,250+Math.abs(to-from)/2);
+  (function f(){const k=Math.min(1,(Date.now()-t0)/d);el.textContent=pad(from+(to-from)*k);if(k<1)raf(f)})()}
+const rankOf=s=>s>=1200?"S":s>=900?"A":s>=600?"B":"C";
+
+// story
+const TEXT=["こんにちは！ Konnichiwa! I'm Kana-chan.","Mischief lanterns stole the kana from our shrine!","Read kana to beat them. いくよ！ Iku yo! Let's go!"];
+const SPEAK=["こんにちは","","いくよ"];
+let li=0,ci=0,typing=null;
+function typeLine(){const t=TEXT[li];ci=0;$("dlgText").textContent="";clearInterval(typing);if(SPEAK[li])say(SPEAK[li]);
+  typing=setInterval(()=>{ci++;$("dlgText").textContent=t.slice(0,ci);if(ci>=t.length){clearInterval(typing);typing=null}},RM?1:35)}
+$("startBtn").onclick=()=>{tone(660,0,.15);if(S.cleared.length){showMap();return}show("story");li=0;typeLine()};
+$("story").onclick=()=>{if(typing){clearInterval(typing);typing=null;$("dlgText").textContent=TEXT[li];return}
+  li++;if(li<TEXT.length)typeLine();else showMap()};
+
+// map
+function hud(){$("hLv").textContent="Lv "+S.lv;$("hXp").style.width=(S.xp/300*100)+"%";$("hPts").textContent="✿ "+S.pts;$("hStr").textContent="🔥 "+S.streak;tick($("hScore"),S.total)}
+function unlocked(n){return true}
+let toastT;
+function toast(html){const t=$("toast");t.innerHTML=html;t.classList.add("on");anim(t,"x-pop");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),3200)}
+function showMap(){show("map");hud();const p=$("path");p.innerHTML="";
+  const firstOpen=(NODES.find(n=>!S.cleared.includes(n.id))||{}).id;
+  NODES.forEach(n=>{const open=unlocked(n)&&!n.lock,done=S.cleared.includes(n.id),cur=open&&n.id===firstOpen,bst=S.best[n.id];
+    const b=document.createElement("button");b.className="x-node"+(open?"":" lock")+(n.cafe?" cafe":"")+(n.boss?" boss":"")+(cur?" cur":"");
+    b.innerHTML=`<span class="x-orb">${open?n.icon:"🔒"}${done?'<span class="x-star">★</span>':""}${bst?`<span class="x-rb r-${bst.r}" title="Best rank">${bst.r}</span>`:""}</span><span><b>${n.id}. ${n.name}</b><em>${n.sub}${bst?" · best "+pad(bst.s):""}</em></span>`;
+    b.onclick=()=>{if(!open)return toast("<div>🔒 <b>Locked</b><br><small>Clear the stage before it to open this one.</small></div>");n.cafe?startCafe():startBattle(n.id)};
+    p.appendChild(b)});}
+
+// battle
+let B,TT,IT;
+function stopTimer(){clearTimeout(TT);const t=$("timer").firstElementChild;t.style.transition="none";t.style.width="100%"}
+function startTimer(ms){const t=$("timer").firstElementChild;stopTimer();void t.offsetWidth;t.style.transition="width "+ms+"ms linear";t.style.width="0%";
+  TT=setTimeout(()=>{if(B&&!B.busy){pop("x-combo","Time's up!");pick(null,null)}},ms)}
+function startBattle(st){const cfg=STAGES[st];stopTimer();clearTimeout(IT);
+  B={st,hp:cfg.hp||100,max:cfg.hp||100,hearts:3,turn:0,combo:0,busy:true,ans:null,t0:0,score:0};tick($("bScore"),0,true);$("over").classList.remove("on");
+  $("arena").classList.toggle("boss",!!cfg.boss);$("timer").hidden=!cfg.time;$("eName").textContent=cfg.name||"Chōchin-obake";$("hpMax").textContent=B.max;
+  $("bub").textContent="";$("opts").innerHTML="";$("hint").textContent="";show("battle");upd();
+  const it=$("bIntro");it.className="x-over x-intro";
+  if(cfg.boss){it.innerHTML='<h2 class="x-clear x-pop">BOSS BATTLE!</h2><div class="x-ban"><span>'+(cfg.name||"Lantern King")+' · '+(cfg.hp||200)+' HP · '+((cfg.time||7000)/1000)+'s</span></div>';it.classList.add("on","flash");tone(110,0,.6,"sawtooth",.14);tone(82,.3,.8,"square",.1)}
+  else if(cfg.line){it.innerHTML=`<div class="x-dlg x-panel x-pop"><div class="x-tag x-ban"><span>Kana-chan</span></div>${cfg.line}</div>`;it.classList.add("on");say(cfg.speak)}
+  IT=setTimeout(()=>{it.classList.remove("on");nextTurn()},it.classList.contains("on")?(cfg.boss?2000:3200):0)}
+function upd(){$("hpNum").textContent=B.hp;$("hpBar").style.width=(B.hp/B.max*100)+"%";$("hearts").textContent="❤".repeat(B.hearts)+"🖤".repeat(3-B.hearts)}
+function nextTurn(){if(!$("battle").classList.contains("on"))return;B.turn++;B.busy=false;$("hint").textContent="";const pool=STAGES[B.st].pool,k=pool[Math.floor(Math.random()*pool.length)],rev=B.turn%3===0;
+  B.k=k;B.rev=rev;const wrong=shuffle(pool.filter(x=>x!==k)).slice(0,3),opts=shuffle([k,...wrong]);
+  const bub=$("bub");bub.textContent=rev?KANA[k]:k;bub.classList.toggle("rom",rev);anim(bub,"x-pop");
+  $("hint").textContent=rev?"Pick the kana!":"";if(!rev)say(k);
+  $("opts").innerHTML="";opts.forEach(o=>{const b=document.createElement("button");b.className="x-opt";b.textContent=rev?o:KANA[o];b.onclick=()=>pick(o,b);$("opts").appendChild(b)});B.t0=Date.now();if(STAGES[B.st].time)startTimer(STAGES[B.st].time)}
+$("bub").onclick=()=>say(B&&B.k);
+function pop(cls,txt){const d=document.createElement("div");d.className=cls;d.textContent=txt;$("arena").appendChild(d);setTimeout(()=>d.remove(),1000)}
+function pick(o,btn){if(B.busy)return;B.busy=true;clearTimeout(TT);$("timer").firstElementChild.style.transition="none";const ok=o===B.k;
+  if(ok){btn.classList.add("ok");B.combo++;const crit=Date.now()-B.t0<3000;sfx.hit();say(B.k);
+    anim($("kc"),"dash");setTimeout(()=>{anim($("slash"),"go");anim($("yk"),"hit");B.hp=Math.max(0,B.hp-20);upd();pop("x-dmg","-20")},200);
+    if(B.combo>1)pop("x-combo",B.combo+" COMBO!"+(crit?" Critical!":""));else if(crit)pop("x-combo","Critical!");
+    const pts=Math.round((100+(crit?150:0))*(1+B.combo*.1));B.score+=pts;tick($("bScore"),B.score);pop("x-pts","+"+pts);
+    $("hint").textContent=B.k+" = "+KANA[B.k];
+    setTimeout(()=>{if(B.hp>0)return nextTurn();const perfect=B.hearts===3;
+      if(!perfect)return victory({st:B.st,score:B.score});
+      B.score+=500;tick($("bScore"),B.score);pop("x-perfect","PERFECT!");sfx.chime();setTimeout(()=>victory({st:B.st,score:B.score,perfect:1}),1300)},1000)}
+  else{if(btn)btn.classList.add("bad");[...$("opts").children].forEach(b=>{if(b.textContent===(B.rev?B.k:KANA[B.k]))b.classList.add("ok")});
+    B.combo=0;B.hearts--;upd();sfx.bad();anim($("game"),"x-shake");try{if(navigator.vibrate)navigator.vibrate(120)}catch(e){}
+    $("hint").textContent=B.k+" = "+KANA[B.k];say(B.k);
+    setTimeout(()=>{if(B.hearts<=0){$("over").classList.add("on");say("もう いちど")}else nextTurn()},1500)}}
+$("retryBtn").onclick=()=>startBattle(B.st);
+$("quitBtn").onclick=()=>{stopTimer();clearTimeout(IT);showMap()};
+
+// café episode
+const DRINKS=[{w:"みず",r:"mizu",en:"Water",c:"mizu",p:"You're thirsty. Order water."},{w:"おちゃ",r:"ocha",en:"Tea",c:"ocha",p:"Order tea."},{w:"コーヒー",r:"kōhī",en:"Coffee",c:"kohi",p:"Order coffee."}];
+const CINTRO=[{tag:"Barista",t:"いらっしゃいませ！ Irasshaimase! Welcome!",s:"いらっしゃいませ"},{tag:"Kana-chan",t:"The pattern is ___ を ください。 ___ o kudasai. ___, please.",s:"を ください"}];
+let C;
+function cSay(tag,html,next){$("cTag").textContent=tag;$("cText").innerHTML=html;$("cNext").style.display=next?"":"none";anim($("cDlg"),"x-pop")}
+function startCafe(){C={i:-1,n:0,score:0,miss:0,phase:"intro",built:[],tiles:[]};show("cafe");$("drinks").innerHTML="";$("cOrd").textContent="Café";
+  tick($("cScore"),0,true);$("cBox").classList.add("intro");cIntro()}
+function cIntro(){const l=CINTRO[C.n];cSay(l.tag,l.t,1);say(l.s)}
+$("cDlg").onclick=()=>{if(!C)return;if(C.phase==="intro"){C.n++;if(C.n<CINTRO.length)cIntro();else nextOrder()}else if(C.phase==="next")nextOrder()};
+function nextOrder(){C.i++;if(C.i>=DRINKS.length)return finishCafe();const d=DRINKS[C.i];C.phase="order";C.built=[];
+  $("cOrd").textContent="Order "+(C.i+1)+"/"+DRINKS.length;$("cBox").classList.remove("intro");$("build").classList.remove("ok");
+  const other=shuffle(DRINKS.filter(x=>x!==d))[0].w;C.tiles=shuffle([d.w,"を","ください",other]);
+  cSay("Kana-chan",d.p+"<br><small>Tap the tiles in order. Under 8s: +150 speed bonus!</small>",0);renderCafe();C.t0=Date.now()}
+function renderCafe(){const t=$("tiles"),bd=$("build");t.innerHTML="";bd.innerHTML="";
+  C.tiles.forEach((w,i)=>{const b=document.createElement("button");b.className="x-tile"+(C.built.includes(i)?" used":"");b.textContent=w;b.onclick=()=>tapTile(i);t.appendChild(b)});
+  C.built.forEach((i,j)=>{const b=document.createElement("button");b.className="x-tile";b.textContent=C.tiles[i];b.onclick=()=>{if(C.phase!=="order")return;C.built.splice(j,1);renderCafe()};bd.appendChild(b)})}
+function tapTile(i){if(C.phase!=="order"||C.built.includes(i))return;tone(700,0,.08,"triangle",.1);C.built.push(i);renderCafe();if(C.built.length===3)checkOrder()}
+function checkOrder(){const d=DRINKS[C.i],got=C.built.map(i=>C.tiles[i]).join("|");
+  if(got===[d.w,"を","ください"].join("|")){C.phase="next";$("build").classList.add("ok");sfx.hit();say(d.w+"を ください");
+    const fast=Date.now()-C.t0<8000;C.score+=200+(fast?150:0);tick($("cScore"),C.score);
+    const k=document.createElement("div");k.className="x-drink "+d.c;k.setAttribute("aria-label",d.en);$("drinks").appendChild(k);
+    cSay("Kana-chan",`${d.w}を ください。 +200${fast?" · Speed +150!":""}<br><small>${d.r} o kudasai. ${d.en}, please.</small>`,1)}
+  else{C.phase="wrong";C.miss++;sfx.bad();anim($("tiles"),"x-wig");anim($("build"),"x-wig");try{if(navigator.vibrate)navigator.vibrate(80)}catch(e){}
+    cSay("Kana-chan",`Not quite! Drink first, then を, then ください.<br><small>${d.en} is ${d.w} (${d.r}).</small>`,0);
+    setTimeout(()=>{C.phase="order";C.built=[];renderCafe()},700)}}
+function finishCafe(){C.phase="end";const perfect=C.miss===0;if(perfect){C.score+=500;tick($("cScore"),C.score)}
+  victory({st:3,score:C.score,perfect,cafe:1})}
+
+// study mode
+const EX={あ:["あめ","ame","rain"],か:["かさ","kasa","umbrella"],み:["みず","mizu","water"],お:["おちゃ","ocha","tea"],コ:["コーヒー","kōhī","coffee"],さ:["さくら","sakura","cherry blossom"],ね:["ねこ","neko","cat"],い:["いぬ","inu","dog"],
+  ア:["アイス","aisu","ice cream"],カ:["カメラ","kamera","camera"],テ:["テレビ","terebi","TV"],ホ:["ホテル","hoteru","hotel"],メ:["メロン","meron","melon"],ラ:["ラーメン","rāmen","ramen"],ト:["トマト","tomato","tomato"],ケ:["ケーキ","kēki","cake"]};
+let tab="h",selK="";
+function collected(){const c=new Set();S.cleared.forEach(id=>{const s=STAGES[id];if(s&&s.set)s.set.forEach(k=>c.add(k))});return c}
+function renderStudy(){const got=collected(),g=$("grid");g.innerHTML="";
+  (tab==="h"?GH:GK).forEach((r,i)=>[...r].forEach((k,j)=>{if(k==="・"){g.appendChild(document.createElement("div"));return}
+    const b=document.createElement("button");b.className="x-kcard"+(got.has(k)?" got":"")+(k===selK?" sel":"");
+    b.innerHTML=`<b>${k}</b><small>${GR[i][j]}</small>`;b.setAttribute("aria-label",k+" "+GR[i][j]+(got.has(k)?", collected":""));
+    b.onclick=()=>studyPick(k);g.appendChild(b)}));
+  $("sProg").textContent="Collected "+got.size+" / 92";$("sBar").style.width=(got.size/92*100)+"%";tick($("sScore"),S.total,true);
+  document.querySelectorAll(".x-tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===tab))}
+function studyPick(k){selK=k;say(k);tone(700,0,.06,"triangle",.08);const e=EX[k];
+  $("sBig").textContent=k;$("sRom").textContent=KANA[k];
+  $("sEx").innerHTML=e?`<button>${e[0]}</button> ${e[1]} · ${e[2]}`:"No example word yet.";
+  const eb=$("sEx").querySelector("button");if(eb)eb.onclick=()=>say(e[0]);
+  $("sheet").classList.add("on");anim($("sheet"),"x-pop");renderStudy()}
+function openStudy(){selK="";$("sheet").classList.remove("on");show("study");renderStudy()}
+$("studyBtn").onclick=openStudy;
+$("backBtn").onclick=()=>{try{const SS=safeGet("speechSynthesis");if(SS)SS.cancel()}catch(e){}showMap()};
+$("sClose").onclick=()=>{selK="";$("sheet").classList.remove("on");renderStudy()};
+$("sBig").onclick=()=>say($("sBig").textContent);
+document.querySelectorAll(".x-tabs button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;renderStudy()});
+DRINKS.forEach(d=>{const b=document.createElement("button");b.className="x-tile";b.textContent=d.w;b.title=d.r+" · "+d.en;
+  b.onclick=()=>{say(d.w+"を ください");$("chips").previousElementSibling.previousElementSibling.previousElementSibling.textContent=d.w+" を ください。";
+    $("chips").previousElementSibling.previousElementSibling.textContent=d.r+" o kudasai.";$("chips").previousElementSibling.textContent=d.en+", please."};$("chips").appendChild(b)});
+
+// victory
+function victory(o){show("win");sfx.chime();say("おめでとう ございます");
+  $("wTitle").textContent=o.cafe?"EPISODE CLEAR!":STAGES[o.st].boss?"SHRINE SAVED!":"STAGE CLEAR!";anim($("wTitle"),"x-pop");
+  const prev=S.best[o.st],rank=rankOf(o.score),nb=!prev||o.score>prev.s;if(nb)S.best[o.st]={s:o.score,r:rank};
+  const tot0=S.total;S.total+=o.score;$("wPerf").hidden=!o.perfect;$("wBest").hidden=!nb;
+  const rk=$("wRank");rk.textContent=rank;rk.className="x-rank r-"+rank;anim(rk,"x-rank");
+  tick($("wScore"),0,true);tick($("wTotal"),tot0,true);setTimeout(()=>{tick($("wScore"),o.score);tick($("wTotal"),S.total)},300);
+  if(nb)setTimeout(()=>{if(nb)[1047,1319,1568].forEach((f,i)=>tone(f,i*.08,.3,"square",.06))},1000);
+  const first=!S.cleared.includes(o.st);if(first)S.cleared.push(o.st);
+  const today=new Date().toDateString();if(S.day!==today){S.streak++;S.day=today}
+  const before=S.xp;S.xp+=50;S.pts+=10;let lvl="";
+  if(S.xp>=300){S.xp-=300;S.lv++;lvl="LEVEL UP! Lv "+S.lv}
+  save();$("wStr").textContent="🔥 "+S.streak+" day streak";
+  $("cards").innerHTML=o.cafe?DRINKS.map((d,i)=>`<div class="x-card x-word" style="animation-delay:${.3+i*.15}s">${d.w}<small>${d.r} · ${d.en.toLowerCase()}</small></div>`).join("")
+    :(STAGES[o.st].set||shuffle(STAGES[o.st].pool).slice(0,5)).map((k,i)=>`<div class="x-card" style="animation-delay:${.3+i*.15}s">${k}<small>${KANA[k]}</small></div>`).join("");
+  const bar=$("wXp");bar.style.transition="none";bar.style.width=(before/300*100)+"%";$("lvup").textContent="";
+  setTimeout(()=>{bar.style.transition="";bar.style.width=(lvl?100:S.xp/300*100)+"%";
+    if(lvl)setTimeout(()=>{$("lvup").textContent=lvl;anim($("lvup"),"x-pop");sfx.chime();bar.style.transition="none";bar.style.width="0%";
+      setTimeout(()=>{bar.style.transition="";bar.style.width=(S.xp/300*100)+"%"},50)},1300)},400);
+  document.querySelectorAll(".x-petal").forEach(p=>p.remove());
+  if(!RM)for(let i=0;i<18;i++){const p=document.createElement("span");p.className="x-petal";p.style.left=Math.random()*100+"%";p.style.animationDuration=(4+Math.random()*4)+"s";p.style.animationDelay=(-Math.random()*6)+"s";$("win").appendChild(p)}}
+$("mapBtn").onclick=showMap;
+}catch(e){/* keep the title screen showing */}})();
+</script>
+</body>
+</html>
