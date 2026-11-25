@@ -588,11 +588,17 @@ function weakList(minM,n){return Object.keys(S.stats).filter(k=>KANA[k]&&S.stats
 let RM=false;try{RM=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)}catch(e){}
 
 // audio + speech
-let AC;
-function tone(f,t0,d,type,vol){try{const Ctx=safeGet("AudioContext")||safeGet("webkitAudioContext");if(!Ctx)return;AC=AC||new Ctx();const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+t0;o.type=type||"sine";o.frequency.value=f;g.gain.setValueAtTime(vol||.2,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d)}catch(e){}}
+let AC,JV=null;
+function pickJV(){try{const SS=safeGet("speechSynthesis");if(!SS)return;const vs=SS.getVoices()||[];JV=vs.find(v=>/ja[-_]JP/i.test(v.lang)&&/kyoko|otoya|google/i.test(v.name))||vs.find(v=>/ja/i.test(v.lang))||null}catch(e){}}
+try{const SS0=safeGet("speechSynthesis");if(SS0){pickJV();SS0.addEventListener&&SS0.addEventListener("voiceschanged",pickJV)}}catch(e){}
+function audioUnlock(){try{try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
+const Ctx=safeGet("AudioContext")||safeGet("webkitAudioContext");if(Ctx){AC=AC||new Ctx();if(AC.state!=="running")AC.resume();const b=AC.createBuffer(1,1,22050),src=AC.createBufferSource();src.buffer=b;src.connect(AC.destination);src.start(0)}
+if(!audioUnlock.sp){const SS=safeGet("speechSynthesis"),U=safeGet("SpeechSynthesisUtterance");if(SS&&U){const u=new U(" ");u.volume=0;SS.speak(u);audioUnlock.sp=1}}}catch(e){}}
+["pointerdown","touchend","click","keydown"].forEach(ev=>document.addEventListener(ev,audioUnlock,{capture:true,passive:true}));
+function tone(f,t0,d,type,vol){try{const Ctx=safeGet("AudioContext")||safeGet("webkitAudioContext");if(!Ctx)return;AC=AC||new Ctx();if(AC.state==="suspended")AC.resume();const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+t0;o.type=type||"sine";o.frequency.value=f;g.gain.setValueAtTime(vol||.2,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d)}catch(e){}}
 const sfx={hit:()=>{tone(880,0,.12,"square",.08);tone(1320,.06,.15,"triangle",.1)},bad:()=>tone(140,0,.3,"sawtooth",.12),
   chime:()=>[784,988,1175,1568].forEach((f,i)=>tone(f,i*.12,.6,"sine",.18))};
-function say(t){try{if(!t)return;const SS=safeGet("speechSynthesis"),U=safeGet("SpeechSynthesisUtterance");if(!SS||!U)return;SS.cancel();const u=new U(t);u.lang="ja-JP";const v=(SS.getVoices()||[]).find(v=>/ja/i.test(v.lang));if(v)u.voice=v;u.rate=.85;SS.speak(u)}catch(e){}}
+function say(t){try{if(!t)return;const SS=safeGet("speechSynthesis"),U=safeGet("SpeechSynthesisUtterance");if(!SS||!U)return;SS.cancel();const u=new U(t);u.lang="ja-JP";if(!JV)pickJV();if(JV)u.voice=JV;u.rate=.85;u.volume=1;if(SS.paused)SS.resume();SS.speak(u)}catch(e){}}
 
 function show(id){$("game").classList.add("x-run");document.querySelectorAll(".x-scr").forEach(s=>s.classList.toggle("on",s.id===id))}
 function anim(el,c){el.classList.remove(c);void el.offsetWidth;el.classList.add(c)}
