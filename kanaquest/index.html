@@ -276,6 +276,20 @@ body>.page{padding:0;max-width:none;display:block}
 .x-wstreak small{font-size:12px;color:#4d5466}
 .x-wsup{position:absolute;right:0;top:-8px;background:var(--gd);color:var(--ind);border-radius:99px;padding:3px 10px;font-size:13px}
 .x-wsup[hidden]{display:none}
+.x-bub.two{font-size:clamp(34px,6.5vh,54px);letter-spacing:-2px}
+.x-sbig.two{font-size:34px;letter-spacing:-2px}
+.x-orb.two{font-size:28px;letter-spacing:-2px}
+.x-cards.many{gap:4px;margin:6px 0;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}.x-cards.many .x-card{flex:none}.x-cards.many .x-card{width:auto;min-width:38px;height:44px;padding:0 4px;font-size:18px;line-height:1.1;border-width:2px}
+.x-cards.many .x-card small{font-size:10px}
+.x-gh{grid-column:1/-1;margin:8px 2px 0;font-size:14px;color:var(--v);letter-spacing:1px}
+.x-gh:first-child{margin-top:0}
+.x-grid.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.x-yk2{display:none}
+.x-arena.oni .x-yk{filter:hue-rotate(250deg) saturate(1.7) brightness(.95) drop-shadow(0 0 14px #ff4a3a) drop-shadow(0 8px 10px #000a)}
+.x-arena.oni .x-yk2{display:block;right:26%;bottom:34%;scale:.85;animation-delay:-1s;filter:hue-rotate(80deg) saturate(1.6) drop-shadow(0 0 12px #5ad1ff) drop-shadow(0 8px 10px #000a)}
+.x-arena.oni .x-crown::before{width:44%;top:-16%;background:linear-gradient(#fff,#ffd3c9 40%,#c4432b);clip-path:polygon(0 100%,8% 0,26% 100%,74% 100%,92% 0,100% 100%)}
+.x-arena.oni .x-crown{filter:drop-shadow(0 0 6px #ff4a3a)}
+@media (max-width:400px){.x-tabs button{font-size:13px;padding:0 2px}}
 @media (prefers-reduced-motion:reduce){.x-game *,.x-game{animation:none !important;transition:none !important}}
 </style>
 </head>
@@ -307,7 +321,7 @@ body>.page{padding:0;max-width:none;display:block}
       <button class="x-sclose" id="jClose" aria-label="Close">✕</button>
       <h3 id="jTitle">YOUR JOURNEY</h3>
       <p class="x-jbig"><b id="jN">0</b> <span id="jNL">days in a row</span></p>
-      <div class="x-jstats"><div><b id="jBest">0</b><small>best streak</small></div><div><b id="jMonth">0</b><small>days this month</small></div><div><b id="jKana">0/92</b><small>kana collected</small></div></div>
+      <div class="x-jstats"><div><b id="jBest">0</b><small>best streak</small></div><div><b id="jMonth">0</b><small>days this month</small></div><div><b id="jKana">0/208</b><small>kana collected</small></div></div>
       <p class="x-jmon" id="jMon"></p>
       <div class="x-cal" id="jCal"></div>
     </div>
@@ -321,6 +335,7 @@ body>.page{padding:0;max-width:none;display:block}
     <div class="x-bscore x-score">SCORE <b class="x-num" id="bScore">0000</b></div>
     <div class="x-ehp"><span id="eName">Chōchin-obake</span> <span id="hpNum">100</span>/<span id="hpMax">100</span><div class="x-bar"><i id="hpBar"></i></div></div>
     <img class="x-kc" id="kc" src="kanachan.png" alt="Kana-chan" />
+    <img class="x-yk x-yk2" id="yk2" src="yokai.png" alt="" aria-hidden="true" />
     <img class="x-yk" id="yk" src="yokai.png" alt="A lantern yokai" />
     <div class="x-crown" aria-hidden="true"></div>
     <div class="x-slash" id="slash"></div>
@@ -362,8 +377,8 @@ body>.page{padding:0;max-width:none;display:block}
   <div class="x-stop"><b>📖 Study</b><button class="x-btn x-back" id="backBtn">▶ Back to the quest</button></div>
   <div class="x-sbody">
     <div class="x-smain">
-      <div class="x-tabs" role="tablist"><button role="tab" aria-selected="true" data-t="h">Hiragana</button><button role="tab" aria-selected="false" data-t="k">Katakana</button></div>
-      <div class="x-prog"><span id="sProg">Collected 0 / 92</span><span class="x-score">SCORE <b class="x-num" id="sScore">0000</b></span></div>
+      <div class="x-tabs" role="tablist"><button role="tab" aria-selected="true" data-t="h">Hiragana</button><button role="tab" aria-selected="false" data-t="k">Katakana</button><button role="tab" aria-selected="false" data-t="d">Dakuten</button><button role="tab" aria-selected="false" data-t="c">Combos</button></div>
+      <div class="x-prog"><span id="sProg">Collected 0 / 208</span><span class="x-score">SCORE <b class="x-num" id="sScore">0000</b></span></div>
       <div class="x-xp"><i id="sBar"></i></div>
       <div class="x-grid" id="grid" role="tabpanel"></div>
     </div>
@@ -412,8 +427,22 @@ const GH=["あいうえお","かきくけこ","さしすせそ","たちつてと
 const GK=["アイウエオ","カキクケコ","サシスセソ","タチツテト","ナニヌネノ","ハヒフヘホ","マミムメモ","ヤ・ユ・ヨ","ラリルレロ","ワ・・・ヲ","ン・・・・"];
 const GR=["a i u e o","ka ki ku ke ko","sa shi su se so","ta chi tsu te to","na ni nu ne no","ha hi fu he ho","ma mi mu me mo","ya - yu - yo","ra ri ru re ro","wa - - - wo","n - - - -"].map(r=>r.split(" "));
 const KANA={};[GH,GK].forEach(g=>g.forEach((r,i)=>[...r].forEach((k,j)=>{if(k!=="・")KANA[k]=GR[i][j]})));
+// dakuten / handakuten (Dakuten Island)
+const DH=["がぎぐげご","ざじずぜぞ","だぢづでど","ばびぶべぼ","ぱぴぷぺぽ"];
+const DK=["ガギグゲゴ","ザジズゼゾ","ダヂヅデド","バビブベボ","パピプペポ"];
+const DR=["ga gi gu ge go","za ji zu ze zo","da ji zu de do","ba bi bu be bo","pa pi pu pe po"].map(r=>r.split(" "));
+[DH,DK].forEach(g=>g.forEach((r,i)=>[...r].forEach((k,j)=>{KANA[k]=DR[i][j]})));
+const RD={ぢ:"ji · di",ヂ:"ji · di",づ:"zu · du",ヅ:"zu · du"};// study label: same sound as じ/ず
+const drow=i=>[...DH[i]],dkrow=i=>[...DK[i]];
+// yōon combos (Combo Caverns), Hepburn romaji
+const YC=["ky","sh","ch","ny","hy","my","ry","gy","j","by","py"];
+const YH=[..."きしちにひみりぎじびぴ"].map((c,i)=>[..."ゃゅょ"].map((y,j)=>{const k=c+y;KANA[k]=YC[i]+"auo"[j];return k}));
+const YK=[..."キシチニヒミリギジビピ"].map((c,i)=>[..."ャュョ"].map((y,j)=>{const k=c+y;KANA[k]=YC[i]+"auo"[j];return k}));
+const yrows=(t,a,b)=>t.slice(a,b).flat();
+const ALLD=[...DH.flatMap((r,i)=>drow(i)),...DK.flatMap((r,i)=>dkrow(i))],ALLY=[...YH.flat(),...YK.flat()];
 const row=i=>[...GH[i]].filter(k=>k!=="・"),ALLH=GH.flatMap((r,i)=>row(i));
 const krow=i=>[...GK[i]].filter(k=>k!=="・"),ALLK=GK.flatMap((r,i)=>krow(i));
+const TOTALK=new Set([...ALLH,...ALLK,...ALLD,...ALLY]).size;// 46+46+50+66 = 208
 const STAGES={1:{set:row(0),pool:row(0)},2:{set:row(1),pool:[...row(1),...row(0)]},4:{set:row(2),pool:[...row(2),...row(1)]},
   5:{set:row(3),pool:[...row(3),...row(2)]},6:{set:row(4),pool:[...row(4),...row(3)]},7:{set:row(5),pool:[...row(5),...row(4)]},
   8:{set:row(6),pool:[...row(6),...row(5)]},9:{set:[...row(7),...row(8),...row(9),...row(10)],pool:[...row(7),...row(8),...row(9),...row(10)]},
@@ -423,7 +452,18 @@ const STAGES={1:{set:row(0),pool:row(0)},2:{set:row(1),pool:[...row(1),...row(0)
   13:{set:[...krow(4),...krow(5)],pool:[...krow(4),...krow(5),...krow(3)]},
   14:{set:[...krow(6),...krow(7)],pool:[...krow(6),...krow(7),...krow(5)]},
   15:{set:[...krow(8),...krow(9),...krow(10)],pool:[...krow(8),...krow(9),...krow(10),...krow(7)]},
-  16:{set:null,pool:ALLK,boss:1,hp:200,time:7000,name:"Lantern Queen"}};
+  16:{set:null,pool:ALLK,boss:1,hp:200,time:7000,name:"Lantern Queen"},
+  // Dakuten Island
+  17:{set:[...drow(0),...drow(1)],pool:[...drow(0),...drow(1)],once:1,line:"Dakuten Island! Two little marks ゛ make a sound buzz: か ka → が ga.",speak:"か、が"},
+  18:{set:[...drow(2),...drow(3),...drow(4)],pool:[...drow(2),...drow(3),...drow(4),...drow(1)],once:1,line:"A little circle ゜ makes a pop: は ha → ぱ pa!",speak:"は、ぱ"},
+  19:{set:[...dkrow(0),...dkrow(1)],pool:[...dkrow(0),...dkrow(1)],once:1,line:"カタカナ gets dakuten too, like ゲーム gēmu, game!",speak:"ゲーム"},
+  20:{set:[...dkrow(2),...dkrow(3),...dkrow(4)],pool:[...dkrow(2),...dkrow(3),...dkrow(4),...dkrow(1)]},
+  // Combo Caverns
+  21:{set:yrows(YH,0,5),pool:yrows(YH,0,5),once:1,line:"Combo Caverns! A small ゃ ゅ ょ blends in: き ki + ゃ = きゃ kya.",speak:"きゃ"},
+  22:{set:yrows(YH,5,11),pool:[...yrows(YH,5,11),...yrows(YH,0,2)]},
+  23:{set:yrows(YK,0,5),pool:yrows(YK,0,5),once:1,line:"カタカナ combos too, like ジュース jūsu, juice!",speak:"ジュース"},
+  24:{set:yrows(YK,5,11),pool:[...yrows(YK,5,11),...yrows(YK,0,2)]},
+  25:{set:null,pool:[...ALLD,...ALLY],boss:1,oni:1,hp:200,time:7000,name:"Twin Oni"}};
 STAGES.daily={set:null,pool:[...row(0),...row(1)],daily:1,hp:100,dmg:10};
 const NODES=[
   {id:1,icon:"あ",name:"Vowel Shrine",sub:"a · i · u · e · o"},
@@ -441,15 +481,24 @@ const NODES=[
   {id:13,icon:"ナ",name:"ナ・ハ Market",sub:"na ni nu ne no · ha hi fu he ho"},
   {id:14,icon:"マ",name:"マ・ヤ Lighthouse",sub:"ma mi mu me mo · ya yu yo"},
   {id:15,icon:"ラ",name:"ラ・ワ Neon Street",sub:"ra ri ru re ro · wa wo n"},
-  {id:16,icon:"👑",name:"BOSS · Lantern Queen",sub:"All katakana · 7s timer",boss:1}];
+  {id:16,icon:"👑",name:"BOSS · Lantern Queen",sub:"All katakana · 7s timer",boss:1},
+  {id:17,icon:"が",name:"が・ざ Hot Springs",sub:"ga gi gu ge go · za ji zu ze zo"},
+  {id:18,icon:"ば",name:"だ・ば・ぱ Bamboo Path",sub:"da ji zu de do · ba bi bu be bo · pa pi pu pe po"},
+  {id:19,icon:"ガ",name:"ガ・ザ Arcade",sub:"ga gi gu ge go · za ji zu ze zo"},
+  {id:20,icon:"パ",name:"ダ・バ・パ Rooftops",sub:"da ji zu de do · ba bi bu be bo · pa pi pu pe po"},
+  {id:21,icon:"きゃ",name:"Combo Caverns · <span class=\"x-nw\">ひらがな 1</span>",sub:"kya · sha · cha · nya · hya"},
+  {id:22,icon:"りょ",name:"Combo Caverns · <span class=\"x-nw\">ひらがな 2</span>",sub:"mya · rya · gya · ja · bya · pya"},
+  {id:23,icon:"シャ",name:"Combo Caverns · <span class=\"x-nw\">カタカナ 1</span>",sub:"kya · sha · cha · nya · hya"},
+  {id:24,icon:"ジュ",name:"Combo Caverns · <span class=\"x-nw\">カタカナ 2</span>",sub:"mya · rya · gya · ja · bya · pya"},
+  {id:25,icon:"👹",name:"BOSS · Twin Oni",sub:"Dakuten + combos · both scripts · 7s timer",boss:1}];
 // safe access: sandboxed iframes throw on the first read of these globals
 function safeGet(name){try{return window[name]}catch(e){return undefined}}
 function safeStore(name){try{const s=window[name];if(!s)return null;const k="__kq_t";s.setItem(k,"1");s.removeItem(k);return s}catch(e){return null}}
 const LS=safeStore("localStorage");safeStore("sessionStorage");
 const store={get(k){try{return LS?LS.getItem(k):null}catch(e){return null}},set(k,v){try{if(LS)LS.setItem(k,v)}catch(e){}}};
-let S={lv:1,xp:0,pts:0,streak:0,bestStreak:0,day:"",log:{},cleared:[],total:0,best:{}};
+let S={lv:1,xp:0,pts:0,streak:0,bestStreak:0,day:"",log:{},cleared:[],total:0,best:{},seen:[]};
 try{const s=JSON.parse(store.get("kanaquest")||"null");if(s&&typeof s==="object")S=Object.assign(S,s);if(!Array.isArray(S.cleared))S.cleared=[];if(!S.best||typeof S.best!=="object")S.best={};S.total=+S.total||0;
-  if(!S.log||typeof S.log!=="object"||Array.isArray(S.log))S.log={};S.bestStreak=+S.bestStreak||0}catch(e){}
+  if(!S.log||typeof S.log!=="object"||Array.isArray(S.log))S.log={};S.bestStreak=+S.bestStreak||0;if(!Array.isArray(S.seen))S.seen=[]}catch(e){}
 const save=()=>{try{store.set("kanaquest",JSON.stringify(S))}catch(e){}};
 // practice log (local dates, like Nagi-dō)
 const dkey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -501,7 +550,7 @@ function hud(){$("hLv").textContent="Lv "+S.lv;$("hXp").style.width=(S.xp/300*10
   h.setAttribute("aria-label",(n?n+"-day streak":"Start your streak")+". Open your journey");tick($("hScore"),S.total)}
 function openJourney(){const n=streak(),now=new Date(),y=now.getFullYear(),m=now.getMonth();
   $("jN").textContent=n;$("jNL").textContent=n===1?"day in a row":"days in a row";$("jBest").textContent=Math.max(S.bestStreak,n);
-  $("jMonth").textContent=monthDays();$("jKana").textContent=collected().size+"/92";
+  $("jMonth").textContent=monthDays();$("jKana").textContent=collected().size+"/"+TOTALK;
   let mon=y+"-"+(m+1);try{mon=now.toLocaleDateString("en",{month:"long",year:"numeric"})}catch(e){}$("jMon").textContent=mon;
   let c="SMTWTFS".split("").map(d=>`<span class="h" aria-hidden="true">${d}</span>`).join("");
   const lead=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();for(let i=0;i<lead;i++)c+='<span class="e"></span>';
@@ -522,7 +571,7 @@ function showMap(){show("map");hud();$("journey").hidden=true;const p=$("path");
   const firstOpen=(NODES.find(n=>!S.cleared.includes(n.id))||{}).id;
   NODES.forEach(n=>{const open=unlocked(n)&&!n.lock,done=S.cleared.includes(n.id),cur=open&&n.id===firstOpen,bst=S.best[n.id];
     const b=document.createElement("button");b.className="x-node"+(open?"":" lock")+(n.cafe?" cafe":"")+(n.boss?" boss":"")+(cur?" cur":"");
-    b.innerHTML=`<span class="x-orb">${open?n.icon:"🔒"}${done?'<span class="x-star">★</span>':""}${bst?`<span class="x-rb r-${bst.r}" title="Best rank">${bst.r}</span>`:""}</span><span><b>${n.id}. ${n.name}</b><em>${n.sub}${bst?" · best "+pad(bst.s):""}</em></span>`;
+    b.innerHTML=`<span class="x-orb${[...n.icon].length>1?" two":""}">${open?n.icon:"🔒"}${done?'<span class="x-star">★</span>':""}${bst?`<span class="x-rb r-${bst.r}" title="Best rank">${bst.r}</span>`:""}</span><span><b>${n.id}. ${n.name}</b><em>${n.sub}${bst?" · best "+pad(bst.s):""}</em></span>`;
     b.onclick=()=>{if(!open)return toast("<div>🔒 <b>Locked</b><br><small>Clear the stage before it to open this one.</small></div>");n.cafe?startCafe():startBattle(n.id)};
     p.appendChild(b)});}
 
@@ -533,23 +582,23 @@ function startTimer(ms){const t=$("timer").firstElementChild;stopTimer();void t.
   TT=setTimeout(()=>{if(B&&!B.busy){pop("x-combo","Time's up!");pick(null,null)}},ms)}
 function startBattle(st){const cfg=STAGES[st];stopTimer();clearTimeout(IT);
   B={st,hp:cfg.hp||100,max:cfg.hp||100,hearts:3,turn:0,combo:0,busy:true,ans:null,t0:0,score:0};tick($("bScore"),0,true);$("over").classList.remove("on");
-  $("arena").classList.toggle("boss",!!cfg.boss);$("timer").hidden=!cfg.time;$("eName").textContent=cfg.name||"Chōchin-obake";$("hpMax").textContent=B.max;
+  $("arena").classList.toggle("boss",!!cfg.boss);$("arena").classList.toggle("oni",!!cfg.oni);$("timer").hidden=!cfg.time;$("eName").textContent=cfg.name||"Chōchin-obake";$("hpMax").textContent=B.max;
   $("bub").textContent="";$("opts").innerHTML="";$("hint").textContent="";show("battle");upd();
   const it=$("bIntro");it.className="x-over x-intro";
   if(cfg.boss){it.innerHTML='<h2 class="x-clear x-pop">BOSS BATTLE!</h2><div class="x-ban"><span>'+(cfg.name||"Lantern King")+' · '+(cfg.hp||200)+' HP · '+((cfg.time||7000)/1000)+'s</span></div>';it.classList.add("on","flash");tone(110,0,.6,"sawtooth",.14);tone(82,.3,.8,"square",.1)}
-  else if(cfg.line){it.innerHTML=`<div class="x-dlg x-panel x-pop"><div class="x-tag x-ban"><span>Kana-chan</span></div>${cfg.line}</div>`;it.classList.add("on");say(cfg.speak)}
+  else if(cfg.line&&!(cfg.once&&S.seen.includes(st))){if(cfg.once){S.seen.push(st);save()}it.innerHTML=`<div class="x-dlg x-panel x-pop"><div class="x-tag x-ban"><span>Kana-chan</span></div>${cfg.line}</div>`;it.classList.add("on");say(cfg.speak)}
   IT=setTimeout(()=>{it.classList.remove("on");nextTurn()},it.classList.contains("on")?(cfg.boss?2000:3200):0)}
 function upd(){$("hpNum").textContent=B.hp;$("hpBar").style.width=(B.hp/B.max*100)+"%";$("hearts").textContent="❤".repeat(B.hearts)+"🖤".repeat(3-B.hearts)}
 function nextTurn(){if(!$("battle").classList.contains("on"))return;B.turn++;B.busy=false;$("hint").textContent="";const pool=STAGES[B.st].pool,k=pool[Math.floor(Math.random()*pool.length)],rev=B.turn%3===0;
-  B.k=k;B.rev=rev;const wrong=shuffle(pool.filter(x=>x!==k)).slice(0,3),opts=shuffle([k,...wrong]);
-  const bub=$("bub");bub.textContent=rev?KANA[k]:k;bub.classList.toggle("rom",rev);anim(bub,"x-pop");
+  B.k=k;B.rev=rev;const wrong=[],heard=new Set([KANA[k]]);for(const x of shuffle(pool)){if(heard.has(KANA[x]))continue;heard.add(KANA[x]);wrong.push(x);if(wrong.length===3)break}const opts=shuffle([k,...wrong]);
+  const bub=$("bub");bub.textContent=rev?KANA[k]:k;bub.classList.toggle("rom",rev);bub.classList.toggle("two",!rev&&k.length>1);anim(bub,"x-pop");
   $("hint").textContent=rev?"Pick the kana!":"";if(!rev)say(k);
   $("opts").innerHTML="";opts.forEach(o=>{const b=document.createElement("button");b.className="x-opt";b.textContent=rev?o:KANA[o];b.onclick=()=>pick(o,b);$("opts").appendChild(b)});B.t0=Date.now();if(STAGES[B.st].time)startTimer(STAGES[B.st].time)}
 $("bub").onclick=()=>say(B&&B.k);
 function pop(cls,txt){const d=document.createElement("div");d.className=cls;d.textContent=txt;$("arena").appendChild(d);setTimeout(()=>d.remove(),1000)}
 function pick(o,btn){if(B.busy)return;B.busy=true;clearTimeout(TT);$("timer").firstElementChild.style.transition="none";const ok=o===B.k;
   if(ok){btn.classList.add("ok");B.combo++;const crit=Date.now()-B.t0<3000;sfx.hit();say(B.k);
-    anim($("kc"),"dash");setTimeout(()=>{anim($("slash"),"go");anim($("yk"),"hit");const dm=STAGES[B.st].dmg||20;B.hp=Math.max(0,B.hp-dm);upd();pop("x-dmg","-"+dm)},200);
+    anim($("kc"),"dash");setTimeout(()=>{anim($("slash"),"go");anim($("yk"),"hit");if(STAGES[B.st].oni)anim($("yk2"),"hit");const dm=STAGES[B.st].dmg||20;B.hp=Math.max(0,B.hp-dm);upd();pop("x-dmg","-"+dm)},200);
     if(B.combo>1)pop("x-combo",B.combo+" COMBO!"+(crit?" Critical!":""));else if(crit)pop("x-combo","Critical!");
     const pts=Math.round((100+(crit?150:0))*(1+B.combo*.1));B.score+=pts;tick($("bScore"),B.score);pop("x-pts","+"+pts);
     $("hint").textContent=B.k+" = "+KANA[B.k];
@@ -593,18 +642,27 @@ function finishCafe(){C.phase="end";const perfect=C.miss===0;if(perfect){C.score
 
 // study mode
 const EX={あ:["あめ","ame","rain"],か:["かさ","kasa","umbrella"],み:["みず","mizu","water"],お:["おちゃ","ocha","tea"],コ:["コーヒー","kōhī","coffee"],さ:["さくら","sakura","cherry blossom"],ね:["ねこ","neko","cat"],い:["いぬ","inu","dog"],
-  ア:["アイス","aisu","ice cream"],カ:["カメラ","kamera","camera"],テ:["テレビ","terebi","TV"],ホ:["ホテル","hoteru","hotel"],メ:["メロン","meron","melon"],ラ:["ラーメン","rāmen","ramen"],ト:["トマト","tomato","tomato"],ケ:["ケーキ","kēki","cake"]};
+  ア:["アイス","aisu","ice cream"],カ:["カメラ","kamera","camera"],テ:["テレビ","terebi","TV"],ホ:["ホテル","hoteru","hotel"],メ:["メロン","meron","melon"],ラ:["ラーメン","rāmen","ramen"],ト:["トマト","tomato","tomato"],ケ:["ケーキ","kēki","cake"],
+  ご:["ごはん","gohan","rice, a meal"],で:["でんしゃ","densha","train"],ぶ:["ぶた","buta","pig"],
+  ギ:["ギター","gitā","guitar"],ゲ:["ゲーム","gēmu","game"],ド:["ドア","doa","door"],デ:["デパート","depāto","department store"],バ:["バス","basu","bus"],パ:["パン","pan","bread"],ピ:["ピザ","piza","pizza"],
+  きょ:["きょう","kyō","today"],しゃ:["しゃしん","shashin","photo"],ちゃ:["おちゃ","ocha","tea"],ひゃ:["ひゃく","hyaku","one hundred"],りょ:["りょこう","ryokō","trip"],ぎゅ:["ぎゅうにゅう","gyūnyū","milk"],じゃ:["じゃあね","jā ne","see you"],
+  キャ:["キャンプ","kyanpu","camping"],シャ:["シャツ","shatsu","shirt"],チョ:["チョコ","choko","chocolate"],ニュ:["ニュース","nyūsu","news"],ジュ:["ジュース","jūsu","juice"]};
 let tab="h",selK="";
 function collected(){const c=new Set();S.cleared.forEach(id=>{const s=STAGES[id];if(s&&s.set)s.set.forEach(k=>c.add(k))});return c}
-function renderStudy(){const got=collected(),g=$("grid");g.innerHTML="";
-  (tab==="h"?GH:GK).forEach((r,i)=>[...r].forEach((k,j)=>{if(k==="・"){g.appendChild(document.createElement("div"));return}
+const SECS={h:[{rows:GH.map(r=>[...r])}],k:[{rows:GK.map(r=>[...r])}],
+  d:[{t:"ひらがな · hiragana",rows:DH.map(r=>[...r])},{t:"カタカナ · katakana",rows:DK.map(r=>[...r])}],
+  c:[{t:"ひらがな · hiragana",rows:YH},{t:"カタカナ · katakana",rows:YK}]};
+const lab=k=>RD[k]||KANA[k];
+function renderStudy(){const got=collected(),g=$("grid");g.innerHTML="";g.classList.toggle("c3",tab==="c");
+  SECS[tab].forEach(sec=>{if(sec.t){const h=document.createElement("div");h.className="x-gh";h.textContent=sec.t;g.appendChild(h)}
+   sec.rows.forEach(r=>r.forEach(k=>{if(k==="・"){g.appendChild(document.createElement("div"));return}
     const b=document.createElement("button");b.className="x-kcard"+(got.has(k)?" got":"")+(k===selK?" sel":"");
-    b.innerHTML=`<b>${k}</b><small>${GR[i][j]}</small>`;b.setAttribute("aria-label",k+" "+GR[i][j]+(got.has(k)?", collected":""));
-    b.onclick=()=>studyPick(k);g.appendChild(b)}));
-  $("sProg").textContent="Collected "+got.size+" / 92";$("sBar").style.width=(got.size/92*100)+"%";tick($("sScore"),S.total,true);
+    b.innerHTML=`<b>${k}</b><small>${lab(k)}</small>`;b.setAttribute("aria-label",k+" "+lab(k)+(got.has(k)?", collected":""));
+    b.onclick=()=>studyPick(k);g.appendChild(b)}))});
+  $("sProg").textContent="Collected "+got.size+" / "+TOTALK;$("sBar").style.width=(got.size/TOTALK*100)+"%";tick($("sScore"),S.total,true);
   document.querySelectorAll(".x-tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===tab))}
 function studyPick(k){selK=k;say(k);tone(700,0,.06,"triangle",.08);const e=EX[k];
-  $("sBig").textContent=k;$("sRom").textContent=KANA[k];
+  $("sBig").textContent=k;$("sBig").classList.toggle("two",k.length>1);$("sRom").textContent=lab(k);
   $("sEx").innerHTML=e?`<button>${e[0]}</button> ${e[1]} · ${e[2]}`:"No example word yet.";
   const eb=$("sEx").querySelector("button");if(eb)eb.onclick=()=>say(e[0]);
   $("sheet").classList.add("on");anim($("sheet"),"x-pop");renderStudy()}
@@ -634,8 +692,9 @@ function victory(o){show("win");sfx.chime();say("おめでとう ございます
   const up=$("wsUp"),wt=$("wToast");up.hidden=!firstToday;wt.classList.remove("on");clearTimeout(wt._t);
   if(firstToday){anim(up,"x-pop");setTimeout(sfx.chime,900);
     if([7,30,100].includes(sn))setTimeout(()=>{wt.innerHTML="<div>🏆 <b>MILESTONE!</b> "+sn+"-day streak</div>";wt.classList.add("on");anim(wt,"x-pop");wt._t=setTimeout(()=>wt.classList.remove("on"),3200)},1200)}
+  const wk=o.cafe?[]:(STAGES[o.st].set||[]);$("cards").classList.toggle("many",wk.length>10||wk.some(k=>k.length>1));
   $("cards").innerHTML=o.cafe?DRINKS.map((d,i)=>`<div class="x-card x-word" style="animation-delay:${.3+i*.15}s">${d.w}<small>${d.r} · ${d.en.toLowerCase()}</small></div>`).join("")
-    :(STAGES[o.st].set||shuffle(STAGES[o.st].pool).slice(0,5)).map((k,i)=>`<div class="x-card" style="animation-delay:${.3+i*.15}s">${k}<small>${KANA[k]}</small></div>`).join("");
+    :(STAGES[o.st].set||shuffle(STAGES[o.st].pool).slice(0,5)).map((k,i,a)=>`<div class="x-card" style="animation-delay:${.3+i*(a.length>10?.06:.15)}s">${k}<small>${KANA[k]}</small></div>`).join("");
   const bar=$("wXp");bar.style.transition="none";bar.style.width=(before/300*100)+"%";$("lvup").textContent="";
   setTimeout(()=>{bar.style.transition="";bar.style.width=(lvl?100:S.xp/300*100)+"%";
     if(lvl)setTimeout(()=>{$("lvup").textContent=lvl;anim($("lvup"),"x-pop");sfx.chime();bar.style.transition="none";bar.style.width="0%";
