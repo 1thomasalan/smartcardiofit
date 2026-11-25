@@ -253,8 +253,8 @@ body>.page{padding:0;max-width:none;display:block}
 .x-daily.done{background:#ffffff1a;color:var(--cr);border-color:#fff8;font-size:16px;min-height:44px;box-shadow:none}
 .x-daily.x-pulse{animation:x-dpulse 1.2s infinite}
 @keyframes x-dpulse{50%{box-shadow:0 0 0 10px #f2b63299,0 6px 0 #9a6b00}}
-#journey{position:absolute;inset:0;z-index:8;display:flex;align-items:flex-end;justify-content:center;background:#0009;animation:x-fade .25s ease}
-#journey[hidden]{display:none}
+#journey,#quests{position:absolute;inset:0;z-index:8;display:flex;align-items:flex-end;justify-content:center;background:#0009;animation:x-fade .25s ease}
+#journey[hidden],#quests[hidden]{display:none}
 .x-jpanel{position:relative;width:100%;max-height:92%;overflow-y:auto;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));border-radius:22px 22px 0 0;animation:x-slide .35s cubic-bezier(.2,.8,.2,1)}
 @keyframes x-slide{from{transform:translateY(100%)}}
 .x-jpanel h3{margin:0 0 4px;font-size:15px;color:var(--v);letter-spacing:1px}
@@ -269,7 +269,7 @@ body>.page{padding:0;max-width:none;display:block}
 .x-cal .e{background:none}
 .x-cal .p{background:var(--gd);color:var(--ind)}.x-cal .p i{font-style:normal;font-size:11px}
 .x-cal .t{outline:3px solid var(--v);outline-offset:-3px}
-@media (min-width:700px){#journey{align-items:center}.x-jpanel{max-width:440px;border-radius:22px}}
+@media (min-width:700px){#journey,#quests{align-items:center}.x-jpanel{max-width:440px;border-radius:22px}}
 .x-wstreak{display:flex;justify-content:center;align-items:center;gap:24px;margin:8px 0;position:relative}
 .x-wstreak>div{display:flex;flex-direction:column;align-items:center}
 .x-wstreak b{font-size:40px;line-height:1;color:var(--v)}.x-wstreak #wsM{font-size:28px;color:var(--ind)}
@@ -290,6 +290,38 @@ body>.page{padding:0;max-width:none;display:block}
 .x-arena.oni .x-crown::before{width:44%;top:-16%;background:linear-gradient(#fff,#ffd3c9 40%,#c4432b);clip-path:polygon(0 100%,8% 0,26% 100%,74% 100%,92% 0,100% 100%)}
 .x-arena.oni .x-crown{filter:drop-shadow(0 0 6px #ff4a3a)}
 @media (max-width:400px){.x-tabs button{font-size:13px;padding:0 2px}}
+/* phase 1B: quests, shields, weak kana */
+.x-qbtn{position:relative;font-size:18px;padding:2px 6px}
+.x-qb{position:absolute;top:-9px;right:-9px;min-width:20px;height:20px;border-radius:99px;background:var(--v);color:#fff;border:2px solid #fff;font-size:12px;font-style:normal;line-height:16px;padding:0 4px;text-align:center;box-shadow:0 2px 0 #0004}
+.x-qb[hidden]{display:none}
+.x-qsub{margin:0 0 12px;font-size:13px;color:#4d5466}
+.x-qrow{display:flex;align-items:center;gap:10px;padding:10px 10px 10px 12px;background:#2f426214;border-radius:14px;margin-bottom:8px}
+.x-qrow.cl{opacity:.75}
+.x-qi{flex:1;min-width:0}.x-qi b{display:block;font-size:15px;color:var(--ind);line-height:1.25}.x-qi small{font-size:12px;color:#4d5466}
+.x-qbar{height:10px;border-radius:99px;background:#2f426226;overflow:hidden;margin:6px 0 2px}.x-qbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gd),#ffd46b)}
+.x-claim{flex:none;min-height:44px;min-width:82px;border:3px solid #fff;border-radius:999px;background:var(--v);color:#fff;font-size:14px;padding:2px 10px;cursor:pointer;box-shadow:0 3px 0 #7d2414;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+.x-claim:active{transform:translateY(2px);box-shadow:0 1px 0 #7d2414}
+.x-claim:disabled{background:#2f42621f;color:#4d5466;box-shadow:none;cursor:default;transform:none}
+.x-claim.off{background:#5bbf6a;color:#fff;box-shadow:none;cursor:default}
+.x-qbonus{background:#f2b63233}
+.x-shop{margin:0 0 12px}.x-shop .x-qrow{margin:0}
+.x-shi{flex:none;font-size:26px}
+.x-dots i.sh{background:#7cc4ff;border-color:#7cc4ff}
+.x-cal .s{background:#cfe8ff;color:var(--ind)}.x-cal .s i{font-style:normal;font-size:11px}
+.x-kcard{position:relative}
+.x-kcard.weak::after{content:"";position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;background:#e0302a;border:2px solid #fff}
+.x-weak{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:0 2px 12px;font-size:13px;color:#4d5466}
+.x-wd{display:inline-block;width:10px;height:10px;border-radius:50%;background:#e0302a;border:2px solid #fff;vertical-align:-1px;margin-right:4px}
+.x-wbtn{font-size:15px;padding:6px 16px;min-height:44px;border-width:3px;box-shadow:0 4px 0 #7d2414}
+/* toast: center without transform so the pop animation can't push it off-screen */
+.x-toast{left:0;right:0;margin:0 auto;transform:none}
+/* narrow phones: the HUD score moves out (still on battle, win and Study) so the XP bar keeps room */
+@media (max-width:400px){.x-hud .x-score{display:none}.x-qbtn{font-size:16px;padding:2px 4px;min-width:40px}.x-hud .x-sbtn{min-width:40px}}
+/* short screens: keep the whole victory card and the Map button on screen */
+@media (max-height:680px){#win{padding-top:calc(8px + env(safe-area-inset-top,0px));padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));gap:4px}
+  #win .x-hero{width:clamp(48px,9vh,180px)}#win .x-wpanel{padding:8px 12px}#win .x-wpanel p{margin:0}
+  .x-gains{margin:4px 0;gap:5px}.x-gains span{font-size:13px;padding:2px 10px}
+  .x-wstreak{margin:2px 0}.x-wstreak b{font-size:30px}.x-sc{margin:2px 0}.x-best{font-size:16px}.x-cards{margin:4px 0}.x-lvup{font-size:20px}}
 @media (prefers-reduced-motion:reduce){.x-game *,.x-game{animation:none !important;transition:none !important}}
 </style>
 </head>
@@ -312,16 +344,26 @@ body>.page{padding:0;max-width:none;display:block}
 </section>
 
 <section class="x-scr" id="map">
-  <div class="x-hud"><span class="x-lv" id="hLv">Lv 1</span><div class="x-xp"><i id="hXp"></i></div><span class="x-stat" id="hPts">✿ 0</span><button class="x-strk" id="hStr" aria-label="Your journey"><span class="x-dots" aria-hidden="true"></span><span class="x-sl">Start your streak</span><span class="x-ss">0</span></button><span class="x-score">SCORE <b class="x-num" id="hScore">0000</b></span><button class="x-sbtn" id="studyBtn" aria-label="Study">📖<span> Study</span></button></div>
+  <div class="x-hud"><span class="x-lv" id="hLv">Lv 1</span><div class="x-xp"><i id="hXp"></i></div><span class="x-stat" id="hPts">✿ 0</span><button class="x-strk" id="hStr" aria-label="Your journey"><span class="x-dots" aria-hidden="true"></span><span class="x-sl">Start your streak</span><span class="x-ss">0</span></button><span class="x-score"><span class="x-sw">SCORE </span><b class="x-num" id="hScore">0000</b></span><button class="x-sbtn x-qbtn" id="qBtn" aria-label="Today's quests">🏮<i class="x-qb" id="qBadge" hidden>0</i></button><button class="x-sbtn" id="studyBtn" aria-label="Study">📖<span> Study</span></button></div>
   <div class="x-dwrap"><button class="x-btn x-daily" id="dailyBtn">▶ Today's practice</button></div>
   <div class="x-path" id="path"></div>
   <div class="x-toast x-panel" id="toast"></div>
+  <div id="quests" role="dialog" aria-modal="true" aria-labelledby="qTitle" hidden>
+    <div class="x-jpanel x-panel">
+      <button class="x-sclose" id="qClose" aria-label="Close">✕</button>
+      <h3 id="qTitle">TODAY'S QUESTS</h3>
+      <p class="x-qsub" id="qSub"></p>
+      <div id="qList"></div>
+      <div class="x-shop" id="qShop"></div>
+    </div>
+  </div>
   <div id="journey" role="dialog" aria-modal="true" aria-labelledby="jTitle" hidden>
     <div class="x-jpanel x-panel">
       <button class="x-sclose" id="jClose" aria-label="Close">✕</button>
       <h3 id="jTitle">YOUR JOURNEY</h3>
       <p class="x-jbig"><b id="jN">0</b> <span id="jNL">days in a row</span></p>
       <div class="x-jstats"><div><b id="jBest">0</b><small>best streak</small></div><div><b id="jMonth">0</b><small>days this month</small></div><div><b id="jKana">0/208</b><small>kana collected</small></div></div>
+      <div class="x-shop" id="jShop"></div>
       <p class="x-jmon" id="jMon"></p>
       <div class="x-cal" id="jCal"></div>
     </div>
@@ -380,6 +422,7 @@ body>.page{padding:0;max-width:none;display:block}
       <div class="x-tabs" role="tablist"><button role="tab" aria-selected="true" data-t="h">Hiragana</button><button role="tab" aria-selected="false" data-t="k">Katakana</button><button role="tab" aria-selected="false" data-t="d">Dakuten</button><button role="tab" aria-selected="false" data-t="c">Combos</button></div>
       <div class="x-prog"><span id="sProg">Collected 0 / 208</span><span class="x-score">SCORE <b class="x-num" id="sScore">0000</b></span></div>
       <div class="x-xp"><i id="sBar"></i></div>
+      <div class="x-weak" id="sWeak"></div>
       <div class="x-grid" id="grid" role="tabpanel"></div>
     </div>
     <div class="x-pat x-panel">
@@ -404,7 +447,7 @@ body>.page{padding:0;max-width:none;display:block}
   <div class="x-wpanel x-panel x-pop">
     <p style="font-size:22px;color:var(--v)"><span class="x-nw">おめでとう</span> <span class="x-nw">ございます！</span></p>
     <p style="font-size:14px">Omedetō gozaimasu! Congratulations!</p>
-    <div class="x-gains"><span>+50 XP</span><span>+10 ✿</span><span id="wPerf" hidden>PERFECT +500</span></div>
+    <div class="x-gains"><span>+50 XP</span><span>+10 ✿</span><span id="wPerf" hidden>PERFECT +500</span><span id="wQuest" hidden>🏮 Quest done!</span></div>
     <div class="x-wstreak"><div><b id="wsN">0</b><small id="wsL">days in a row</small></div><div><b id="wsM">0</b><small>wins this month</small></div><span class="x-wsup" id="wsUp" hidden>🔥 Streak +1</span></div>
     <div class="x-sc"><div><small>STAGE</small><b class="x-num" id="wScore">0000</b></div><div class="x-rank" id="wRank">C</div><div><small>TOTAL</small><b class="x-num" id="wTotal">0000</b></div></div>
     <div class="x-best" id="wBest" hidden>NEW BEST!</div>
@@ -496,21 +539,52 @@ function safeGet(name){try{return window[name]}catch(e){return undefined}}
 function safeStore(name){try{const s=window[name];if(!s)return null;const k="__kq_t";s.setItem(k,"1");s.removeItem(k);return s}catch(e){return null}}
 const LS=safeStore("localStorage");safeStore("sessionStorage");
 const store={get(k){try{return LS?LS.getItem(k):null}catch(e){return null}},set(k,v){try{if(LS)LS.setItem(k,v)}catch(e){}}};
-let S={lv:1,xp:0,pts:0,streak:0,bestStreak:0,day:"",log:{},cleared:[],total:0,best:{},seen:[]};
+let S={lv:1,xp:0,pts:0,streak:0,bestStreak:0,day:"",log:{},cleared:[],total:0,best:{},seen:[],shields:0,shielded:[],shChk:"",stats:{},quests:null};
 try{const s=JSON.parse(store.get("kanaquest")||"null");if(s&&typeof s==="object")S=Object.assign(S,s);if(!Array.isArray(S.cleared))S.cleared=[];if(!S.best||typeof S.best!=="object")S.best={};S.total=+S.total||0;
   if(!S.log||typeof S.log!=="object"||Array.isArray(S.log))S.log={};S.bestStreak=+S.bestStreak||0;if(!Array.isArray(S.seen))S.seen=[]}catch(e){}
+// phase 1B fields: default safely for older saves
+try{S.pts=+S.pts||0;S.shields=Math.max(0,Math.min(2,Math.floor(+S.shields||0)));if(!Array.isArray(S.shielded))S.shielded=[];S.shielded=S.shielded.filter(k=>typeof k==="string");
+  if(typeof S.shChk!=="string")S.shChk="";if(!S.stats||typeof S.stats!=="object"||Array.isArray(S.stats))S.stats={};
+  if(!S.quests||typeof S.quests!=="object"||Array.isArray(S.quests))S.quests=null}catch(e){}
 const save=()=>{try{store.set("kanaquest",JSON.stringify(S))}catch(e){}};
 // practice log (local dates, like Nagi-dō)
 const dkey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const todayKey=()=>dkey(new Date());
 function daysAgo(n){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-n);return d}
-function streak(){let n=0,i=S.log[todayKey()]?0:1;while(S.log[dkey(daysAgo(i))]){n++;i++}return n}
+// streak shields: a gap of missed days right before today is covered if enough shields are held.
+// Each gap is judged once (S.shChk = last day judged), so buying shields later never repairs an old break.
+let shieldUsed=0;
+function applyShields(){const t=todayKey(),y=dkey(daysAgo(1));let L="";for(const k in S.log)if(k<t&&S.log[k]&&k>L)L=k;if(!L)return;
+  const sh=new Set(S.shielded),miss=[];for(let i=1;i<1000;i++){const k=dkey(daysAgo(i));if(k<=L)break;if(!sh.has(k))miss.push(k)}
+  if(!miss.length)return;
+  if(miss.some(k=>k<=S.shChk)){if(S.shChk<y){S.shChk=y;save()}return}
+  S.shChk=y;if(miss.length<=S.shields){S.shields-=miss.length;S.shielded.push(...miss);shieldUsed+=miss.length}save()}
+// shielded days bridge the streak but do not add to it
+function streak(){applyShields();const sh=new Set(S.shielded);let n=0;for(let i=S.log[todayKey()]?0:1;i<5000;i++){const k=dkey(daysAgo(i));if(S.log[k])n++;else if(!sh.has(k))break}return n}
 const monthKey=()=>todayKey().slice(0,7);
 function monthWins(){const m=monthKey();let w=0;for(const k in S.log)if(k.slice(0,7)===m)w+=+(S.log[k]&&S.log[k].wins)||0;return w}
 function monthDays(){const m=monthKey();return Object.keys(S.log).filter(k=>k.slice(0,7)===m).length}
 function logWin(score){const k=todayKey(),first=!S.log[k],e=S.log[k]||{wins:0,score:0};e.wins=(+e.wins||0)+1;e.score=(+e.score||0)+(+score||0);S.log[k]=e;
   S.streak=streak();if(S.streak>S.bestStreak)S.bestStreak=S.streak;return first}
 S.streak=streak();if(S.streak>S.bestStreak)S.bestStreak=S.streak;
+// daily quests: one easy (10 ✿), one medium (15 ✿), one hard (20 ✿), seeded by the local date
+const QT=[[{id:"win1",ev:"win",g:1,t:"Win 1 battle"},{id:"daily",ev:"daily",g:1,t:"Finish Today's practice"},{id:"cafe",ev:"cafe",g:1,t:"Play the café"},{id:"ans20",ev:"right",g:20,t:"Answer 20 questions right"}],
+  [{id:"row5",ev:"row",g:5,max:1,t:"Get 5 right in a row"},{id:"win3",ev:"win",g:3,t:"Win 3 battles"},{id:"nohit",ev:"nohit",g:1,t:"Win without losing a heart"},{id:"ans40",ev:"right",g:40,t:"Answer 40 questions right"}],
+  [{id:"rankA",ev:"rank",g:1,t:"Win with rank A or better"},{id:"boss",ev:"boss",g:1,t:"Beat a boss",need:()=>S.cleared.length>=8},{id:"row10",ev:"row",g:10,max:1,t:"Get a 10 combo"}]];
+const QR=[10,15,20],QBONUS=30,SHIELD_COST=50,SHIELD_MAX=2,QBY={};QT.flat().forEach(q=>QBY[q.id]=q);
+function seeded(str){let h=2166136261;for(const c of str)h=Math.imul(h^c.charCodeAt(0),16777619);return()=>{h=h+0x6D2B79F5|0;let t=Math.imul(h^h>>>15,1|h);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function ensureQuests(){const d=todayKey(),q=S.quests;
+  if(q&&q.day===d&&Array.isArray(q.ids)&&q.ids.length===3&&q.ids.every(i=>QBY[i])&&Array.isArray(q.p)&&Array.isArray(q.c))return q;
+  const r=seeded("kanaquest-"+d);S.quests={day:d,ids:QT.map(t=>{const ok=t.filter(x=>!x.need||x.need());return ok[Math.floor(r()*ok.length)].id}),p:[0,0,0],c:[0,0,0],b:0};save();return S.quests}
+const qDone=(q,i)=>(+q.p[i]||0)>=QBY[q.ids[i]].g;
+let qNew=0;
+function qEvent(ev,v){try{const q=ensureQuests();let ch=0;q.ids.forEach((id,i)=>{const d=QBY[id];if(d.ev!==ev)return;const o=+q.p[i]||0;if(o>=d.g)return;
+  const n=Math.min(d.g,d.max?Math.max(o,+v||0):o+(+v||1));if(n!==o){q.p[i]=n;ch=1;if(n>=d.g){qNew++;tone(1047,0,.15,"triangle",.08);tone(1568,.1,.25,"triangle",.08)}}});if(ch)save()}catch(e){}}
+function qClaimable(){const q=ensureQuests();let n=0;for(let i=0;i<3;i++)if(qDone(q,i)&&!q.c[i])n++;if(!q.b&&[0,1,2].every(i=>qDone(q,i)))n++;return n}
+// weak-kana radar: S.stats[kana]={c:correct,m:misses,last:time of last miss}
+function stat(k,ok){if(!k||!KANA[k])return;let s=S.stats[k];if(!s||typeof s!=="object")s=S.stats[k]={c:0,m:0,last:0};if(ok)s.c=(+s.c||0)+1;else{s.m=(+s.m||0)+1;s.last=Date.now()}}
+function weakness(s){const c=+s.c||0,m=+s.m||0,age=(Date.now()-(+s.last||0))/864e5;return (m+1)/(c+m+2)+(s.last?.3*Math.exp(-age/3):0)}
+function weakList(minM,n){return Object.keys(S.stats).filter(k=>KANA[k]&&S.stats[k]&&(+S.stats[k].m||0)>=minM).map(k=>[k,weakness(S.stats[k])]).filter(x=>x[1]>=.2).sort((a,b)=>b[1]-a[1]).slice(0,n).map(x=>x[0])}
 let RM=false;try{RM=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)}catch(e){}
 
 // audio + speech
@@ -545,28 +619,59 @@ $("story").onclick=()=>{if(typing){clearInterval(typing);typing=null;$("dlgText"
 
 // map
 function hud(){$("hLv").textContent="Lv "+S.lv;$("hXp").style.width=(S.xp/300*100)+"%";$("hPts").textContent="✿ "+S.pts;
-  S.streak=streak();const n=S.streak,h=$("hStr");let dots="";for(let i=6;i>=0;i--)dots+=`<i${S.log[dkey(daysAgo(i))]?' class="on"':""}></i>`;
+  S.streak=streak();const n=S.streak,h=$("hStr"),shd=new Set(S.shielded);let dots="";for(let i=6;i>=0;i--){const k=dkey(daysAgo(i));dots+=`<i${S.log[k]?' class="on"':shd.has(k)?' class="sh"':""}></i>`}
   h.querySelector(".x-dots").innerHTML=dots;h.querySelector(".x-sl").textContent=n?n+"-day streak":"Start your streak";h.querySelector(".x-ss").textContent=n;
-  h.setAttribute("aria-label",(n?n+"-day streak":"Start your streak")+". Open your journey");tick($("hScore"),S.total)}
+  h.setAttribute("aria-label",(n?n+"-day streak":"Start your streak")+". Open your journey");tick($("hScore"),S.total);
+  const qc=qClaimable(),qb=$("qBadge");qb.hidden=!qc;qb.textContent=qc;$("qBtn").setAttribute("aria-label","Today's quests"+(qc?", "+qc+" reward"+(qc>1?"s":"")+" to claim":""))}
 function openJourney(){const n=streak(),now=new Date(),y=now.getFullYear(),m=now.getMonth();
   $("jN").textContent=n;$("jNL").textContent=n===1?"day in a row":"days in a row";$("jBest").textContent=Math.max(S.bestStreak,n);
   $("jMonth").textContent=monthDays();$("jKana").textContent=collected().size+"/"+TOTALK;
   let mon=y+"-"+(m+1);try{mon=now.toLocaleDateString("en",{month:"long",year:"numeric"})}catch(e){}$("jMon").textContent=mon;
   let c="SMTWTFS".split("").map(d=>`<span class="h" aria-hidden="true">${d}</span>`).join("");
   const lead=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();for(let i=0;i<lead;i++)c+='<span class="e"></span>';
-  for(let d=1;d<=days;d++){const p=!!S.log[dkey(new Date(y,m,d,12))],t=d===now.getDate();
-    c+=`<span class="${p?"p":""}${t?" t":""}" aria-label="${mon.split(" ")[0]} ${d}${p?", practiced":""}${t?", today":""}">${d}${p?"<i>✓</i>":""}</span>`}
-  $("jCal").innerHTML=c;$("journey").hidden=false;tone(700,0,.06,"triangle",.08);try{$("jClose").focus()}catch(e){}}
+  const shd=new Set(S.shielded);
+  for(let d=1;d<=days;d++){const dk=dkey(new Date(y,m,d,12)),p=!!S.log[dk],s=!p&&shd.has(dk),t=d===now.getDate();
+    c+=`<span class="${p?"p":s?"s":""}${t?" t":""}" aria-label="${mon.split(" ")[0]} ${d}${p?", practiced":s?", covered by a shield":""}${t?", today":""}">${d}${p?"<i>✓</i>":s?"<i>🛡</i>":""}</span>`}
+  $("jCal").innerHTML=c;renderShop();$("journey").hidden=false;tone(700,0,.06,"triangle",.08);try{$("jClose").focus()}catch(e){}}
 function closeJourney(){$("journey").hidden=true;try{$("hStr").focus()}catch(e){}}
 $("hStr").onclick=openJourney;$("jClose").onclick=closeJourney;
 $("journey").onclick=e=>{if(e.target===$("journey"))closeJourney()};
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("journey").hidden)closeJourney()});
-function startDaily(){pulseDaily=false;const got=[...collected()];STAGES.daily.pool=got.length>=10?got:[...row(0),...row(1)];startBattle("daily")}
+document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(!$("journey").hidden)closeJourney();if(!$("quests").hidden)closeQuests()});
+// quests panel + shield shop
+function untilMidnight(){const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);const mins=Math.max(1,Math.ceil((m-n)/60000));return mins>=60?Math.floor(mins/60)+"h "+(mins%60)+"m":mins+"m"}
+function renderShop(){const n=S.shields,full=n>=SHIELD_MAX,can=!full&&S.pts>=SHIELD_COST;
+  const h=`<div class="x-qrow"><span class="x-shi" aria-hidden="true">🛡</span><div class="x-qi"><b>Streak shield${n?" "+"🛡".repeat(n):""}</b><small>Covers a missed day · you hold ${n}/${SHIELD_MAX}${!full&&!can?" · need "+SHIELD_COST+" ✿":""}</small></div><button class="x-claim" data-buy${can?"":" disabled"} aria-label="${full?"Shields full":"Buy a streak shield for "+SHIELD_COST+" flowers"}">${full?"Full":SHIELD_COST+" ✿"}</button></div>`;
+  ["jShop","qShop"].forEach(id=>{$(id).innerHTML=h})}
+function buyShield(e){const b=e.target.closest("[data-buy]");if(!b||b.disabled)return;if(S.shields>=SHIELD_MAX||S.pts<SHIELD_COST)return;
+  S.pts-=SHIELD_COST;S.shields++;save();sfx.hit();hud();anim($("hPts"),"x-tick");renderShop()}
+$("jShop").onclick=buyShield;$("qShop").onclick=buyShield;
+function renderQuests(){const q=ensureQuests();let h="";
+  q.ids.forEach((id,i)=>{const d=QBY[id],p=Math.min(d.g,+q.p[i]||0),done=p>=d.g,cl=!!q.c[i];
+    h+=`<div class="x-qrow${cl?" cl":""}"><div class="x-qi"><b>${d.t}</b><div class="x-qbar"><i style="width:${p/d.g*100}%"></i></div><small>${p} / ${d.g}</small></div>${cl?`<span class="x-claim off">✓ ${QR[i]} ✿</span>`:`<button class="x-claim" data-q="${i}"${done?"":" disabled"}>${done?"Claim ":""}${QR[i]} ✿</button>`}</div>`});
+  const nd=[0,1,2].filter(i=>qDone(q,i)).length,all=nd===3;
+  h+=`<div class="x-qrow x-qbonus${q.b?" cl":""}"><div class="x-qi"><b>🎁 All 3 quests</b><small>${nd} / 3 done</small></div>${q.b?`<span class="x-claim off">✓ ${QBONUS} ✿</span>`:`<button class="x-claim" data-q="b"${all?"":" disabled"}>${all?"Claim ":"+"}${QBONUS} ✿</button>`}</div>`;
+  $("qList").innerHTML=h;$("qSub").textContent="New quests in "+untilMidnight();renderShop()}
+$("qList").onclick=e=>{const b=e.target.closest("[data-q]");if(!b||b.disabled)return;const q=ensureQuests(),i=b.dataset.q;let amt=0;
+  if(i==="b"){if(q.b||![0,1,2].every(j=>qDone(q,j)))return;q.b=1;amt=QBONUS}else{const j=+i;if(q.c[j]||!qDone(q,j))return;q.c[j]=1;amt=QR[j]}
+  S.pts+=amt;save();sfx.chime();hud();anim($("hPts"),"x-tick");renderQuests()};
+function openQuests(){renderQuests();$("quests").hidden=false;tone(700,0,.06,"triangle",.08);try{$("qClose").focus()}catch(e){}}
+function closeQuests(){$("quests").hidden=true;hud();try{$("qBtn").focus()}catch(e){}}
+$("qBtn").onclick=openQuests;$("qClose").onclick=closeQuests;
+$("quests").onclick=e=>{if(e.target===$("quests"))closeQuests()};
+function reviewBase(){const got=[...collected()];return got.length>=10?got:[...row(0),...row(1)]}
+// Today's practice: about half the questions from weak kana once there are 3+ with misses
+function startDaily(){pulseDaily=false;const wk=weakList(1,8),f=wk.length>=3?wk:null;
+  STAGES.daily.focus=f;STAGES.daily.focusP=.5;STAGES.daily.pool=[...new Set([...reviewBase(),...(f||[])])];startBattle("daily")}
+function startWeak(){const wk=weakList(2,10);if(!wk.length)return;
+  STAGES.weak={set:wk,pool:[...new Set([...wk,...reviewBase()])],focus:wk,focusP:.8,hp:100,dmg:10};startBattle("weak")}
 $("dailyBtn").onclick=startDaily;
 function unlocked(n){return true}
 let toastT;
 function toast(html){const t=$("toast");t.innerHTML=html;t.classList.add("on");anim(t,"x-pop");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),3200)}
-function showMap(){show("map");hud();$("journey").hidden=true;const p=$("path");p.innerHTML="";
+function showMap(){show("map");hud();$("journey").hidden=true;$("quests").hidden=true;
+  const msgs=[];if(shieldUsed){msgs.push("🛡 <b>Shield saved your streak!</b>"+(shieldUsed>1?" <small>("+shieldUsed+" days covered)</small>":""));shieldUsed=0}
+  if(qNew){msgs.push("🏮 <b>Quest complete!</b> <small>Tap 🏮 to claim your ✿.</small>");qNew=0}
+  if(msgs.length)setTimeout(()=>{if($("map").classList.contains("on"))toast("<div>"+msgs.join("<br>")+"</div>")},450);const p=$("path");p.innerHTML="";
   const db=$("dailyBtn"),dn=!!S.log[todayKey()];db.classList.toggle("done",dn);db.textContent=dn?"✓ Practiced today · play again":"▶ Today's practice";db.classList.toggle("x-pulse",pulseDaily);
   const firstOpen=(NODES.find(n=>!S.cleared.includes(n.id))||{}).id;
   NODES.forEach(n=>{const open=unlocked(n)&&!n.lock,done=S.cleared.includes(n.id),cur=open&&n.id===firstOpen,bst=S.best[n.id];
@@ -589,7 +694,8 @@ function startBattle(st){const cfg=STAGES[st];stopTimer();clearTimeout(IT);
   else if(cfg.line&&!(cfg.once&&S.seen.includes(st))){if(cfg.once){S.seen.push(st);save()}it.innerHTML=`<div class="x-dlg x-panel x-pop"><div class="x-tag x-ban"><span>Kana-chan</span></div>${cfg.line}</div>`;it.classList.add("on");say(cfg.speak)}
   IT=setTimeout(()=>{it.classList.remove("on");nextTurn()},it.classList.contains("on")?(cfg.boss?2000:3200):0)}
 function upd(){$("hpNum").textContent=B.hp;$("hpBar").style.width=(B.hp/B.max*100)+"%";$("hearts").textContent="❤".repeat(B.hearts)+"🖤".repeat(3-B.hearts)}
-function nextTurn(){if(!$("battle").classList.contains("on"))return;B.turn++;B.busy=false;$("hint").textContent="";const pool=STAGES[B.st].pool,k=pool[Math.floor(Math.random()*pool.length)],rev=B.turn%3===0;
+function nextTurn(){if(!$("battle").classList.contains("on"))return;B.turn++;B.busy=false;$("hint").textContent="";const cfg=STAGES[B.st],pool=cfg.pool,from=cfg.focus&&cfg.focus.length&&Math.random()<(cfg.focusP||.5)?cfg.focus:pool;
+  let k=from[Math.floor(Math.random()*from.length)];if(k===B.k&&from.length>1)k=from[Math.floor(Math.random()*from.length)];const rev=B.turn%3===0;
   B.k=k;B.rev=rev;const wrong=[],heard=new Set([KANA[k]]);for(const x of shuffle(pool)){if(heard.has(KANA[x]))continue;heard.add(KANA[x]);wrong.push(x);if(wrong.length===3)break}const opts=shuffle([k,...wrong]);
   const bub=$("bub");bub.textContent=rev?KANA[k]:k;bub.classList.toggle("rom",rev);bub.classList.toggle("two",!rev&&k.length>1);anim(bub,"x-pop");
   $("hint").textContent=rev?"Pick the kana!":"";if(!rev)say(k);
@@ -597,7 +703,8 @@ function nextTurn(){if(!$("battle").classList.contains("on"))return;B.turn++;B.b
 $("bub").onclick=()=>say(B&&B.k);
 function pop(cls,txt){const d=document.createElement("div");d.className=cls;d.textContent=txt;$("arena").appendChild(d);setTimeout(()=>d.remove(),1000)}
 function pick(o,btn){if(B.busy)return;B.busy=true;clearTimeout(TT);$("timer").firstElementChild.style.transition="none";const ok=o===B.k;
-  if(ok){btn.classList.add("ok");B.combo++;const crit=Date.now()-B.t0<3000;sfx.hit();say(B.k);
+  stat(B.k,ok);if(ok){B.combo++;qEvent("right");qEvent("row",B.combo)}save();
+  if(ok){btn.classList.add("ok");const crit=Date.now()-B.t0<3000;sfx.hit();say(B.k);
     anim($("kc"),"dash");setTimeout(()=>{anim($("slash"),"go");anim($("yk"),"hit");if(STAGES[B.st].oni)anim($("yk2"),"hit");const dm=STAGES[B.st].dmg||20;B.hp=Math.max(0,B.hp-dm);upd();pop("x-dmg","-"+dm)},200);
     if(B.combo>1)pop("x-combo",B.combo+" COMBO!"+(crit?" Critical!":""));else if(crit)pop("x-combo","Critical!");
     const pts=Math.round((100+(crit?150:0))*(1+B.combo*.1));B.score+=pts;tick($("bScore"),B.score);pop("x-pts","+"+pts);
@@ -653,11 +760,13 @@ const SECS={h:[{rows:GH.map(r=>[...r])}],k:[{rows:GK.map(r=>[...r])}],
   d:[{t:"ひらがな · hiragana",rows:DH.map(r=>[...r])},{t:"カタカナ · katakana",rows:DK.map(r=>[...r])}],
   c:[{t:"ひらがな · hiragana",rows:YH},{t:"カタカナ · katakana",rows:YK}]};
 const lab=k=>RD[k]||KANA[k];
-function renderStudy(){const got=collected(),g=$("grid");g.innerHTML="";g.classList.toggle("c3",tab==="c");
+function renderStudy(){const got=collected(),g=$("grid"),wk=weakList(2,10),weak=new Set(wk);g.innerHTML="";g.classList.toggle("c3",tab==="c");
+  $("sWeak").innerHTML=wk.length?`<span><i class="x-wd" aria-hidden="true"></i>Needs practice: ${wk.length} kana</span><button class="x-btn x-wbtn" id="wkBtn">▶ Practice weak kana</button>`:`<span><i class="x-wd" aria-hidden="true"></i>Kana you miss twice get a red dot.</span>`;
+  if(wk.length)$("wkBtn").onclick=()=>{try{const SS=safeGet("speechSynthesis");if(SS)SS.cancel()}catch(e){}startWeak()};
   SECS[tab].forEach(sec=>{if(sec.t){const h=document.createElement("div");h.className="x-gh";h.textContent=sec.t;g.appendChild(h)}
    sec.rows.forEach(r=>r.forEach(k=>{if(k==="・"){g.appendChild(document.createElement("div"));return}
-    const b=document.createElement("button");b.className="x-kcard"+(got.has(k)?" got":"")+(k===selK?" sel":"");
-    b.innerHTML=`<b>${k}</b><small>${lab(k)}</small>`;b.setAttribute("aria-label",k+" "+lab(k)+(got.has(k)?", collected":""));
+    const b=document.createElement("button");b.className="x-kcard"+(got.has(k)?" got":"")+(k===selK?" sel":"")+(weak.has(k)?" weak":"");
+    b.innerHTML=`<b>${k}</b><small>${lab(k)}</small>`;b.setAttribute("aria-label",k+" "+lab(k)+(got.has(k)?", collected":"")+(weak.has(k)?", needs practice":""));
     b.onclick=()=>studyPick(k);g.appendChild(b)}))});
   $("sProg").textContent="Collected "+got.size+" / "+TOTALK;$("sBar").style.width=(got.size/TOTALK*100)+"%";tick($("sScore"),S.total,true);
   document.querySelectorAll(".x-tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===tab))}
@@ -678,14 +787,16 @@ DRINKS.forEach(d=>{const b=document.createElement("button");b.className="x-tile"
 
 // victory
 function victory(o){show("win");sfx.chime();say("おめでとう ございます");
-  $("wTitle").textContent=o.cafe?"EPISODE CLEAR!":o.st==="daily"?"DAILY PRACTICE DONE!":STAGES[o.st].boss?"SHRINE SAVED!":"STAGE CLEAR!";anim($("wTitle"),"x-pop");
+  $("wTitle").textContent=o.cafe?"EPISODE CLEAR!":o.st==="daily"?"DAILY PRACTICE DONE!":o.st==="weak"?"REVIEW CLEAR!":STAGES[o.st].boss?"SHRINE SAVED!":"STAGE CLEAR!";anim($("wTitle"),"x-pop");
   const prev=S.best[o.st],rank=rankOf(o.score),nb=!prev||o.score>prev.s;if(nb)S.best[o.st]={s:o.score,r:rank};
   const tot0=S.total;S.total+=o.score;$("wPerf").hidden=!o.perfect;$("wBest").hidden=!nb;
   const rk=$("wRank");rk.textContent=rank;rk.className="x-rank r-"+rank;anim(rk,"x-rank");
   tick($("wScore"),0,true);tick($("wTotal"),tot0,true);setTimeout(()=>{tick($("wScore"),o.score);tick($("wTotal"),S.total)},300);
   if(nb)setTimeout(()=>{if(nb)[1047,1319,1568].forEach((f,i)=>tone(f,i*.08,.3,"square",.06))},1000);
-  const first=!S.cleared.includes(o.st);if(first&&o.st!=="daily")S.cleared.push(o.st);
+  const first=!S.cleared.includes(o.st);if(first&&typeof o.st==="number")S.cleared.push(o.st);
   const firstToday=logWin(o.score);S.day=new Date().toDateString();
+  if(o.cafe)qEvent("cafe");else{qEvent("win");if(rank==="S"||rank==="A")qEvent("rank");if(STAGES[o.st].boss)qEvent("boss");if(o.perfect)qEvent("nohit");if(o.st==="daily")qEvent("daily")}
+  $("wQuest").hidden=!qNew;
   const before=S.xp;S.xp+=50;S.pts+=10;let lvl="";
   if(S.xp>=300){S.xp-=300;S.lv++;lvl="LEVEL UP! Lv "+S.lv}
   save();const sn=S.streak;$("wsN").textContent=sn;$("wsL").textContent=sn===1?"day in a row":"days in a row";$("wsM").textContent=monthWins();
